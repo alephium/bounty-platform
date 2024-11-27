@@ -1,0 +1,5 @@
+node_modules
+out
+public/**/*
+**/__next_data_cache_handler.js
+**/*.cache.js
