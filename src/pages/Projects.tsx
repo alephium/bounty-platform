@@ -1,34 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import { Project } from '../types/supabase'
-import { projectService } from '../services/project.service'
-import ProjectCard from '../components/ProjectCard'
+import { useState } from 'react'
+import { Category, Status, Project } from '../types/supabase'
 
-export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
+const categories: Category[] = ['content', 'design', 'development', 'other']
+const statuses: Status[] = ['open', 'in review', 'completed']
 
-  useEffect(() => {
-    async function loadProjects() {
-      try {
-        const data = await projectService.getProjects()
-        setProjects(data)
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadProjects()
-  }, [])
-
-  if (loading) return <div>Loading...</div>
+export const Projects = () => {
+  const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all')
+  const [selectedStatus, setSelectedStatus] = useState<Status | 'all'>('all')
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {projects.map(project => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-[#C1A461]">Projects</h1>
+        <div className="flex gap-4">
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as Category | 'all')}
+            className="bg-[#2D3439] text-[#C1A461] rounded-lg px-3 py-2"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          <select 
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as Status | 'all')}
+            className="bg-[#2D3439] text-[#C1A461] rounded-lg px-3 py-2"
+          >
+            <option value="all">All Statuses</option>
+            {statuses.map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {/* Add ProjectList component here */}
     </div>
   )
 }

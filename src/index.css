@@ -71,3 +71,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.font-pirate {
+  font-family: 'Pirata One', cursive;
+}
