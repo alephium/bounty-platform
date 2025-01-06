@@ -8,65 +8,17 @@
 # testing
 /coverage
 
-# cypress
-cypress/screenshots
-cypress/videos
-
-# next.js
-/.next
-/out
-
-# next-sitemap
-# public/robots.txt
-public/sitemap.xml
-public/sitemap-*.xml
-
-# cache
-.swc/
-
 # production
 /build
 
 # misc
 .DS_Store
-*.pem
-Thumbs.db
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# debug
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# dotenv local files
-.env*.local
 .env
-
-# prisma migration
-prisma/migrations
-
-# local folder
-local
-
-# vercel
-.vercel
-
-/public/assets/data
-
-# Sentry Config File
-.sentryclirc
-
-
-#next-pwa
-**/public/precache.*.*.js
-**/public/sw.js
-**/public/workbox-*.js
-**/public/worker-*.js
-**/public/fallback-*.js
-**/public/precache.*.*.js.map
-**/public/sw.js.map
-**/public/workbox-*.js.map
-**/public/worker-*.js.map
-**/public/fallback-*.js
-# Sentry Config File
-.env.sentry-build-plugin

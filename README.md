@@ -1,77 +1,46 @@
-<div align="center">
-  <br/>
-  <img src="https://pbs.twimg.com/profile_images/1655546485365407744/dOeIC0R-_400x400.jpg" style="border-radius:10px" width="120px" height="auto"/>
-  <h2></h2>
-  <p>
-    <strong>An open source platform connecting crypto founders with elite talent to create bounties, and accelerate project completion</strong>
-  </p>
-  
-  ![Project Status: Active](https://www.repostatus.org/badges/latest/active.svg)
-  [![Follow]()](https://twitter.com/alephium)
-</div>
+# Getting Started with Create React App
 
-## Development Setup
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-### Prerequisites
+## Available Scripts
 
-- NodeJS
-- MySQL
-- pnpm
+In the project directory, you can run:
 
-### Getting Started
+### `npm start`
 
-1. Clone the repository into a public Github repository (or fork it):
-    ```bash
-    ```
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-2. Navigate to the project directory:
-    ```bash
-    cd Alephium
-    ```
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-3. Install the dependencies: 
-    ```bash
-    pnpm i
-    ```
+### `npm test`
 
-4. Set up your `.env` file.
-  - Start by copying the `.env.example` file to a new file named `.env`. This file will store your local environment settings.
-  - Use `openssl rand -base64 32` to generate a key and add it under `NEXTAUTH_SECRET` in the .env file.
-  - Database setup
-    - Create a local `MySQL` instance and replace `<user>`, `<pass>`, `<db-host>`, and `<db-port>` with their applicable values.
-      ```
-      DATABASE_URL='mysql://<user>:<pass>@<db-host>:<db-port>'
-      ``` 
-    - If you don't want to create a local DB, then you can also consider using services like railway.app or render.
-      - [Setup MySQL DB with railway.app](https://docs.railway.app/guides/mysql)
-      - [Setup MYSQL DB with render](https://docs.render.com/deploy-mysql)
-      
-    - Generate prisma migrations & client.
-      ```bash
-      npx prisma migrate dev --name init && npx prisma generate
-      ```
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-  - You have to set up resend to run the app:
-    - [Resend](https://resend.com): To obtain your `RESEND_API_KEY`, visit the Resend dashboard. This credential is essential for setting up Email Auth.
+### `npm run build`
 
-  NOTE: If you are facing any issues with setup, feel free to contact [Abhishek](https://twitter.com/abhwshek)
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-5. Run the development server
-    ```bash
-    pnpm dev
-    ```
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-## Contributing
-We welcome contributions from everyone! Whether it's submitting an issue, a pull request, or suggesting new ideas, your input is highly valued. Check out our [contributing guide](CONTRIBUTING.md) for guidelines on how to proceed.
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
+### `npm run eject`
 
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-### Contributors
-<a href="">
-  <img src="https://contrib.rocks/image?repo=" />
-</a>
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-## Repo Activity
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-<img width="100%" src="https://repobeats.axiom.co/api/embed/a82375612cac34000c44afc158c634bc0802a712.svg" />
-# Contribium
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
