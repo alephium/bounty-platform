@@ -1,3 +1,5 @@
+// src/pages/Home.tsx
+import { useUser } from '../contexts/UserContext'
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Card, CardContent } from "../components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
@@ -7,6 +9,18 @@ import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-rea
 import { Link } from "react-router-dom"
 
 export default function Home() {
+  const { user } = useUser()
+
+  const getInitials = (name: string | null) => {
+    if (!name) return 'GU'
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
     <div className="min-h-screen bg-[#1B2228] text-gray-100">
       <div className="w-full h-screen px-4">
@@ -16,12 +30,21 @@ export default function Home() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
-                    <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">YY</AvatarFallback>
+                    {user?.avatar_url ? (
+                      <AvatarImage
+                        src={user.avatar_url}
+                        alt={user.full_name || 'User avatar'}
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
+                      {getInitials(user?.full_name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h1 className="text-2xl font-bold text-[#C1A461]">Welcome aboard, Captain Yuanying</h1>
-                    <p className="text-[#C1A461]">Your next adventure awaits on Contribum</p>
+                    <h1 className="text-2xl font-bold text-[#C1A461]">
+                      Welcome aboard, Captain {user?.full_name || 'Guest'}
+                    </h1>
+                    <p className="text-[#C1A461]">Your next adventure awaits on $ALPH Bounty Lands</p>
                   </div>
                 </div>
               </CardContent>
@@ -158,4 +181,3 @@ const opportunities = [
     verified: true
   }
 ]
-

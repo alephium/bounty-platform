@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit, Share, Plus, Twitter, Linkedin, Github, Globe } from 'lucide-react'
 
-export default function ProfilePage() {
+export default function Profile() {
   return (
     <div className="min-h-screen bg-[#1B2228]">
       {/* Header with gradient */}

@@ -9,6 +9,8 @@ import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
 import { Projects } from './pages/Projects'
 import { Grants } from './pages/Grants'
+import Profile from './pages/Profile'
+import EditProfile from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 
 const App = () => {
@@ -40,12 +42,6 @@ const App = () => {
     }
   }, [])
 
-  // if (loading) {
-  //   return <div className="min-h-screen bg-[#1B2228] flex items-center justify-center">
-  //     <div className="text-[#C1A461]">Loading...</div>
-  //   </div>
-  // }
-
   return (
     <UserProvider user={user} loading={loading}>
       <BrowserRouter>
@@ -56,6 +52,8 @@ const App = () => {
             <Route path="/bounties" element={<Bounties />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/grants" element={<Grants />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/editprofile" element={<EditProfile />} />
           </Route>
         </Routes>
       </BrowserRouter>
@@ -64,28 +62,3 @@ const App = () => {
 }
 
 export default App
-
-// import { BrowserRouter, Routes, Route } from 'react-router-dom'
-// import Layout from './components/Layout'
-// import Home from './pages/Home' // Remove curly braces
-// import { Bounties } from './pages/Bounties'
-// import { Projects } from './pages/Projects'
-// import { Grants } from './pages/Grants'
-
-
-// const App = () => {
-//   return (
-//     <BrowserRouter>
-//       <Layout>
-//         <Routes>
-//           <Route path="/" element={<Home />} />
-//           <Route path="/bounties" element={<Bounties />} />
-//           <Route path="/projects" element={<Projects />} />
-//           <Route path="/grants" element={<Grants />} />
-//         </Routes>
-//       </Layout>
-//     </BrowserRouter>
-//   )
-// }
-
-// export default App

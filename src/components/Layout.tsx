@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
 import { AuthPromptModal } from './AuthPromptModal'
+import { AvatarDropdown } from './ui/AvatarDropdown'
 
 const Layout = () => {
   const { user } = useUser()
@@ -44,22 +45,7 @@ const Layout = () => {
   const renderAvatar = () => {
     if (!user) return null;
     
-    return (
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-[#C1A461]">{user.full_name}</span>
-        <Avatar>
-          {user.avatar_url ? (
-            <AvatarImage
-              src={user.avatar_url}
-              alt={user.full_name || 'User avatar'}
-            />
-          ) : null}
-          <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
-            {getInitials(user.full_name)}
-          </AvatarFallback>
-        </Avatar>
-      </div>
-    );
+    return <AvatarDropdown user={user} getInitials={getInitials} />
   };
 
   return (
@@ -86,6 +72,7 @@ const Layout = () => {
                   </Link>
                 ))}
               </div>
+            
             </div>
             
             <div className="flex items-center gap-4">
