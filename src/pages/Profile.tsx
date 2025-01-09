@@ -4,10 +4,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit, Share, Plus, Twitter, Linkedin, Github, Globe } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
 
 export default function Profile() {
+  const { theme } = useTheme()
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+
   return (
-    <div className="min-h-screen bg-[#1B2228]">
+    <div className={`min-h-screen ${bgColor}`}>
       {/* Header with gradient */}
       <div className="h-48 bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400" />
       
@@ -45,7 +53,7 @@ export default function Profile() {
 
           {/* Details and Skills */}
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-[#1B2228] border-[#C1A461]/20">
+          <Card className={`${cardBg} ${borderColor}`}>
               <CardContent className="p-6">
                 <h2 className="text-lg font-bold text-[#C1A461] mb-4">Details</h2>
                 <div className="space-y-3 text-[#C1A461]/60">
@@ -56,7 +64,7 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#1B2228] border-[#C1A461]/20">
+            <Card className={`${cardBg} ${borderColor}`}>
               <CardContent className="p-6">
                 <h2 className="text-lg font-bold text-[#C1A461] mb-4">Skills</h2>
                 <div className="space-y-4">
@@ -143,7 +151,7 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="activity" className="w-full">
-              <TabsList className="bg-[#1B2228] border-b border-[#C1A461]/20 w-full justify-start rounded-none p-0 h-auto">
+              <TabsList className="${bgColor} ${borderColor} w-full justify-start rounded-none p-0 h-auto">
                 {["Activity Feed", "Personal Projects"].map((tab) => (
                   <TabsTrigger
                     key={tab}
@@ -181,4 +189,3 @@ export default function Profile() {
     </div>
   )
 }
-

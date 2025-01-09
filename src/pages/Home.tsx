@@ -7,9 +7,19 @@ import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-react'
 import { Link } from "react-router-dom"
+import { useTheme } from '../contexts/ThemeContext'
 
 export default function Home() {
   const { user } = useUser()
+  const { theme } = useTheme()
+  
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+
+  // console.log('user check', user?.avatar_url)
 
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
@@ -22,14 +32,16 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1B2228] text-gray-100">
-      <div className="w-full h-screen px-4">
-        <div className="max-w-7xl mx-auto">
-          <main>
-            <Card className="bg-gradient-to-br from-amber-500/20 to-amber-500/5 border-amber-500/20 mb-6">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
+    <div className={`min-h-screen ${bgColor} w-full px-4`}>
+      <div className="max-w-7xl mx-auto">
+        <main>
+          <Card className={`${theme === 'dark' ? 
+            'bg-gradient-to-br from-amber-500/20 to-amber-500/5' : 
+            'bg-gradient-to-br from-amber-100 to-amber-50'} 
+            ${borderColor} mb-6`}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                 <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
                     {user?.avatar_url ? (
                       <AvatarImage
                         src={user.avatar_url}
@@ -37,113 +49,119 @@ export default function Home() {
                       />
                     ) : null}
                     <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
-                      {getInitials(user?.full_name)}
+                      {getInitials(user?.full_name || null)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h1 className="text-2xl font-bold text-[#C1A461]">
-                      Welcome aboard, Captain {user?.full_name || 'Guest'}
-                    </h1>
-                    <p className="text-[#C1A461]">Your next adventure awaits on $ALPH Bounty Lands</p>
-                  </div>
+                <div>
+                  <h1 className={`text-2xl font-bold ${textColor}`}>
+                    Welcome aboard, Captain {user?.full_name || 'Guest'}
+                  </h1>
+                  <p className={textColor}>Your next adventure awaits on $ALPH Bounty Lands</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {["All Quests", "Content", "Design", "Development", "Other"].map((filter) => (
+                <Button 
+                  key={filter}
+                  variant="outline" 
+                  className={`rounded-full ${borderColor} bg-transparent ${textColor} 
+                    ${theme === 'dark' ? 
+                      'hover:bg-amber-500/20 hover:text-amber-400' : 
+                      'hover:bg-amber-100 hover:text-amber-700'}`}
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
+
+            <Card className={`${cardBg} ${borderColor}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Compass className={`w-6 h-6 ${textColor}`} />
+                  <h2 className={`font-bold ${textColor}`}>Available Quests</h2>
+                </div>
+
+                <Tabs defaultValue="open" className="w-full">
+                  <TabsList className={`grid w-full max-w-[400px] grid-cols-3 mb-4 ${cardBg}`}>
+                    {["Open", "In Review", "Completed"].map((tab) => (
+                      <TabsTrigger 
+                        key={tab}
+                        value={tab.toLowerCase()}
+                        className={`data-[state=active]:${theme === 'dark' ? 'bg-amber-500' : 'bg-amber-400'} 
+                          data-[state=active]:text-gray-900`}
+                      >
+                        {tab}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  <div className="space-y-4">
+                    {opportunities.map((opp) => (
+                      <Card key={opp.id} className={`${cardBg} ${borderColor}`}>
+                        <CardContent className="flex items-center justify-between p-4">
+                          <div className="flex gap-4">
+                            <div className={`w-12 h-12 ${theme === 'dark' ? 
+                              'bg-amber-500/10' : 'bg-amber-100'} rounded-lg flex items-center justify-center`}>
+                              <Ship className={textColor} />
+                            </div>
+                            <div>
+                              <h3 className={`font-medium ${textColor}`}>{opp.title}</h3>
+                              <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                {opp.company}
+                                {opp.verified && (
+                                  <Badge variant="secondary" className={`${theme === 'dark' ? 
+                                    'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}>
+                                    <Anchor className="w-3 h-3 mr-1" />
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{opp.type}</span>
+                                </div>
+                                <span>Due in {opp.dueIn}</span>
+                                {opp.responses && (
+                                  <div className="flex items-center gap-1">
+                                    <MessageSquare className="w-4 h-4" />
+                                    <span>{opp.responses}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="flex items-center gap-1">
+                                <span className={textColor}>◈</span>
+                                <span className={`font-medium ${textColor}`}>{opp.amount}</span>
+                              </div>
+                              <span className={`text-sm ${mutedTextColor}`}>USDC</span>
+                            </div>
+                            {opp.type === "Project" && (
+                              <Button 
+                                variant="outline"
+                                className={`${borderColor} bg-transparent ${textColor} 
+                                  ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                              >
+                                Join Crew
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </Tabs>
               </CardContent>
             </Card>
-
-            <div className="space-y-4">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {["All Quests", "Content", "Design", "Development", "Other"].map((filter) => (
-                  <Button 
-                    key={filter}
-                    variant="outline" 
-                    className="rounded-full border-amber-500/20 bg-transparent text-[#C1A461] hover:bg-amber-500/20 hover:text-amber-400"
-                  >
-                    {filter}
-                  </Button>
-                ))}
-              </div>
-
-              <Card className="bg-gray-800/50 border-amber-500/20">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Compass className="w-6 h-6 text-[#C1A461]" />
-                    <h2 className="font-bold text-[#C1A461]">Available Quests</h2>
-                  </div>
-
-                  <Tabs defaultValue="open" className="w-full">
-                    <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
-                      {["Open", "In Review", "Completed"].map((tab) => (
-                        <TabsTrigger 
-                          key={tab}
-                          value={tab.toLowerCase()}
-                          className="data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900"
-                        >
-                          {tab}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-
-                    <div className="space-y-4">
-                      {opportunities.map((opp) => (
-                        <Card key={opp.id} className="bg-gray-800/50 border-amber-500/20">
-                          <CardContent className="flex items-center justify-between p-4">
-                            <div className="flex gap-4">
-                              <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
-                                <Ship className="w-6 h-6 text-[#C1A461]" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium text-[#C1A461]">{opp.title}</h3>
-                                <div className="flex items-center gap-1 text-sm text-[#C1A461]">
-                                  {opp.company}
-                                  {opp.verified && (
-                                    <Badge variant="secondary" className="bg-amber-500/20 text-[#C1A461]">
-                                      <Anchor className="w-3 h-3 mr-1" />
-                                      Verified
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-4 text-sm text-[#C1A461] mt-1">
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>{opp.type}</span>
-                                  </div>
-                                  <span>Due in {opp.dueIn}</span>
-                                  {opp.responses && (
-                                    <div className="flex items-center gap-1">
-                                      <MessageSquare className="w-4 h-4" />
-                                      <span>{opp.responses}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[#C1A461]">◈</span>
-                                  <span className="font-medium text-[#C1A461]">{opp.amount}</span>
-                                </div>
-                                <span className="text-sm text-[#C1A461]">USDC</span>
-                              </div>
-                              {opp.type === "Project" && (
-                                <Button 
-                                  variant="outline"
-                                  className="border-amber-500/20 bg-transparent text-[#C1A461] hover:bg-amber-500/20"
-                                >
-                                  Join Crew
-                                </Button>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   )

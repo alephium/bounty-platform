@@ -1,27 +1,27 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, useNavigate, Outlet } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, Sun, Moon } from 'lucide-react'
 import { Card, CardContent } from "./ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { AuthPromptModal } from './AuthPromptModal'
 import { AvatarDropdown } from './ui/AvatarDropdown'
 
 const Layout = () => {
   const { user } = useUser()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    // Only start the timer if user is not logged in and not on auth page
     if (!user && !window.location.pathname.includes('/auth')) {
       const timer = setTimeout(() => {
         setShowAuthPrompt(true)
-      }, 15000) // 15 seconds
-
+      }, 15000)
       return () => clearTimeout(timer)
     }
   }, [user])
@@ -34,28 +34,23 @@ const Layout = () => {
 
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
   }
 
   const renderAvatar = () => {
-    if (!user) return null;
-    
+    if (!user) return null
     return <AvatarDropdown user={user} getInitials={getInitials} />
-  };
+  }
+
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   return (
     <>
-      <AuthPromptModal 
-        open={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
-      <div className="min-h-screen bg-[#1B2228]">
-        <nav className="bg-[#1B2228]">
+      <AuthPromptModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <div className={`min-h-screen ${bgColor}`}>
+        <nav className={`${bgColor} border-b ${borderColor}`}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
               <Link to="/">
@@ -66,40 +61,47 @@ const Layout = () => {
                   <Link 
                     key={item}
                     to={`/${item.toLowerCase()}`}
-                    className="text-sm font-medium text-[#C1A461] hover:text-[#C1A461] transition-colors"
+                    className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors`}
                   >
                     {item}
                   </Link>
                 ))}
               </div>
-            
             </div>
             
             <div className="flex items-center gap-4">
-              <Search className="w-5 h-5 text-[#C1A461]" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className={`${textColor} hover:opacity-80`}
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </Button>
+              <Search className={`w-5 h-5 ${textColor}`} />
               
               {user ? (
-                // Logged in state
                 renderAvatar()
               ) : (
-                // Not logged in state
                 <div className="flex items-center gap-4">
                   <Button 
                     variant="ghost" 
-                    className="text-[#C1A461] hover:bg-amber-500/20"
+                    className={`${textColor} hover:opacity-80`}
                     onClick={() => navigate('/sponsor')}
                   >
                     Become a Sponsor
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="text-[#C1A461] hover:bg-amber-500/20"
+                    className={`${textColor} hover:opacity-80`}
                     onClick={() => navigate('/auth')}
                   >
                     Login
                   </Button>
                   <Button 
-                    className="bg-amber-500 hover:bg-amber-600 text-gray-900"
+                    className={theme === 'dark' ? 
+                      "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                      "bg-amber-500 hover:bg-amber-600 text-white"}
                     onClick={() => navigate('/auth')}
                   >
                     Sign Up
@@ -115,7 +117,7 @@ const Layout = () => {
             <Outlet />
           </main>
           <aside className="space-y-6 w-60">
-            <Card className="bg-gray-800/50 border-amber-500/20 w-68">
+            <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-2 text-2xl font-bold">
@@ -134,7 +136,7 @@ const Layout = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800/50 border-amber-500/20 w-68">
+            <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
                 <h2 className="font-bold text-[#C1A461] mb-4">NAVIGATION GUIDE</h2>
                 <div className="space-y-6">
@@ -169,10 +171,12 @@ const Layout = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800/50 border-amber-500/20 w-68">
+            <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
                 <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
-                {/* Recent earners content */}
+                <div>
+                        <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
+                </div>
               </CardContent>
             </Card>
           </aside>

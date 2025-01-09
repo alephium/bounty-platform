@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import { UserService } from './services/user.service'
 import { User } from './types/supabase'
 import { UserProvider } from './contexts/UserContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
@@ -12,6 +13,7 @@ import { Grants } from './pages/Grants'
 import Profile from './pages/Profile'
 import EditProfile from './pages/EditProfile'
 import AuthPage from './pages/Auth'
+
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null)
@@ -44,19 +46,21 @@ const App = () => {
 
   return (
     <UserProvider user={user} loading={loading}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/bounties" element={<Bounties />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/grants" element={<Grants />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/editprofile" element={<EditProfile />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/bounties" element={<Bounties />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/grants" element={<Grants />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/editprofile" element={<EditProfile />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </UserProvider>
   )
 }

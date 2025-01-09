@@ -9,6 +9,7 @@ import {
   import { useNavigate } from 'react-router-dom'
   import { User, LogOut, Settings } from 'lucide-react'
   import { UserService } from '@/services/user.service'
+  import { useTheme } from '@/contexts/ThemeContext'
   
   interface AvatarDropdownProps {
     user: {
@@ -20,6 +21,15 @@ import {
   
   export function AvatarDropdown({ user, getInitials }: AvatarDropdownProps) {
     const navigate = useNavigate()
+    const { theme } = useTheme()
+  
+    // Theme-specific styles
+    const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+    const dropdownBg = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+    const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+    const hoverBg = theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-50'
+    const avatarBg = theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100'
+    const focusTextColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-amber-700'
   
     const handleLogout = async () => {
       try {
@@ -30,11 +40,13 @@ import {
       }
     }
   
+    const menuItemClasses = `${textColor} focus:${hoverBg} focus:${focusTextColor} cursor-pointer`
+  
     return (
       <DropdownMenu>
         <DropdownMenuTrigger className="cursor-pointer">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-[#C1A461]">{user.full_name}</span>
+            <span className={`text-sm ${textColor}`}>{user.full_name}</span>
             <Avatar>
               {user.avatar_url ? (
                 <AvatarImage
@@ -42,30 +54,30 @@ import {
                   alt={user.full_name || 'User avatar'}
                 />
               ) : null}
-              <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
+              <AvatarFallback className={`${avatarBg} ${textColor}`}>
                 {getInitials(user.full_name)}
               </AvatarFallback>
             </Avatar>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 bg-[#1B2228] border-[#C1A461]/20">
+        <DropdownMenuContent className={`w-56 ${dropdownBg} ${borderColor}`}>
           <DropdownMenuItem 
-            className="text-[#C1A461] focus:bg-[#C1A461]/20 focus:text-[#C1A461] cursor-pointer"
+            className={menuItemClasses}
             onClick={() => navigate('/profile')}
           >
             <User className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
           <DropdownMenuItem 
-            className="text-[#C1A461] focus:bg-[#C1A461]/20 focus:text-[#C1A461] cursor-pointer"
+            className={menuItemClasses}
             onClick={() => navigate('/editprofile')}
           >
             <Settings className="mr-2 h-4 w-4" />
             Edit Profile
           </DropdownMenuItem>
-          <DropdownMenuSeparator className="bg-[#C1A461]/20" />
+          <DropdownMenuSeparator className={borderColor} />
           <DropdownMenuItem 
-            className="text-[#C1A461] focus:bg-[#C1A461]/20 focus:text-[#C1A461] cursor-pointer"
+            className={menuItemClasses}
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />

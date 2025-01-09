@@ -1,6 +1,6 @@
 export type Category = 'content' | 'design' | 'development' | 'other'
 export type Status = 'open' | 'in review' | 'completed'
-export type Web3Interest = 'defi' | 'nft' | 'dao'
+export type Web3Interest = 'defi' | 'nft' | 'dao' | 'other'
 export type WorkExperience = '0-2' | '2-5' | '5-10' | '10+'
 
 // Project, Bounty, and Grant interfaces remain the same

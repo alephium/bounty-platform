@@ -6,19 +6,28 @@ import { Mail } from 'lucide-react'
 import { Link } from "react-router-dom"
 import { UserService } from '../services/user.service'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../contexts/ThemeContext'
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const { theme } = useTheme()
+
+  // Theme-specific styles
+  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-500'
+  const borderColor = theme === 'dark' ? 'border-amber-500/20' : 'border-amber-200'
+  const buttonClass = theme === 'dark' 
+    ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' 
+    : 'bg-amber-500 hover:bg-amber-600 text-white'
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true)
       const { error } = await UserService.signInWithGoogle()
       if (error) throw error
-      
-      // Supabase will automatically redirect to your app after successful sign in
-      // You can handle the session in your App.tsx or a layout component
     } catch (error) {
       console.error('Error signing in with Google:', error)
     } finally {
@@ -27,21 +36,21 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-gray-800/50 border-amber-500/20">
+    <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-4`}>
+      <Card className={`w-full max-w-md ${cardBg} ${borderColor}`}>
         <CardContent className="p-8 space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-[#C1A461]">
+            <h1 className={`text-2xl font-bold ${textColor}`}>
               Set Sail on Your Journey
             </h1>
-            <p className="text-[#C1A461]/60">
-              Your treasure awaits in global bounty lands
+            <p className={mutedTextColor}>
+              Your treasure awaits in global $ALPH bounty lands
             </p>
           </div>
 
           <div className="space-y-4">
             <Button 
-              className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 flex items-center justify-center gap-2"
+              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
               size="lg"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
@@ -67,7 +76,33 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with Google'}
             </Button>
 
-            {/* Rest of your UI remains the same */}
+            <div className="flex items-center gap-2">
+              <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
+              <span className={mutedTextColor}>or</span>
+              <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
+            </div>
+
+            <Button
+              variant="outline"
+              className={`w-full ${borderColor} ${textColor} 
+                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-50'}`}
+              size="lg"
+              onClick={() => navigate('/auth/email')}
+            >
+              <Mail className="w-5 h-5 mr-2" />
+              Continue with Email
+            </Button>
+
+            <p className={`text-center text-sm ${mutedTextColor}`}>
+              By continuing, you agree to our{' '}
+              <Link to="/terms" className={`${textColor} hover:underline`}>
+                Terms of Service
+              </Link>
+              {' '}and{' '}
+              <Link to="/privacy" className={`${textColor} hover:underline`}>
+                Privacy Policy
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>
