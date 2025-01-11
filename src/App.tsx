@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import { UserService } from './services/user.service'
 import { User } from './types/supabase'
@@ -16,6 +16,22 @@ import EditProfile from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import ProofofWork from './pages/ProofofWork'
 
+// Protected Route wrapper component
+const ProtectedRoute = ({ children, user, loading }) => {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1B2228] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
+  }
+
+  return children
+}
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null)
@@ -60,21 +76,55 @@ const App = () => {
       subscription.unsubscribe();
     };
   }, []);
+
   return (
     <UserProvider user={user} loading={loading}>
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>
+              {/* Public routes */}
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/" element={<Home />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/editprofile" element={<EditProfile />} />
-              <Route path="/proofofwork" element={<ProofofWork />} />
+              
+              {/* Profile routes with username parameter */}
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute user={user} loading={loading}>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile/:username" 
+                element={<Profile />} 
+              />
+
+              {/* Protected routes */}
+              <Route
+                path="/editprofile"
+                element={
+                  <ProtectedRoute user={user} loading={loading}>
+                    <EditProfile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/proofofwork"
+                element={
+                  <ProtectedRoute user={user} loading={loading}>
+                    <ProofofWork />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </BrowserRouter>

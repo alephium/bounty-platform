@@ -1,4 +1,5 @@
 // src/pages/Home.tsx
+import { useEffect } from 'react'
 import { useUser } from '../contexts/UserContext'
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Card, CardContent } from "../components/ui/card"
@@ -10,8 +11,12 @@ import { Link } from "react-router-dom"
 import { useTheme } from '../contexts/ThemeContext'
 
 export default function Home() {
-  const { user } = useUser()
+  const { user, loading, refreshUser } = useUser()
   const { theme } = useTheme()
+
+  useEffect(() => {
+    refreshUser()
+  }, [])
   
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
@@ -19,16 +24,10 @@ export default function Home() {
   const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
   const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
-  // console.log('user check', user?.avatar_url)
-
+  console.log('user check', user?.avatar_url)
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
   }
 
   return (
@@ -46,11 +45,15 @@ export default function Home() {
                       <AvatarImage
                         src={user.avatar_url}
                         alt={user.full_name || 'User avatar'}
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg'
+                        }}
                       />
-                    ) : null}
-                    <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
-                      {getInitials(user?.full_name || null)}
-                    </AvatarFallback>
+                    ) : (
+                      <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
+                        {getInitials(user?.full_name || null)}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                 <div>
                   <h1 className={`text-2xl font-bold ${textColor}`}>
@@ -86,13 +89,12 @@ export default function Home() {
                 </div>
 
                 <Tabs defaultValue="open" className="w-full">
-                  <TabsList className={`grid w-full max-w-[400px] grid-cols-3 mb-4 ${cardBg}`}>
+                  <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
                     {["Open", "In Review", "Completed"].map((tab) => (
                       <TabsTrigger 
                         key={tab}
                         value={tab.toLowerCase()}
-                        className={`data-[state=active]:${theme === 'dark' ? 'bg-amber-500' : 'bg-amber-400'} 
-                          data-[state=active]:text-gray-900`}
+                        className="data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900"
                       >
                         {tab}
                       </TabsTrigger>
