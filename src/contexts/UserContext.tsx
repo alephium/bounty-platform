@@ -21,10 +21,11 @@ export function UserProvider({
   const [loading, setLoading] = useState(false)
 
   const refreshUser = async () => {
+    console.log('refreshUser')
     try {
       setLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
-      
+      console.log(session)
       if (session?.user?.id) {
         const { data: userData, error } = await supabase
           .from('users')
@@ -44,7 +45,10 @@ export function UserProvider({
 
   // Listen for auth changes
   useEffect(() => {
+    console.log('refreshUser')
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(event)
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         refreshUser()
       } else if (event === 'SIGNED_OUT') {

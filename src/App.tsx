@@ -16,8 +16,13 @@ import EditProfile from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import ProofofWork from './pages/ProofofWork'
 
-// Protected Route wrapper component
-const ProtectedRoute = ({ children, user, loading }) => {
+interface ProtectedRouteProps {
+  children: React.ReactNode
+  user: User | null
+  loading: boolean
+}
+
+const ProtectedRoute = ({ children, user, loading }: ProtectedRouteProps) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#1B2228] flex items-center justify-center">
@@ -36,46 +41,6 @@ const ProtectedRoute = ({ children, user, loading }) => {
 const App = () => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true;
-  
-    const handleAuthChange = async (event, session) => {
-      if (!mounted || !session?.user) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-  
-      try {
-        // First try to get existing user
-        let userData = await UserService.getCurrentUser();
-        
-        // If no user exists, create one
-        if (!userData) {
-          userData = await UserService.createOrUpdateUser(session.user);
-        }
-  
-        if (mounted) {
-          setUser(userData);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error handling auth change:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-  
-    // Set up auth listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-  
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <UserProvider user={user} loading={loading}>
@@ -100,10 +65,7 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/profile/:username" 
-                element={<Profile />} 
-              />
+              <Route path="/profile/:username" element={<Profile />} />
 
               {/* Protected routes */}
               <Route

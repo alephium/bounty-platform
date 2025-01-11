@@ -1,20 +1,32 @@
 import { supabase } from '../lib/supabase'
 import { User } from '../types/supabase'
 
+console.log("session!!!",supabase.auth.getSession());
+
 export class UserService {
   static async getCurrentUser(): Promise<User | null> {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
+    try {
+      // First check if we have a session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
+      if (!session?.user) return null
 
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+      // Get the user data from our users table
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
 
-    return data
+        console.log(data)
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error getting current user:', error)
+      return null
+    }
   }
-
   private static async generateUniqueUsername(fullName: string): Promise<string> {
     // Get first name and convert to lowercase
     const firstName = fullName.split(' ')[0].toLowerCase()
@@ -88,25 +100,42 @@ export class UserService {
       return null
     }
   }
-
   static async signInWithGoogle() {
-    const redirectTo = `${window.location.origin}`
-    
-    return supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
+    try {
+      const { origin } = window.location
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          scopes: 'email profile',
         },
-        scopes: 'email profile',
-      },
-    })
+      })
+      
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error signing in with Google:', error)
+      throw error
+    }
   }
-
   static async signOut() {
-    return supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Clear any local storage items related to auth
+      window.localStorage.removeItem('contributium-auth')
+      window.localStorage.removeItem('supabase.auth.token')
+      
+      return true
+    } catch (error) {
+      console.error('Error signing out:', error)
+      throw error
+    }
   }
 
   static async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
