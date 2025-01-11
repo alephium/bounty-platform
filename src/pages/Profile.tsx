@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Edit, Share, Plus, Twitter, Linkedin, Github, Globe, X, Copy, Send } from 'lucide-react'
+import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
-import { Project } from '../types/supabase'
-import { User } from '../types/supabase'
+import { Project, User } from '../types/supabase'
 import { toast } from "sonner"
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { username } = useParams() // Get username from URL
+  const { username } = useParams()
   const { theme } = useTheme()
   const { user: currentUser } = useUser()
   const [profileUser, setProfileUser] = useState<User | null>(null)
@@ -49,7 +48,7 @@ export default function Profile() {
 
   const handleShare = (platform: string) => {
     let url = ""
-    const text = `Check out ${user?.full_name || user?.username}'s profile!`
+    const text = `Check out ${profileUser?.full_name || profileUser?.username}'s profile!`
     
     switch (platform) {
       case "twitter":
@@ -65,54 +64,62 @@ export default function Profile() {
     if (url) window.open(url, "_blank")
   }
 
-  // Fetch projects
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // If no username provided, use current user's profile
+        console.log("username", username)
+        console.log("currentUser", currentUser?.id)
+
         if (!username && currentUser) {
           setProfileUser(currentUser)
-          const userSlug = currentUser.username || currentUser.id
-          navigate(`/profile/${userSlug}`, { replace: true })
+          navigate(`/profile/${currentUser.username}`, { replace: true })
           return
         }
+
         const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .or(`full_name.ilike.${username},id.eq.${username}`)
-        .single()
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single()
 
-      if (userError) throw userError
+        if (userError) throw userError
 
-      if (!userData) {
-        throw new Error('User not found')
+        if (!userData) {
+          throw new Error('User not found')
+        }
+
+        setProfileUser(userData)
+
+        // const { data: projectsData, error: projectsError } = await supabase
+        //   .from('projects')
+        //   .select('*')
+        //   .eq('creator_id', userData.id)  // Changed from user_id to creator_id
+        //   .order('created_at', { ascending: false })
+
+        // if (projectsError) throw projectsError
+
+        setProjects(projectsData || [])
+      } catch (err: any) {
+        console.error('Profile error:', err)
+        setError(err.message || 'An error occurred')
+      } finally {
+        setLoading(false)
       }
-
-      setProfileUser(userData)
-
-      // Fetch user's projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', userData.id)
-        .order('created_at', { ascending: false })
-
-      if (projectsError) throw projectsError
-
-      setProjects(projectsData || [])
-    } catch (err) {
-      console.error('Profile error:', err)
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
     }
-  }
 
-  fetchProfileData()
+    fetchProfileData()
   }, [username, currentUser, navigate])
+
+  // if (loading) {
+  //   return (
+  //     <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
+  //       <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
+  //     </div>
+  //   )
+  // }
 
   if (error || !profileUser) {
     return (
@@ -138,44 +145,10 @@ export default function Profile() {
           <div className="max-w-4xl mx-auto px-4 -mt-24">
             <div className="space-y-6">
               {/* Profile Header */}
-              {/* <div className="flex justify-between items-start">
-                <div className="flex items-end gap-4">
-                  <Avatar className="w-32 h-32 border-4 border-[#1B2228] rounded-full">
-                    <AvatarImage src={user.avatar_url || '/placeholder.svg'} alt={user.full_name || user.username} />
-                    <AvatarFallback className="text-2xl">
-                      {user.first_name?.[0]}{user.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="mb-4">
-                    <h1 className={`text-2xl font-bold ${textColor}`}>
-                      {user.full_name || user.username}
-                    </h1>
-                    <p className={mutedTextColor}>@{user.username}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/20`}
-                    onClick={() => navigate('/edit-profile')}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/20`}
-                    onClick={() => setIsShareModalOpen(true)}
-                  >
-                    <Share className="w-4 h-4 mr-2" />
-                    Share
-                  </Button>
-                </div>
-              </div> */}
               <div className="flex justify-between items-start">
               <div className="flex items-end gap-4">
                 <Avatar className="w-32 h-32 border-4 border-[#1B2228] rounded-full">
-                  <AvatarImage src={profileUser.avatar_url || '/placeholder.svg'} alt={profileUser.full_name || profileUser.username} />
+                  <AvatarImage src={profileUser.avatar_url || '/placeholder.svg'} alt={profileUser.username} />
                   <AvatarFallback className="text-2xl">
                     {profileUser.first_name?.[0]}{profileUser.last_name?.[0]}
                   </AvatarFallback>
@@ -216,17 +189,17 @@ export default function Profile() {
                   <CardContent className="p-6">
                     <h2 className={`text-lg font-bold ${textColor} mb-4`}>Details</h2>
                     <div className={`space-y-3 ${mutedTextColor}`}>
-                      {user.work_experience && (
-                        <p>{user.work_experience} years of experience</p>
+                      {profileUser.work_experience && (
+                        <p>{profileUser.work_experience} years of experience</p>
                       )}
-                      {user.current_employer && (
-                        <p>Works at {user.current_employer}</p>
+                      {profileUser.current_employer && (
+                        <p>Works at {profileUser.current_employer}</p>
                       )}
-                      {user.location && (
-                        <p>Based in {user.location}</p>
+                      {profileUser.location && (
+                        <p>Based in {profileUser.location}</p>
                       )}
-                      {user.bio && (
-                        <p>{user.bio}</p>
+                      {profileUser.bio && (
+                        <p>{profileUser.bio}</p>
                       )}
                     </div>
                   </CardContent>
@@ -236,11 +209,11 @@ export default function Profile() {
                   <CardContent className="p-6">
                     <h2 className={`text-lg font-bold ${textColor} mb-4`}>Skills</h2>
                     <div className="space-y-4">
-                      {user.frontend_skills?.length > 0 && (
+                      {profileUser.frontend_skills?.length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>FRONTEND</h3>
                           <div className="flex flex-wrap gap-2">
-                            {user.frontend_skills.map((skill) => (
+                            {profileUser.frontend_skills.map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -252,11 +225,11 @@ export default function Profile() {
                         </div>
                       )}
                       
-                      {user.backend_skills?.length > 0 && (
+                      {profileUser.backend_skills?.length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>BACKEND</h3>
                           <div className="flex flex-wrap gap-2">
-                            {user.backend_skills.map((skill) => (
+                            {profileUser.backend_skills.map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -268,11 +241,11 @@ export default function Profile() {
                         </div>
                       )}
                       
-                      {user.blockchain_skills?.length > 0 && (
+                      {profileUser.blockchain_skills?.length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>BLOCKCHAIN</h3>
                           <div className="flex flex-wrap gap-2">
-                            {user.blockchain_skills.map((skill) => (
+                            {profileUser.blockchain_skills.map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -293,7 +266,7 @@ export default function Profile() {
                 <div className="flex gap-8">
                   <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
-                      {Object.entries(user.total_earnings || {}).map(([token, amount]) => (
+                      {Object.entries(profileUser.total_earnings || {}).map(([token, amount]) => (
                         <span key={token} className="mr-2">
                           {amount.toLocaleString()} {token}
                         </span>
@@ -303,54 +276,54 @@ export default function Profile() {
                   </div>
                   <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
-                      {user.completed_projects_count || 0}
+                      {profileUser.completed_projects_count || 0}
                     </p>
                     <p className={`text-sm ${mutedTextColor}`}>Projects Completed</p>
                   </div>
                   <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
-                      {user.completed_bounties_count || 0}
+                      {profileUser.completed_bounties_count || 0}
                     </p>
                     <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  {user.twitter_url && (
+                  {profileUser.twitter_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(user.twitter_url, '_blank')}
+                      onClick={() => window.open(profileUser.twitter_url, '_blank')}
                     >
                       <Twitter className="w-5 h-5" />
                     </Button>
                   )}
-                  {user.linkedin_url && (
+                  {profileUser.linkedin_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(user.linkedin_url, '_blank')}
+                      onClick={() => window.open(profileUser.linkedin_url, '_blank')}
                     >
                       <Linkedin className="w-5 h-5" />
                     </Button>
                   )}
-                  {user.github_url && (
+                  {profileUser.github_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(user.github_url, '_blank')}
+                      onClick={() => window.open(profileUser.github_url, '_blank')}
                     >
                       <Github className="w-5 h-5" />
                     </Button>
                   )}
-                  {user.website_url && (
+                  {profileUser.website_url && (
                     <Button 
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(user.website_url, '_blank')}
+                      onClick={() => window.open(profileUser.website_url, '_blank')}
                     >
                       <Globe className="w-5 h-5" />
                     </Button>
