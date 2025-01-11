@@ -56,11 +56,12 @@ export interface UserAchievement {
   user_id: string
   project_id?: string
   bounty_id?: string
-  type: 'project' | 'bounty'
+  type: 'project' | 'bounty' | 'grant' | 'hackathon'
   status: Status
   earnings?: {
     amount: number
     token: string
+    Prize: string
   }
   completed_at: string
   created_at: string
@@ -104,6 +105,8 @@ export interface User {
   }
   completed_projects_count?: number
   completed_bounties_count?: number
+  completed_grants_count?: number
+  completed_hackathons_count?: number
   
   is_private: boolean              // Required but with default
   created_at: string              // Required but auto-generated
@@ -116,7 +119,6 @@ export interface ProofOfWork {
   title: string
   description: string
   category: ProjectCategory
-  status: ProjectStatus
   skills: string[]         // Array of skill IDs
   project_url: string
   created_at: string

@@ -55,8 +55,7 @@ const App = () => {
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
-              
-              {/* Profile routes with username parameter */}
+              <Route path="/proofofwork" element={<ProofofWork />} />
               <Route 
                 path="/profile" 
                 element={
@@ -73,14 +72,6 @@ const App = () => {
                 element={
                   <ProtectedRoute user={user} loading={loading}>
                     <EditProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/proofofwork"
-                element={
-                  <ProtectedRoute user={user} loading={loading}>
-                    <ProofofWork />
                   </ProtectedRoute>
                 }
               />

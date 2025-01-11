@@ -70,9 +70,6 @@ export default function Profile() {
         setLoading(true)
         setError(null)
 
-        console.log("username", username)
-        console.log("currentUser", currentUser?.id)
-
         if (!username && currentUser) {
           setProfileUser(currentUser)
           navigate(`/profile/${currentUser.username}`, { replace: true })
@@ -93,13 +90,13 @@ export default function Profile() {
 
         setProfileUser(userData)
 
-        // const { data: projectsData, error: projectsError } = await supabase
-        //   .from('projects')
-        //   .select('*')
-        //   .eq('creator_id', userData.id)  // Changed from user_id to creator_id
-        //   .order('created_at', { ascending: false })
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', userData.id)
+          .order('created_at', { ascending: false })
 
-        // if (projectsError) throw projectsError
+        if (projectsError) throw projectsError
 
         setProjects(projectsData || [])
       } catch (err: any) {
@@ -272,7 +269,13 @@ export default function Profile() {
                         </span>
                       ))}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Total Earned</p>
+                    <p className={`text-sm ${mutedTextColor}`}>Total Reward</p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-xl font-bold ${textColor}`}>
+                      {profileUser.completed_bounties_count || 0}
+                    </p>
+                    <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
                   </div>
                   <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
@@ -282,9 +285,15 @@ export default function Profile() {
                   </div>
                   <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
-                      {profileUser.completed_bounties_count || 0}
+                      {profileUser.completed_grants_count || 0}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
+                    <p className={`text-sm ${mutedTextColor}`}>Grant Completed</p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-xl font-bold ${textColor}`}>
+                      {profileUser.completed_hackathons_count || 0}
+                    </p>
+                    <p className={`text-sm ${mutedTextColor}`}>Hackathon Completed</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -293,7 +302,7 @@ export default function Profile() {
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(profileUser.twitter_url, '_blank')}
+                      onClick={() => profileUser.twitter_url && window.open(profileUser.twitter_url, '_blank')}
                     >
                       <Twitter className="w-5 h-5" />
                     </Button>
@@ -303,7 +312,7 @@ export default function Profile() {
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(profileUser.linkedin_url, '_blank')}
+                      onClick={() => profileUser.linkedin_url && window.open(profileUser.linkedin_url, '_blank')}
                     >
                       <Linkedin className="w-5 h-5" />
                     </Button>
@@ -313,7 +322,7 @@ export default function Profile() {
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(profileUser.github_url, '_blank')}
+                      onClick={() => profileUser.github_url && window.open(profileUser.github_url, '_blank')}
                     >
                       <Github className="w-5 h-5" />
                     </Button>
@@ -323,7 +332,7 @@ export default function Profile() {
                       variant="ghost" 
                       size="icon"
                       className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
-                      onClick={() => window.open(profileUser.website_url, '_blank')}
+                      onClick={() => profileUser.website_url && window.open(profileUser.website_url, '_blank')}
                     >
                       <Globe className="w-5 h-5" />
                     </Button>

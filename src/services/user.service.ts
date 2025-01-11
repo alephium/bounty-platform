@@ -1,8 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { User } from '../types/supabase'
 
-console.log("session!!!",supabase.auth.getSession());
-
 export class UserService {
   static async getCurrentUser(): Promise<User | null> {
     try {
@@ -17,8 +15,6 @@ export class UserService {
         .select('*')
         .eq('id', session.user.id)
         .single()
-
-        console.log(data)
 
       if (error) throw error
       return data
@@ -58,9 +54,6 @@ export class UserService {
         .select('*')
         .eq('id', supabaseUser.id)
         .single()
-
-      console.log("Fetch result:", { existingUser, error })  // Safe debugging
-
       if (existingUser) {
         return existingUser
       }

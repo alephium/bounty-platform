@@ -24,7 +24,6 @@ export default function Home() {
   const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
   const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
-  console.log('user check', user?.avatar_url)
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)

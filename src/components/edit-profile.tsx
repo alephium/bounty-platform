@@ -193,15 +193,35 @@ export default function EditProfile() {
                     {[
                       {
                         category: "Frontend",
-                        skills: ["React", "Vue", "Angular"]
+                        skills: [
+                          "React", "Vue", "Angular", "Next.js", "Nuxt", "TypeScript",
+                          "HTML5", "CSS3", "Sass/SCSS", "Tailwind CSS", "Material UI",
+                          "Redux", "Vuex", "GraphQL", "Jest", "Cypress", "WebPack",
+                          "Vite", "Three.js", "D3.js", "Bootstrap", "jQuery", "PWA",
+                          "Responsive Design", "Web Components", "Svelte", "Gatsby"
+                        ]
                       },
                       {
                         category: "Backend",
-                        skills: ["Javascript", "Python", "C++"]
+                        skills: [
+                          "JavaScript", "Python", "C++", "Java", "Go", "Ruby",
+                          "Node.js", "Django", "Flask", "Spring Boot", "Express",
+                          "NestJS", "FastAPI", "Ruby on Rails", "PHP", "Laravel",
+                          "PostgreSQL", "MongoDB", "MySQL", "Redis", "Docker",
+                          "Kubernetes", "AWS", "GCP", "Azure", "CI/CD", "GraphQL",
+                          "REST API", "WebSocket", "Microservices", "System Design"
+                        ]
                       },
                       {
                         category: "Blockchain",
-                        skills: ["Rust", "Solidity"]
+                        skills: [
+                          "Rust", "Solidity", "Move", "Cairo", "Web3.js", "Ethers.js",
+                          "Hardhat", "Truffle", "Foundry", "Smart Contracts", "DeFi",
+                          "NFT Development", "Layer 2", "IPFS", "Cosmos SDK", "Substrate",
+                          "Zero Knowledge", "Chainlink", "The Graph", "DApp Development",
+                          "MetaMask Integration", "WalletConnect", "Starknet", "zkSync",
+                          "Cross-chain", "EVM", "Solana", "Aptos", "Sui", "Polkadot"
+                        ]
                       }
                     ].map((category) => (
                       <div key={category.category}>
