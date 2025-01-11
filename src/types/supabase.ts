@@ -2,6 +2,9 @@ export type Category = 'content' | 'design' | 'development' | 'other'
 export type Status = 'open' | 'in review' | 'completed'
 export type Web3Interest = 'defi' | 'nft' | 'dao' | 'other'
 export type WorkExperience = '0-2' | '2-5' | '5-10' | '10+'
+export type ProjectCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
+export type ProjectStatus = 'published' | 'draft' | 'archived'
+export type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
 
 // Project, Bounty, and Grant interfaces remain the same
 export interface Project {
@@ -48,6 +51,22 @@ export interface Grant {
   updated_at: string
 }
 
+export interface UserAchievement {
+  id: string
+  user_id: string
+  project_id?: string
+  bounty_id?: string
+  type: 'project' | 'bounty'
+  status: Status
+  earnings?: {
+    amount: number
+    token: string
+  }
+  completed_at: string
+  created_at: string
+  updated_at: string
+}
+
 // Updated User interface with minimal required fields
 export interface User {
   id: string
@@ -78,13 +97,43 @@ export interface User {
   frontend_skills: string[] | null
   backend_skills: string[] | null
   blockchain_skills: string[] | null
+
+  achievements?: UserAchievement[]
+  total_earnings?: {
+    [key: string]: number  // token -> amount mapping
+  }
+  completed_projects_count?: number
+  completed_bounties_count?: number
   
   is_private: boolean              // Required but with default
   created_at: string              // Required but auto-generated
   updated_at: string              // Required but auto-generated
 }
 
+export interface ProofOfWork {
+  id: string
+  user_id: string
+  title: string
+  description: string
+  category: ProjectCategory
+  status: ProjectStatus
+  skills: string[]         // Array of skill IDs
+  project_url: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Skill {
+  id: string
+  name: string
+  category: SkillCategory
+  created_at: string
+  updated_at: string
+}
+
+
 export type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'>
 export type BountyInsert = Omit<Bounty, 'id' | 'created_at' | 'updated_at'>
 export type GrantInsert = Omit<Grant, 'id' | 'created_at' | 'updated_at'>
 export type UserUpdate = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
+export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated_at'>

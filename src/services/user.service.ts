@@ -17,29 +17,35 @@ export class UserService {
 
   static async createOrUpdateUser(supabaseUser: any): Promise<User | null> {
     try {
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', supabaseUser.id)
         .single()
 
-      if (existingUser) return existingUser
+      console.log("Fetch result:", { existingUser, error })  // Safe debugging
 
+      if (existingUser) {
+        return existingUser
+      }
+
+      // Only proceed to create if we definitely don't have a user
       const newUser: Partial<User> = {
         id: supabaseUser.id,
         email: supabaseUser.email,
-        full_name: supabaseUser.user_metadata.full_name,
-        avatar_url: supabaseUser.user_metadata.avatar_url,
+        full_name: supabaseUser.user_metadata?.full_name,
+        avatar_url: supabaseUser.user_metadata?.avatar_url,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-      const { data, error } = await supabase
+
+      const { data, error: insertError } = await supabase
         .from('users')
         .insert([newUser])
         .select()
         .single()
 
-      if (error) throw error
+      if (insertError) throw insertError
       return data
     } catch (error) {
       console.error('Error in createOrUpdateUser:', error)
