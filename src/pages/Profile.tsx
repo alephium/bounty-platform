@@ -12,6 +12,85 @@ import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
 import { Project, User } from '../types/supabase'
 import { toast } from "sonner"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
+
+type SkillOption = {
+  value: string;
+  label: string;
+}
+
+const skillOptions:Record<SkillCategory, SkillOption[]> = {
+  frontend: [
+    { value: "react", label: "React" },
+    { value: "vue", label: "Vue.js" },
+    { value: "angular", label: "Angular" },
+    { value: "nextjs", label: "Next.js" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "html", label: "HTML5" },
+    { value: "css", label: "CSS3" },
+    { value: "tailwind", label: "Tailwind CSS" },
+    { value: "sass", label: "Sass/SCSS" },
+    { value: "mui", label: "Material UI" }
+  ],
+  backend: [
+    { value: "nodejs", label: "Node.js" },
+    { value: "python", label: "Python" },
+    { value: "java", label: "Java" },
+    { value: "csharp", label: "C#" },
+    { value: "golang", label: "Go" },
+    { value: "ruby", label: "Ruby" },
+    { value: "php", label: "PHP" },
+    { value: "postgresql", label: "PostgreSQL" },
+    { value: "mongodb", label: "MongoDB" },
+    { value: "mysql", label: "MySQL" },
+    { value: "redis", label: "Redis" },
+    { value: "docker", label: "Docker" }
+  ],
+  blockchain: [
+    { value: "solidity", label: "Solidity" },
+    { value: "rust", label: "Rust" },
+    { value: "ralph", label: "Ralph" },
+    { value: "web3js", label: "Web3.js" },
+    { value: "ethersjs", label: "Ethers.js" },
+    { value: "hardhat", label: "Hardhat" },
+    { value: "truffle", label: "Truffle" },
+    { value: "defi", label: "DeFi Development" },
+    { value: "nft", label: "NFT Development" },
+    { value: "smartcontracts", label: "Smart Contracts" },
+    { value: "ipfs", label: "IPFS" }
+  ],
+  design: [
+    { value: "figma", label: "Figma" },
+    { value: "sketch", label: "Sketch" },
+    { value: "adobe_xd", label: "Adobe XD" },
+    { value: "photoshop", label: "Photoshop" },
+    { value: "illustrator", label: "Illustrator" },
+    { value: "ui_design", label: "UI Design" },
+    { value: "ux_design", label: "UX Design" },
+    { value: "motion", label: "Motion Design" },
+    { value: "3d", label: "3D Design" }
+  ],
+  content: [
+    { value: "writing", label: "Content Writing" },
+    { value: "editing", label: "Content Editing" },
+    { value: "seo", label: "SEO Writing" },
+    { value: "technical", label: "Technical Writing" },
+    { value: "copywriting", label: "Copywriting" },
+    { value: "social", label: "Social Media" },
+    { value: "research", label: "Research" },
+    { value: "storytelling", label: "Storytelling" }
+  ]
+};
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -24,7 +103,21 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [copied, setCopied] = useState(false)
-
+  const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false)
+  const [description, setDescription] = useState("")
+  const maxLength = 180
+  const [selectedCategory, setSelectedCategory] = useState("")
+  const [selectedSubSkill, setSelectedSubSkill] = useState("")
+  const [projectTitle, setProjectTitle] = useState("")
+  const [projectUrl, setProjectUrl] = useState("")
+  const [formErrors, setFormErrors] = useState({
+    title: false,
+    description: false,
+    category: false,
+    subSkill: false,
+    url: false
+  })
+  // console.log('user',currentUser, profileUser)
   // Theme-based styling
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
@@ -63,7 +156,7 @@ export default function Profile() {
     }
     if (url) window.open(url, "_blank")
   }
-
+  
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -91,10 +184,10 @@ export default function Profile() {
         setProfileUser(userData)
 
         const { data: projectsData, error: projectsError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', userData.id)
-          .order('created_at', { ascending: false })
+        .from('proof_of_work')
+        .select('*')
+        .eq('user_id', userData.id)  // Changed from 'id' to 'user_id'
+        .order('created_at', { ascending: false })
 
         if (projectsError) throw projectsError
 
@@ -109,14 +202,6 @@ export default function Profile() {
 
     fetchProfileData()
   }, [username, currentUser, navigate])
-
-  // if (loading) {
-  //   return (
-  //     <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
-  //       <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
-  //     </div>
-  //   )
-  // }
 
   if (error || !profileUser) {
     return (
@@ -133,7 +218,6 @@ export default function Profile() {
   }
 
   const isOwnProfile = currentUser?.id === profileUser.id
-
   return (
     <>
       <div className={`min-h-screen ${bgColor}`}>
@@ -150,6 +234,7 @@ export default function Profile() {
                     {profileUser.first_name?.[0]}{profileUser.last_name?.[0]}
                   </AvatarFallback>
                 </Avatar>
+                
                 <div className="mb-4">
                   <h1 className={`text-2xl font-bold ${textColor}`}>
                     {profileUser.full_name || profileUser.username}
@@ -359,17 +444,53 @@ export default function Profile() {
                         {projects.map((project) => (
                           <Card key={project.id} className={`${cardBg} border-${borderColor}`}>
                             <CardContent className="p-4">
-                              <h3 className={`font-medium ${textColor}`}>{project.title}</h3>
-                              <p className={`mt-2 ${mutedTextColor}`}>{project.description}</p>
-                              <div className="mt-4 flex items-center gap-2">
-                                <Badge>{project.category}</Badge>
-                                <Badge variant="outline">{project.status}</Badge>
+                              {/* Project Title */}
+                              <h3 className={`font-medium ${textColor}`}>
+                                {project.title}
+                              </h3>
+                              
+                              {/* Project Description */}
+                              <p className={`mt-2 ${mutedTextColor}`}>
+                                {project.description}
+                              </p>
+                              
+                              {/* Category and Skills */}
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                {/* Main Category Badge */}
+                                <Badge className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30">
+                                  {project.category}
+                                </Badge>
+                                
+                                {/* Skills Badges */}
+                                {project.skills?.map((skill, index) => (
+                                  <Badge 
+                                    key={`${skill}-${index}`}
+                                    variant="outline" 
+                                    className="border-[#C1A461]/20 text-[#C1A461]"
+                                  >
+                                    {skill}
+                                  </Badge>
+                                ))}
                               </div>
+
+                              {/* Project URL */}
+                              {project.project_url && (
+                                <a 
+                                  href={project.project_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`mt-3 inline-flex items-center text-sm ${mutedTextColor} hover:${textColor}`}
+                                >
+                                  <Globe className="w-4 h-4 mr-1" />
+                                  View Project
+                                </a>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
                       </div>
                     ) : (
+                      // Your existing "No projects" view
                       <div className="text-center space-y-4">
                         <div className="w-20 h-20 bg-[#C1A461]/10 rounded-full flex items-center justify-center mx-auto">
                           <div className="w-8 h-8 bg-[#C1A461]/20 rounded" />
@@ -378,7 +499,7 @@ export default function Profile() {
                         <div className="flex flex-col gap-2 max-w-xs mx-auto">
                           <Button 
                             className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-                            onClick={() => navigate('/proofofwork')}
+                            onClick={() => setIsAddProjectModalOpen(true)}
                           >
                             Add Project
                           </Button>
@@ -388,80 +509,246 @@ export default function Profile() {
                   </TabsContent>
                 </Tabs>
               </div>
+
+              {isAddProjectModalOpen && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                <Card className="w-full max-w-2xl bg-[#1B2228] border-[#C1A461]/20">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-[#C1A461] text-2xl font-semibold">Add Project</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
+                      onClick={() => setIsAddProjectModalOpen(false)}
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[#C1A461]">
+                        Project Title <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        placeholder="Project Title"
+                        value={projectTitle}
+                        onChange={(e) => setProjectTitle(e.target.value)}
+                        className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40"
+                      />
+                    </div>
+
+
+                    <div className="space-y-2">
+                      <Label className="text-[#C1A461]">
+                        Description <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Textarea
+                          placeholder="Project Description"
+                          className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40 min-h-[120px]"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          maxLength={maxLength}
+                        />
+                        <span className="absolute bottom-2 right-2 text-sm text-[#C1A461]/60">
+                          {maxLength - description.length} characters left
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[#C1A461]">
+                        Skills <span className="text-red-500">*</span>
+                      </Label>
+                      <Select onValueChange={setSelectedCategory} value={selectedCategory}>
+                        <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus:ring-[#C1A461]">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                          <SelectItem value="frontend">Frontend Development</SelectItem>
+                          <SelectItem value="backend">Backend Development</SelectItem>
+                          <SelectItem value="blockchain">Blockchain Development</SelectItem>
+                          <SelectItem value="design">Design</SelectItem>
+                          <SelectItem value="content">Content</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[#C1A461]">
+                        Sub Skills <span className="text-red-500">*</span>
+                      </Label>
+                      <Select 
+                        onValueChange={setSelectedSubSkill} 
+                        value={selectedSubSkill}
+                        disabled={!selectedCategory}
+                      >
+                        <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus:ring-[#C1A461]">
+                          <SelectValue placeholder={selectedCategory ? "Select sub-skill..." : "Select a skill first"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                          {selectedCategory && skillOptions[selectedCategory].map(skill => (
+                            <SelectItem key={skill.value} value={skill.value}>
+                              {skill.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[#C1A461]">
+                        Link <span className="text-red-500">*</span>
+                      </Label>
+                      <Input 
+                        placeholder="https://example.com"
+                        value={projectUrl}
+                        onChange={(e) => setProjectUrl(e.target.value)}
+                        className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40"
+                      />
+                    </div>
+
+                    <Button 
+                      className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                      onClick={async () => {
+                        // Validate all fields
+                        if (!projectTitle || !description || !selectedCategory || !selectedSubSkill || !projectUrl) {
+                          toast.error("Please fill in all required fields")
+                          return
+                        }
+
+                        // Validate URL
+                        try {
+                          new URL(projectUrl)
+                        } catch {
+                          toast.error("Please enter a valid URL")
+                          return
+                        }
+
+                        try {
+                          const newProof: ProofOfWorkInsert = {
+                            user_id: currentUser?.id ?? '',
+                            title: projectTitle,
+                            description: description,
+                            category: selectedCategory as ProjectCategory,
+                            skills: [selectedSubSkill], // Array of skill IDs
+                            project_url: projectUrl,
+                          }
+
+                          // Insert into Supabase
+                          const { error } = await supabase
+                            .from('proof_of_work')
+                            .insert([newProof])
+
+                          if (error) throw error
+
+                          // Refresh the projects list
+                          const { data: updatedProofs } = await supabase
+                            .from('proof_of_work')
+                            .select('*')
+                            .eq('user_id', currentUser?.id)
+                            .order('created_at', { ascending: false })
+
+                          if (updatedProofs) {
+                            setProjects(updatedProofs)
+                          }
+
+                          toast.success("Project added successfully!")
+                          setIsAddProjectModalOpen(false)
+                          
+                          // Reset form
+                          setProjectTitle("")
+                          setDescription("")
+                          setSelectedCategory("")
+                          setSelectedSubSkill("")
+                          setProjectUrl("")
+
+                        } catch (error) {
+                          console.error('Error adding project:', error)
+                          toast.error("Failed to add project")
+                        }
+                      }}
+                    >
+                      Add Project
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+              )}
             </div>
           </div>
-        </div>
-        {isShareModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-lg bg-[#1B2228] border-[#C1A461]/20">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-[#C1A461] text-2xl font-semibold">Share Profile</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
-                  onClick={() => setIsShareModalOpen(false)}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-[#C1A461]/60 text-lg">
-                  Share your profile with friends or on social media to showcase your proof of work, all in one place
-                </p>
+      </div>
+      {isShareModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-lg bg-[#1B2228] border-[#C1A461]/20">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-[#C1A461] text-2xl font-semibold">Share Profile</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
+                onClick={() => setIsShareModalOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-[#C1A461]/60 text-lg">
+                Share your profile with friends or on social media to showcase your proof of work, all in one place
+              </p>
 
-                <div className="flex gap-2">
-                  <Input
-                    readOnly
-                    value={shareUrl}
-                    className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
-                  />
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={shareUrl}
+                  className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
+                />
+                <Button
+                  variant="outline"
+                  className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
+                  onClick={handleCopy}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-[#C1A461]/60 uppercase text-sm font-medium">Share to</h3>
+                <div className="flex gap-4">
                   <Button
                     variant="outline"
-                    className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
-                    onClick={handleCopy}
+                    size="icon"
+                    className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
+                    onClick={() => handleShare("twitter")}
                   >
-                    <Copy className="h-4 w-4" />
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
+                    onClick={() => handleShare("telegram")}
+                  >
+                    <Send className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
+                    onClick={() => handleShare("whatsapp")}
+                  >
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
                   </Button>
                 </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-[#C1A461]/60 uppercase text-sm font-medium">Share to</h3>
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
-                      onClick={() => handleShare("twitter")}
-                    >
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
-                      onClick={() => handleShare("telegram")}
-                    >
-                      <Send className="w-5 h-5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="rounded-full w-12 h-12 border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
-                      onClick={() => handleShare("whatsapp")}
-                    >
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </>
-    )
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
+  )
 }

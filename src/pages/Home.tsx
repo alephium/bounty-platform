@@ -29,6 +29,7 @@ export default function Home() {
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
   }
 
+
   return (
     <div className={`min-h-screen ${bgColor} w-full px-4`}>
       <div className="max-w-7xl mx-auto">

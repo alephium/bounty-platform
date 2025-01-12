@@ -14,7 +14,6 @@ import { Hackathon } from './pages/Hackathon'
 import Profile from './pages/Profile'
 import EditProfile from './pages/EditProfile'
 import AuthPage from './pages/Auth'
-import ProofofWork from './pages/ProofofWork'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -55,7 +54,6 @@ const App = () => {
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
-              <Route path="/proofofwork" element={<ProofofWork />} />
               <Route 
                 path="/profile" 
                 element={

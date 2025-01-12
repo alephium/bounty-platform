@@ -2,7 +2,7 @@ export type Category = 'content' | 'design' | 'development' | 'other'
 export type Status = 'open' | 'in review' | 'completed'
 export type Web3Interest = 'defi' | 'nft' | 'dao' | 'other'
 export type WorkExperience = '0-2' | '2-5' | '5-10' | '10+'
-export type ProjectCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
+export type ProjectCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
 export type ProjectStatus = 'published' | 'draft' | 'archived'
 export type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
 
@@ -114,15 +114,12 @@ export interface User {
 }
 
 export interface ProofOfWork {
-  id: string
   user_id: string
   title: string
   description: string
   category: ProjectCategory
   skills: string[]         // Array of skill IDs
   project_url: string
-  created_at: string
-  updated_at: string
 }
 
 export interface Skill {
