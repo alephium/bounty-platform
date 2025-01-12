@@ -10,9 +10,10 @@ import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
 import { Projects } from './pages/Projects'
 import { Grants } from './pages/Grants'
-import { Hackathon } from './pages/Hackathon'
+import Hackathon from './pages/Hackathon'
 import Prize  from './pages/Prize'
 import Profile from './pages/Profile'
+import Submit from './pages/Submit'
 import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 
@@ -56,7 +57,8 @@ const App = () => {
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
               <Route path="/editprofile" element={<EditProfile />} />
-              <Route path="/prize" element={<Prize />} />
+              <Route path="/hackathon/prize" element={<Prize />} />
+              <Route path="/hackathon/submit" element={<Submit />} />
               <Route 
                 path="/profile" 
                 element={
