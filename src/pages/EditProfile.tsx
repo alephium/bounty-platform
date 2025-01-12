@@ -1,48 +1,427 @@
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { ChangeEvent, FormEvent, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Upload, Github, Twitter, Linkedin, Globe, MessageCircle, Loader2 } from 'lucide-react'
+import { User } from '../types/supabase'
+import { UserService } from '../services/user.service'
+import { useUser } from '../contexts/UserContext'
+import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Textarea } from '../components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Checkbox } from "@/components/ui/checkbox"
-import { X, Upload, Github, Twitter, Linkedin, Globe, MessageCircle } from 'lucide-react'
-import { useTheme } from '@/contexts/ThemeContext'
+} from '../components/ui/select'
+import { Badge } from '../components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
+import { Checkbox } from '../components/ui/checkbox'
+import { useToast } from '../components/ui/use-toast'
+import { useTheme } from '../contexts/ThemeContext'
 
-export default function EditProfile() {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+interface FormData {
+  username: string
+  firstName: string
+  lastName: string
+  bio: string
+  walletAddress: string
+  githubUrl: string
+  twitterUrl: string
+  linkedinUrl: string
+  telegramUrl: string
+  websiteUrl: string
+  currentEmployer: string
+  web3Interests: string[]
+  workExperience: string
+  location: string
+}
+
+interface FormErrors {
+  [key: string]: string
+}
+
+type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
+
+interface SkillOption {
+  value: string
+  label: string
+}
+
+const skillOptions: Record<SkillCategory, SkillOption[]> = {
+  frontend: [
+    { value: "react", label: "React" },
+    { value: "vue", label: "Vue.js" },
+    { value: "angular", label: "Angular" },
+    { value: "nextjs", label: "Next.js" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "html", label: "HTML5" },
+    { value: "css", label: "CSS3" },
+    { value: "tailwind", label: "Tailwind CSS" },
+    { value: "sass", label: "Sass/SCSS" },
+    { value: "mui", label: "Material UI" }
+  ],
+  backend: [
+    { value: "nodejs", label: "Node.js" },
+    { value: "python", label: "Python" },
+    { value: "java", label: "Java" },
+    { value: "csharp", label: "C#" },
+    { value: "golang", label: "Go" },
+    { value: "ruby", label: "Ruby" },
+    { value: "php", label: "PHP" },
+    { value: "postgresql", label: "PostgreSQL" },
+    { value: "mongodb", label: "MongoDB" },
+    { value: "mysql", label: "MySQL" },
+    { value: "redis", label: "Redis" },
+    { value: "docker", label: "Docker" }
+  ],
+  blockchain: [
+    { value: "solidity", label: "Solidity" },
+    { value: "rust", label: "Rust" },
+    { value: "ralph", label: "Ralph" },
+    { value: "web3js", label: "Web3.js" },
+    { value: "ethersjs", label: "Ethers.js" },
+    { value: "hardhat", label: "Hardhat" },
+    { value: "truffle", label: "Truffle" },
+    { value: "defi", label: "DeFi Development" },
+    { value: "nft", label: "NFT Development" },
+    { value: "smartcontracts", label: "Smart Contracts" },
+    { value: "ipfs", label: "IPFS" }
+  ],
+  design: [
+    { value: "figma", label: "Figma" },
+    { value: "sketch", label: "Sketch" },
+    { value: "adobe_xd", label: "Adobe XD" },
+    { value: "photoshop", label: "Photoshop" },
+    { value: "illustrator", label: "Illustrator" },
+    { value: "ui_design", label: "UI Design" },
+    { value: "ux_design", label: "UX Design" },
+    { value: "motion", label: "Motion Design" },
+    { value: "3d", label: "3D Design" }
+  ],
+  content: [
+    { value: "writing", label: "Content Writing" },
+    { value: "editing", label: "Content Editing" },
+    { value: "seo", label: "SEO Writing" },
+    { value: "technical", label: "Technical Writing" },
+    { value: "copywriting", label: "Copywriting" },
+    { value: "social", label: "Social Media" },
+    { value: "research", label: "Research" },
+    { value: "storytelling", label: "Storytelling" }
+  ]
+}
+
+interface SelectedSkills extends Record<SkillCategory, string[]> {}
+
+const COUNTRIES = [
+  // Europe
+  { value: 'albania', label: 'Albania' },
+  { value: 'andorra', label: 'Andorra' },
+  { value: 'austria', label: 'Austria' },
+  { value: 'belgium', label: 'Belgium' },
+  { value: 'bulgaria', label: 'Bulgaria' },
+  { value: 'croatia', label: 'Croatia' },
+  { value: 'cyprus', label: 'Cyprus' },
+  { value: 'czech-republic', label: 'Czech Republic' },
+  { value: 'denmark', label: 'Denmark' },
+  { value: 'estonia', label: 'Estonia' },
+  { value: 'finland', label: 'Finland' },
+  { value: 'france', label: 'France' },
+  { value: 'germany', label: 'Germany' },
+  { value: 'greece', label: 'Greece' },
+  { value: 'hungary', label: 'Hungary' },
+  { value: 'iceland', label: 'Iceland' },
+  { value: 'ireland', label: 'Ireland' },
+  { value: 'italy', label: 'Italy' },
+  { value: 'latvia', label: 'Latvia' },
+  { value: 'liechtenstein', label: 'Liechtenstein' },
+  { value: 'lithuania', label: 'Lithuania' },
+  { value: 'luxembourg', label: 'Luxembourg' },
+  { value: 'malta', label: 'Malta' },
+  { value: 'monaco', label: 'Monaco' },
+  { value: 'netherlands', label: 'Netherlands' },
+  { value: 'norway', label: 'Norway' },
+  { value: 'poland', label: 'Poland' },
+  { value: 'portugal', label: 'Portugal' },
+  { value: 'romania', label: 'Romania' },
+  { value: 'slovakia', label: 'Slovakia' },
+  { value: 'slovenia', label: 'Slovenia' },
+  { value: 'spain', label: 'Spain' },
+  { value: 'sweden', label: 'Sweden' },
+  { value: 'switzerland', label: 'Switzerland' },
+  { value: 'united-kingdom', label: 'United Kingdom' },
+
+  // Asia
+  { value: 'afghanistan', label: 'Afghanistan' },
+  { value: 'bangladesh', label: 'Bangladesh' },
+  { value: 'bhutan', label: 'Bhutan' },
+  { value: 'brunei', label: 'Brunei' },
+  { value: 'cambodia', label: 'Cambodia' },
+  { value: 'china', label: 'China' },
+  { value: 'india', label: 'India' },
+  { value: 'indonesia', label: 'Indonesia' },
+  { value: 'japan', label: 'Japan' },
+  { value: 'kazakhstan', label: 'Kazakhstan' },
+  { value: 'korea-north', label: 'Korea, North' },
+  { value: 'korea-south', label: 'Korea, South' },
+  { value: 'kyrgyzstan', label: 'Kyrgyzstan' },
+  { value: 'laos', label: 'Laos' },
+  { value: 'malaysia', label: 'Malaysia' },
+  { value: 'maldives', label: 'Maldives' },
+  { value: 'mongolia', label: 'Mongolia' },
+  { value: 'myanmar', label: 'Myanmar' },
+  { value: 'nepal', label: 'Nepal' },
+  { value: 'pakistan', label: 'Pakistan' },
+  { value: 'philippines', label: 'Philippines' },
+  { value: 'singapore', label: 'Singapore' },
+  { value: 'sri-lanka', label: 'Sri Lanka' },
+  { value: 'taiwan', label: 'Taiwan' },
+  { value: 'tajikistan', label: 'Tajikistan' },
+  { value: 'thailand', label: 'Thailand' },
+  { value: 'timor-leste', label: 'Timor-Leste' },
+  { value: 'turkmenistan', label: 'Turkmenistan' },
+  { value: 'uzbekistan', label: 'Uzbekistan' },
+  { value: 'vietnam', label: 'Vietnam' },
+
+  // North America
+  { value: 'canada', label: 'Canada' },
+  { value: 'mexico', label: 'Mexico' },
+  { value: 'united-states', label: 'United States' },
+  { value: 'costa-rica', label: 'Costa Rica' },
+  { value: 'cuba', label: 'Cuba' },
+  { value: 'dominican-republic', label: 'Dominican Republic' },
+  { value: 'el-salvador', label: 'El Salvador' },
+  { value: 'guatemala', label: 'Guatemala' },
+  { value: 'haiti', label: 'Haiti' },
+  { value: 'honduras', label: 'Honduras' },
+  { value: 'jamaica', label: 'Jamaica' },
+  { value: 'nicaragua', label: 'Nicaragua' },
+  { value: 'panama', label: 'Panama' },
+  { value: 'trinidad-and-tobago', label: 'Trinidad and Tobago' },
+
+  // South America
+  { value: 'argentina', label: 'Argentina' },
+  { value: 'bolivia', label: 'Bolivia' },
+  { value: 'brazil', label: 'Brazil' },
+  { value: 'chile', label: 'Chile' },
+  { value: 'colombia', label: 'Colombia' },
+  { value: 'ecuador', label: 'Ecuador' },
+  { value: 'guyana', label: 'Guyana' },
+  { value: 'paraguay', label: 'Paraguay' },
+  { value: 'peru', label: 'Peru' },
+  { value: 'suriname', label: 'Suriname' },
+  { value: 'uruguay', label: 'Uruguay' },
+  { value: 'venezuela', label: 'Venezuela' }
+];
+
+const WEB3_INTERESTS = ['DeFi', 'NFTs', 'DAOs', 'GameFi', 'Infrastructure'] as const
+
+export const EditProfile = () => {
+  const navigate = useNavigate()
   const { theme } = useTheme()
+  const { toast } = useToast()
+  const { user, refreshUser } = useUser()
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  
+  const [selectedSkills, setSelectedSkills] = useState<SelectedSkills>({
+    frontend: user?.frontend_skills || [],
+    backend: user?.backend_skills || [],
+    blockchain: user?.blockchain_skills || [],
+    design: user?.design_skills || [],
+    content: user?.content_skills || []
+  })
 
-  const cardBg = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-500'
-  const inputBg = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const focusRing = theme === 'dark' ? 'focus-visible:ring-[#C1A461]' : 'focus-visible:ring-amber-500'
-  const badgeBg = theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'
-  const buttonHover = theme === 'dark' ? 'hover:bg-[#C1A461]/90' : 'hover:bg-amber-600'
-  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const hoverBg = theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-50'
-  const avatarBg = theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100'
-  const focusTextColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-amber-700'
-  const commonInputClasses = "bg-white dark:bg-[#1B2228] border-amber-200 dark:border-amber-500/20 text-gray-900 dark:text-[#C1A461] focus-visible:ring-amber-500 dark:focus-visible:ring-[#C1A461]"
-  const labelClasses = "text-gray-900 dark:text-[#C1A461]"
-  const mutedTextClasses = "text-gray-500 dark:text-[#C1A461]/60"
+  const [formData, setFormData] = useState<FormData>({
+    username: user?.username || '',
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    bio: user?.bio || '',
+    walletAddress: user?.wallet_address || '',
+    githubUrl: user?.github_url || '',
+    twitterUrl: user?.twitter_url || '',
+    linkedinUrl: user?.linkedin_url || '',
+    telegramUrl: user?.telegram_url || '',
+    websiteUrl: user?.website_url || '',
+    currentEmployer: user?.current_employer || '',
+    web3Interests: user?.web3_interests || [],
+    workExperience: user?.work_experience || '',
+    location: user?.location || '',
+  })
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'username':
+        if (!value) return 'Username is required'
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(value)) {
+          return 'Username must be 3-20 characters and can only contain letters, numbers, and underscores'
+        }
+        break
+      case 'walletAddress':
+        if (!value) return 'Wallet address is required'
+        break
+      case 'firstName':
+        if (!value) return 'First name is required'
+        break
+      case 'lastName':
+        if (!value) return 'Last name is required'
+        break
+      // URL validations
+      case 'githubUrl':
+      case 'twitterUrl':
+      case 'linkedinUrl':
+      case 'websiteUrl':
+        if (value && !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(value)) {
+          return 'Invalid URL format'
+        }
+        break
+    }
+    return ''
+  }
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    const error = validateField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    if (name === 'web3Interests') {
+      const values = value.split(',').filter(Boolean)
+      setFormData(prev => ({
+        ...prev,
+        [name]: values
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+  }
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 5MB",
+          variant: "destructive"
+        })
+        return
+      }
+      setAvatarFile(file)
+      setAvatarPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user) return null
+    
+    const fileExt = avatarFile.name.split('.').pop()
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`
+    
+    const { data, error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, avatarFile)
+      
+    if (error) throw error
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(fileName)
+      
+    return publicUrl
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!user?.id) return
+
+    setIsLoading(true)
+
+    try {
+      // Check username availability if it changed
+      if (formData.username !== user.username) {
+        const isAvailable = await UserService.isUsernameAvailable(formData.username)
+        if (!isAvailable) {
+          toast({
+            title: "Error",
+            description: "Username is already taken",
+            variant: "destructive"
+          })
+          return
+        }
+      }
+
+      let avatarUrl = user.avatar_url
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar()
+      }
+
+      const updates: Partial<User> = {
+        username: formData.username,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        bio: formData.bio,
+        wallet_address: formData.walletAddress,
+        github_url: formData.githubUrl,
+        twitter_url: formData.twitterUrl,
+        linkedin_url: formData.linkedinUrl,
+        telegram_url: formData.telegramUrl,
+        website_url: formData.websiteUrl,
+        current_employer: formData.currentEmployer,
+        web3_interests: formData.web3Interests,
+        work_experience: formData.workExperience,
+        location: formData.location,
+        frontend_skills: selectedSkills.frontend,
+        backend_skills: selectedSkills.backend,
+        blockchain_skills: selectedSkills.blockchain,
+        design_skills: selectedSkills.design,
+        content_skills: selectedSkills.content,
+        avatar_url: avatarUrl || undefined,
+        updated_at: new Date().toISOString()
+      }
+
+      const updatedUser = await UserService.updateProfile(user.id, updates)
+      if (!updatedUser) throw new Error('Failed to update profile')
+
+      await refreshUser()
+      
+      toast({
+        title: "Success",
+        description: "Profile updated successfully"
+      })
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} p-4`}>
+    <form onSubmit={handleSubmit} className={`min-h-screen ${bgColor} w-full px-4`}>
       <div className="max-w-3xl mx-auto">
-        <Card className={`${cardBg} ${borderColor}`}>
+        <Card className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-[#C1A461]">Edit Profile</CardTitle>
           </CardHeader>
@@ -52,414 +431,273 @@ export default function EditProfile() {
               <h2 className="text-lg font-semibold text-[#C1A461]">PERSONAL INFO</h2>
               
               <div className="space-y-4">
+                {/* Profile Picture */}
                 <div>
                   <Label>Profile Picture</Label>
                   <div className="mt-2 flex items-center gap-4">
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>YL</AvatarFallback>
+                      <AvatarImage src={avatarPreview || user?.avatar_url || "/placeholder.svg"} />
+                      <AvatarFallback>{formData.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 border-2 border-dashed border-[#C1A461]/20 rounded-lg p-4 text-center">
-                      <Button variant="outline" className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Choose or drag and drop media
-                      </Button>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="avatar-upload"
+                      />
+                      <Label htmlFor="avatar-upload" className="cursor-pointer">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Choose or drag and drop media
+                        </Button>
+                      </Label>
                       <p className="text-sm text-[#C1A461]/60 mt-2">Maximum size 5 MB</p>
                     </div>
                   </div>
                 </div>
 
-                <div>
+                {/* Username */}
+                <div className="space-y-1">
                   <Label htmlFor="username">Username *</Label>
                   <Input 
-                    id="username" 
-                    value="yy" 
-                    className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461] ${errors.username ? 'border-red-500' : ''}`}
+                    required
                   />
+                  {errors.username && (
+                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  )}
                 </div>
 
+                {/* First and Last Name */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="firstName">First Name *</Label>
                     <Input 
-                      id="firstName" 
-                      value="" 
-                      className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                        text-gray-900 dark:text-[#C1A461] ${errors.firstName ? 'border-red-500' : ''}`}
+                      required
                     />
+                    {errors.firstName && (
+                      <p className="text-red-500 text-sm">{errors.firstName}</p>
+                    )}
                   </div>
-                  <div>
+                  <div className="space-y-1">
                     <Label htmlFor="lastName">Last Name *</Label>
                     <Input 
-                      id="lastName" 
-                      value="" 
-                      className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                        text-gray-900 dark:text-[#C1A461] ${errors.lastName ? 'border-red-500' : ''}`}
+                      required
                     />
+                    {errors.lastName && (
+                      <p className="text-red-500 text-sm">{errors.lastName}</p>
+                    )}
                   </div>
                 </div>
 
-                <div>
+                {/* Bio */}
+                <div className="space-y-1">
                   <Label htmlFor="bio">Your One-Line Bio</Label>
                   <Textarea 
-                    id="bio" 
-                    placeholder=""
-                    className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461]"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="wallet">Your Alephium Wallet Address *</Label>
+                {/* Wallet Address */}
+                <div className="space-y-1">
+                  <Label htmlFor="walletAddress">Your Alephium Wallet Address *</Label>
                   <Input 
-                    id="wallet" 
-                    placeholder="Wallet Address"
-                    className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
+                    id="walletAddress"
+                    name="walletAddress"
+                    value={formData.walletAddress}
+                    onChange={handleInputChange}
+                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461] ${errors.walletAddress ? 'border-red-500' : ''}`}
+                    required
                   />
-                </div>
-              </div>
-            </section>
-
-            {/* Socials */}
-            <section className="space-y-6">
-              <h2 className="text-lg font-semibold text-[#C1A461]">SOCIALS</h2>
-              <div className="space-y-4">
-                {[
-                  { icon: Github, placeholder: "github.com/", value: "" },
-                  { icon: Twitter, placeholder: "x.com/", value: "" },
-                  { icon: Linkedin, placeholder: "linkedin.com/in/", value: "" },
-                  { icon: MessageCircle, placeholder: "t.me/", value: "" },
-                  { icon: Globe, placeholder: "https://", value: "" },
-                ].map((social, index) => (
-                  <div key={index} className="relative">
-                    <social.icon className="w-5 h-5 absolute left-3 top-2.5 text-[#C1A461]/60" />
-                    <Input 
-                      value={social.value}
-                      className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
-                      placeholder={social.placeholder}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Work */}
-            <section className="space-y-6">
-              <h2 className="text-lg font-semibold text-[#C1A461]">WORK</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label>What areas of Web3 are you most interested in?</Label>
-                  <Select>
-                    <SelectTrigger  className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectValue placeholder="Select areas" />
-                    </SelectTrigger>
-                    <SelectContent  className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectItem value="defi">DeFi</SelectItem>
-                      <SelectItem value="nft">NFTs</SelectItem>
-                      <SelectItem value="dao">DAOs</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {errors.walletAddress && (
+                    <p className="text-red-500 text-sm">{errors.walletAddress}</p>
+                  )}
                 </div>
 
-                <div>
-                  <Label>Community Affiliations</Label>
-                  <Select defaultValue="superteam">
-                    <SelectTrigger  className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectValue placeholder="Select community" />
-                    </SelectTrigger>
-                    <SelectContent className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectItem value="superteam">Superteam Germany</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Work Experience</Label>
-                  <Select defaultValue="2-5">
-                    <SelectTrigger  className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectValue placeholder="Select experience" />
-                    </SelectTrigger>
-                    <SelectContent className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}>
-                      <SelectItem value="0-1">0 to 1 Year</SelectItem>
-                      <SelectItem value="2-5">2 to 5 Years</SelectItem>
-                      <SelectItem value="5+">more than 5 Years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Location</Label>
-                  <Select defaultValue="">
-                    <SelectTrigger className={`${inputBg} ${borderColor} ${textColor}`}>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent className={`${cardBg} ${borderColor}`}>
-                      <SelectItem value="afghanistan">Afghanistan</SelectItem>
-                      <SelectItem value="albania">Albania</SelectItem>
-                      <SelectItem value="algeria">Algeria</SelectItem>
-                      <SelectItem value="andorra">Andorra</SelectItem>
-                      <SelectItem value="angola">Angola</SelectItem>
-                      <SelectItem value="antigua-and-barbuda">Antigua and Barbuda</SelectItem>
-                      <SelectItem value="argentina">Argentina</SelectItem>
-                      <SelectItem value="armenia">Armenia</SelectItem>
-                      <SelectItem value="australia">Australia</SelectItem>
-                      <SelectItem value="austria">Austria</SelectItem>
-                      <SelectItem value="azerbaijan">Azerbaijan</SelectItem>
-                      <SelectItem value="bahamas">Bahamas</SelectItem>
-                      <SelectItem value="bahrain">Bahrain</SelectItem>
-                      <SelectItem value="bangladesh">Bangladesh</SelectItem>
-                      <SelectItem value="barbados">Barbados</SelectItem>
-                      <SelectItem value="belarus">Belarus</SelectItem>
-                      <SelectItem value="belgium">Belgium</SelectItem>
-                      <SelectItem value="belize">Belize</SelectItem>
-                      <SelectItem value="benin">Benin</SelectItem>
-                      <SelectItem value="bhutan">Bhutan</SelectItem>
-                      <SelectItem value="bolivia">Bolivia</SelectItem>
-                      <SelectItem value="bosnia-and-herzegovina">Bosnia and Herzegovina</SelectItem>
-                      <SelectItem value="botswana">Botswana</SelectItem>
-                      <SelectItem value="brazil">Brazil</SelectItem>
-                      <SelectItem value="brunei">Brunei</SelectItem>
-                      <SelectItem value="bulgaria">Bulgaria</SelectItem>
-                      <SelectItem value="burkina-faso">Burkina Faso</SelectItem>
-                      <SelectItem value="burundi">Burundi</SelectItem>
-                      <SelectItem value="cambodia">Cambodia</SelectItem>
-                      <SelectItem value="cameroon">Cameroon</SelectItem>
-                      <SelectItem value="canada">Canada</SelectItem>
-                      <SelectItem value="cape-verde">Cape Verde</SelectItem>
-                      <SelectItem value="central-african-republic">Central African Republic</SelectItem>
-                      <SelectItem value="chad">Chad</SelectItem>
-                      <SelectItem value="chile">Chile</SelectItem>
-                      <SelectItem value="china">China</SelectItem>
-                      <SelectItem value="colombia">Colombia</SelectItem>
-                      <SelectItem value="comoros">Comoros</SelectItem>
-                      <SelectItem value="congo">Congo</SelectItem>
-                      <SelectItem value="costa-rica">Costa Rica</SelectItem>
-                      <SelectItem value="croatia">Croatia</SelectItem>
-                      <SelectItem value="cuba">Cuba</SelectItem>
-                      <SelectItem value="cyprus">Cyprus</SelectItem>
-                      <SelectItem value="czech-republic">Czech Republic</SelectItem>
-                      <SelectItem value="denmark">Denmark</SelectItem>
-                      <SelectItem value="djibouti">Djibouti</SelectItem>
-                      <SelectItem value="dominica">Dominica</SelectItem>
-                      <SelectItem value="dominican-republic">Dominican Republic</SelectItem>
-                      <SelectItem value="east-timor">East Timor</SelectItem>
-                      <SelectItem value="ecuador">Ecuador</SelectItem>
-                      <SelectItem value="egypt">Egypt</SelectItem>
-                      <SelectItem value="el-salvador">El Salvador</SelectItem>
-                      <SelectItem value="equatorial-guinea">Equatorial Guinea</SelectItem>
-                      <SelectItem value="eritrea">Eritrea</SelectItem>
-                      <SelectItem value="estonia">Estonia</SelectItem>
-                      <SelectItem value="ethiopia">Ethiopia</SelectItem>
-                      <SelectItem value="fiji">Fiji</SelectItem>
-                      <SelectItem value="finland">Finland</SelectItem>
-                      <SelectItem value="france">France</SelectItem>
-                      <SelectItem value="gabon">Gabon</SelectItem>
-                      <SelectItem value="gambia">Gambia</SelectItem>
-                      <SelectItem value="georgia">Georgia</SelectItem>
-                      <SelectItem value="germany">Germany</SelectItem>
-                      <SelectItem value="ghana">Ghana</SelectItem>
-                      <SelectItem value="greece">Greece</SelectItem>
-                      <SelectItem value="grenada">Grenada</SelectItem>
-                      <SelectItem value="guatemala">Guatemala</SelectItem>
-                      <SelectItem value="guinea">Guinea</SelectItem>
-                      <SelectItem value="guinea-bissau">Guinea-Bissau</SelectItem>
-                      <SelectItem value="guyana">Guyana</SelectItem>
-                      <SelectItem value="haiti">Haiti</SelectItem>
-                      <SelectItem value="honduras">Honduras</SelectItem>
-                      <SelectItem value="hungary">Hungary</SelectItem>
-                      <SelectItem value="iceland">Iceland</SelectItem>
-                      <SelectItem value="india">India</SelectItem>
-                      <SelectItem value="indonesia">Indonesia</SelectItem>
-                      <SelectItem value="iran">Iran</SelectItem>
-                      <SelectItem value="iraq">Iraq</SelectItem>
-                      <SelectItem value="ireland">Ireland</SelectItem>
-                      <SelectItem value="israel">Israel</SelectItem>
-                      <SelectItem value="italy">Italy</SelectItem>
-                      <SelectItem value="ivory-coast">Ivory Coast</SelectItem>
-                      <SelectItem value="jamaica">Jamaica</SelectItem>
-                      <SelectItem value="japan">Japan</SelectItem>
-                      <SelectItem value="jordan">Jordan</SelectItem>
-                      <SelectItem value="kazakhstan">Kazakhstan</SelectItem>
-                      <SelectItem value="kenya">Kenya</SelectItem>
-                      <SelectItem value="kiribati">Kiribati</SelectItem>
-                      <SelectItem value="korea-north">Korea, North</SelectItem>
-                      <SelectItem value="korea-south">Korea, South</SelectItem>
-                      <SelectItem value="kosovo">Kosovo</SelectItem>
-                      <SelectItem value="kuwait">Kuwait</SelectItem>
-                      <SelectItem value="kyrgyzstan">Kyrgyzstan</SelectItem>
-                      <SelectItem value="laos">Laos</SelectItem>
-                      <SelectItem value="latvia">Latvia</SelectItem>
-                      <SelectItem value="lebanon">Lebanon</SelectItem>
-                      <SelectItem value="lesotho">Lesotho</SelectItem>
-                      <SelectItem value="liberia">Liberia</SelectItem>
-                      <SelectItem value="libya">Libya</SelectItem>
-                      <SelectItem value="liechtenstein">Liechtenstein</SelectItem>
-                      <SelectItem value="lithuania">Lithuania</SelectItem>
-                      <SelectItem value="luxembourg">Luxembourg</SelectItem>
-                      <SelectItem value="macedonia">Macedonia</SelectItem>
-                      <SelectItem value="madagascar">Madagascar</SelectItem>
-                      <SelectItem value="malawi">Malawi</SelectItem>
-                      <SelectItem value="malaysia">Malaysia</SelectItem>
-                      <SelectItem value="maldives">Maldives</SelectItem>
-                      <SelectItem value="mali">Mali</SelectItem>
-                      <SelectItem value="malta">Malta</SelectItem>
-                      <SelectItem value="marshall-islands">Marshall Islands</SelectItem>
-                      <SelectItem value="mauritania">Mauritania</SelectItem>
-                      <SelectItem value="mauritius">Mauritius</SelectItem>
-                      <SelectItem value="mexico">Mexico</SelectItem>
-                      <SelectItem value="micronesia">Micronesia</SelectItem>
-                      <SelectItem value="moldova">Moldova</SelectItem>
-                      <SelectItem value="monaco">Monaco</SelectItem>
-                      <SelectItem value="mongolia">Mongolia</SelectItem>
-                      <SelectItem value="montenegro">Montenegro</SelectItem>
-                      <SelectItem value="morocco">Morocco</SelectItem>
-                      <SelectItem value="mozambique">Mozambique</SelectItem>
-                      <SelectItem value="myanmar">Myanmar</SelectItem>
-                      <SelectItem value="namibia">Namibia</SelectItem>
-                      <SelectItem value="nauru">Nauru</SelectItem>
-                      <SelectItem value="nepal">Nepal</SelectItem>
-                      <SelectItem value="netherlands">Netherlands</SelectItem>
-                      <SelectItem value="new-zealand">New Zealand</SelectItem>
-                      <SelectItem value="nicaragua">Nicaragua</SelectItem>
-                      <SelectItem value="niger">Niger</SelectItem>
-                      <SelectItem value="nigeria">Nigeria</SelectItem>
-                      <SelectItem value="norway">Norway</SelectItem>
-                      <SelectItem value="oman">Oman</SelectItem>
-                      <SelectItem value="pakistan">Pakistan</SelectItem>
-                      <SelectItem value="palau">Palau</SelectItem>
-                      <SelectItem value="palestine">Palestine</SelectItem>
-                      <SelectItem value="panama">Panama</SelectItem>
-                      <SelectItem value="papua-new-guinea">Papua New Guinea</SelectItem>
-                      <SelectItem value="paraguay">Paraguay</SelectItem>
-                      <SelectItem value="peru">Peru</SelectItem>
-                      <SelectItem value="philippines">Philippines</SelectItem>
-                      <SelectItem value="poland">Poland</SelectItem>
-                      <SelectItem value="portugal">Portugal</SelectItem>
-                      <SelectItem value="qatar">Qatar</SelectItem>
-                      <SelectItem value="romania">Romania</SelectItem>
-                      <SelectItem value="russia">Russia</SelectItem>
-                      <SelectItem value="rwanda">Rwanda</SelectItem>
-                      <SelectItem value="saint-kitts-and-nevis">Saint Kitts and Nevis</SelectItem>
-                      <SelectItem value="saint-lucia">Saint Lucia</SelectItem>
-                      <SelectItem value="saint-vincent">Saint Vincent and the Grenadines</SelectItem>
-                      <SelectItem value="samoa">Samoa</SelectItem>
-                      <SelectItem value="san-marino">San Marino</SelectItem>
-                      <SelectItem value="sao-tome">Sao Tome and Principe</SelectItem>
-                      <SelectItem value="saudi-arabia">Saudi Arabia</SelectItem>
-                      <SelectItem value="senegal">Senegal</SelectItem>
-                      <SelectItem value="serbia">Serbia</SelectItem>
-                      <SelectItem value="seychelles">Seychelles</SelectItem>
-                      <SelectItem value="sierra-leone">Sierra Leone</SelectItem>
-                      <SelectItem value="singapore">Singapore</SelectItem>
-                      <SelectItem value="slovakia">Slovakia</SelectItem>
-                      <SelectItem value="slovenia">Slovenia</SelectItem>
-                      <SelectItem value="solomon-islands">Solomon Islands</SelectItem>
-                      <SelectItem value="somalia">Somalia</SelectItem>
-                      <SelectItem value="south-africa">South Africa</SelectItem>
-                      <SelectItem value="south-sudan">South Sudan</SelectItem>
-                      <SelectItem value="spain">Spain</SelectItem>
-                      <SelectItem value="sri-lanka">Sri Lanka</SelectItem>
-                      <SelectItem value="sudan">Sudan</SelectItem>
-                      <SelectItem value="suriname">Suriname</SelectItem>
-                      <SelectItem value="swaziland">Swaziland</SelectItem>
-                      <SelectItem value="sweden">Sweden</SelectItem>
-                      <SelectItem value="switzerland">Switzerland</SelectItem>
-                      <SelectItem value="syria">Syria</SelectItem>
-                      <SelectItem value="taiwan">Taiwan</SelectItem>
-                      <SelectItem value="tajikistan">Tajikistan</SelectItem>
-                      <SelectItem value="tanzania">Tanzania</SelectItem>
-                      <SelectItem value="thailand">Thailand</SelectItem>
-                      <SelectItem value="togo">Togo</SelectItem>
-                      <SelectItem value="tonga">Tonga</SelectItem>
-                      <SelectItem value="trinidad-and-tobago">Trinidad and Tobago</SelectItem>
-                      <SelectItem value="tunisia">Tunisia</SelectItem>
-                      <SelectItem value="turkey">Turkey</SelectItem>
-                      <SelectItem value="turkmenistan">Turkmenistan</SelectItem>
-                      <SelectItem value="tuvalu">Tuvalu</SelectItem>
-                      <SelectItem value="uganda">Uganda</SelectItem>
-                      <SelectItem value="ukraine">Ukraine</SelectItem>
-                      <SelectItem value="united-arab-emirates">United Arab Emirates</SelectItem>
-                      <SelectItem value="united-kingdom">United Kingdom</SelectItem>
-                      <SelectItem value="united-states">United States</SelectItem>
-                      <SelectItem value="uruguay">Uruguay</SelectItem>
-                      <SelectItem value="uzbekistan">Uzbekistan</SelectItem>
-                      <SelectItem value="vanuatu">Vanuatu</SelectItem>
-                      <SelectItem value="vatican-city">Vatican City</SelectItem>
-                      <SelectItem value="venezuela">Venezuela</SelectItem>
-                      <SelectItem value="vietnam">Vietnam</SelectItem>
-                      <SelectItem value="yemen">Yemen</SelectItem>
-                      <SelectItem value="zambia">Zambia</SelectItem>
-                      <SelectItem value="zimbabwe">Zimbabwe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Current Employer</Label>
-                  <Input 
-                    value=""
-                    className={`${inputBg} ${borderColor} ${textColor} ${focusRing}`}
-                  />
-                </div>
-
-                <div>
-                  <Label className="flex items-center gap-2">
-                    Skills Needed
-                    <span className="text-[#C1A461]/60 text-sm">
-                      We will send email notifications of new listings for your selected skills
-                    </span>
-                  </Label>
-                  <div className="space-y-4 mt-4">
+                {/* Social Links */}
+                <section className="space-y-6">
+                  <h2 className="text-lg font-semibold text-[#C1A461]">SOCIALS</h2>
+                  <div className="space-y-4">
                     {[
-                      {
-                        category: "Frontend",
-                        skills: ["React", "Vue", "Angular"]
-                      },
-                      {
-                        category: "Backend",
-                        skills: ["Javascript", "Python", "C++"]
-                      },
-                      {
-                        category: "Blockchain",
-                        skills: ["Rust", "Solidity"]
-                      }
-                    ].map((category) => (
-                      <div key={category.category}>
-                        <h3 className="text-sm font-medium text-[#C1A461] mb-2">{category.category}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {category.skills.map((skill) => (
-                            <Badge
-                              key={skill}
-                              variant="outline"
-                              className={`cursor-pointer border-[#C1A461]/20 hover:border-[#C1A461]/40
-                                ${selectedSkills.includes(skill) ? 'bg-[#C1A461]/20' : ''}`}
-                              onClick={() => {
-                                setSelectedSkills(prev => 
-                                  prev.includes(skill) 
-                                    ? prev.filter(s => s !== skill)
-                                    : [...prev, skill]
-                                )
-                              }}
-                            >
-                              {skill}
-                            </Badge>
-                          ))}
+                      { icon: Github, name: "githubUrl", placeholder: "github.com/", value: formData.githubUrl },
+                      { icon: Twitter, name: "twitterUrl", placeholder: "x.com/", value: formData.twitterUrl },
+                      { icon: Linkedin, name: "linkedinUrl", placeholder: "linkedin.com/in/", value: formData.linkedinUrl },
+                      { icon: MessageCircle, name: "telegramUrl", placeholder: "t.me/", value: formData.telegramUrl },
+                      { icon: Globe, name: "websiteUrl", placeholder: "https://", value: formData.websiteUrl },
+                    ].map((social) => (
+                      <div key={social.name} className="space-y-1">
+                        <div className="relative">
+                          <social.icon className="w-5 h-5 absolute left-3 top-2.5 text-[#C1A461]/60" />
+                          <Input 
+                            name={social.name}
+                            value={social.value}
+                            onChange={handleInputChange}
+                            className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                              text-gray-900 dark:text-[#C1A461] pl-10 ${errors[social.name] ? 'border-red-500' : ''}`}
+                            placeholder={social.placeholder}
+                          />
                         </div>
+                        {errors[social.name] && (
+                          <p className="text-red-500 text-sm">{errors[social.name]}</p>
+                        )}
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="private" className="border-[#C1A461]/20 data-[state=checked]:bg-[#C1A461]" />
-                  <Label htmlFor="private">Keep my info private</Label>
-                </div>
+                {/* Work Section */}
+                <section className="space-y-6">
+                  <h2 className="text-lg font-semibold text-[#C1A461]">WORK</h2>
+                  <div className="space-y-4">
+                    {/* Web3 Interests */}
+                    <div>
+                      <Label>What areas of Web3 are you most interested in?</Label>
+                      <Select value={formData.web3Interests.join(',')} onValueChange={(value) => handleSelectChange('web3Interests', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select areas" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                          {WEB3_INTERESTS.map((interest) => (
+                            <SelectItem key={interest} value={interest}>{interest}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Work Experience */}
+                    <div>
+                      <Label>Work Experience</Label>
+                      <Select value={formData.workExperience} onValueChange={(value) => handleSelectChange('workExperience', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select experience" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                          <SelectItem value="0-1">0 to 1 Year</SelectItem>
+                          <SelectItem value="2-5">2 to 5 Years</SelectItem>
+                          <SelectItem value="5+">more than 5 Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <Label>Location</Label>
+                      <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 h-48 overflow-y-auto">
+                          {COUNTRIES.map((country) => (
+                            <SelectItem key={country.value} value={country.value}>{country.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Current Employer */}
+                    <div>
+                      <Label>Current Employer</Label>
+                      <Input 
+                        name="currentEmployer"
+                        value={formData.currentEmployer}
+                        onChange={handleInputChange}
+                        className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]"
+                      />
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        Skills
+                        <span className="text-[#C1A461]/60 text-sm">
+                          Select your skills to receive relevant opportunities
+                        </span>
+                      </Label>
+                      <div className="space-y-4 mt-4">
+                        {(Object.entries(skillOptions) as [SkillCategory, SkillOption[]][]).map(([category, options]) => (
+                          <div key={category}>
+                            <h3 className="text-sm font-medium text-[#C1A461] mb-2">
+                              {category.charAt(0).toUpperCase() + category.slice(1)}
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {options.map((skill) => {
+                                const isSelected = selectedSkills[category].includes(skill.value);
+                                return (
+                                  <Badge
+                                    key={skill.value}
+                                    variant="outline"
+                                    className={`cursor-pointer border-[#C1A461]/20 hover:border-[#C1A461]/40
+                                      ${isSelected ? 'bg-[#C1A461]/20' : ''}`}
+                                    onClick={() => {
+                                      setSelectedSkills(prev => ({
+                                        ...prev,
+                                        [category]: isSelected
+                                          ? prev[category].filter(s => s !== skill.value)
+                                          : [...prev[category], skill.value]
+                                      }))
+                                    }}
+                                  >
+                                    {skill.label}
+                                  </Badge>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating Profile
+                    </>
+                  ) : (
+                    "Update Profile"
+                  )}
+                </Button>
               </div>
             </section>
-
-            <Button className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]">
-              Update Profile
-            </Button>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </form>
   )
 }

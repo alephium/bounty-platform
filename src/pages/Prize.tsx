@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Trophy, Users, Star, Sparkles, Code, Shield, Gift, Heart, GroupIcon as Team } from 'lucide-react'
 
-export default function PrizePage() {
+export default function Prize() {
   return (
     <div className="min-h-screen bg-[#1B2228] text-[#C1A461] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -75,8 +75,8 @@ export default function PrizePage() {
             ].map((category) => (
               <Card key={category.title} className="bg-[#1B2228] border-[#C1A461]/20">
                 <CardContent className="p-6 text-center">
-                  <category.icon className="w-8 h-8 mx-auto mb-4" />
-                  <h3 className="font-bold">{category.title}</h3>
+                  <category.icon className="w-8 h-8 mx-auto mb-4  text-[#C1A461]/80" />
+                  <h3 className="font-bold text-gray-200">{category.title}</h3>
                   <p className="mt-2 text-[#C1A461]/80">€500</p>
                 </CardContent>
               </Card>
@@ -92,26 +92,26 @@ export default function PrizePage() {
           </h2>
           <Card className="bg-[#1B2228] border-[#C1A461]/20">
             <CardContent className="p-6">
-              <p className="text-lg font-bold mb-4">Prize Pool: €3,000</p>
+              <p className="text-lg font-bold mb-4 text-gray-200">Prize Pool: €3,000</p>
               <ul className="space-y-4">
                 <li className="flex items-start gap-2">
                   <span className="text-[#C1A461]">•</span>
                   <div>
-                    <p className="font-bold">Port a simple Solidity Contract</p>
+                    <p className="font-bold text-gray-200">Port a simple Solidity Contract</p>
                     <p className="text-[#C1A461]/80">Up to €500</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#C1A461]">•</span>
                   <div>
-                    <p className="font-bold">Solve the Bounty Puzzle</p>
+                    <p className="font-bold text-gray-200">Solve the Bounty Puzzle</p>
                     <p className="text-[#C1A461]/80">€100 (based on complexity)</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#C1A461]">•</span>
                   <div>
-                    <p className="font-bold">Build a Mini-Tool or Utility</p>
+                    <p className="font-bold text-gray-200">Build a Mini-Tool or Utility</p>
                     <p className="text-[#C1A461]/80">Up to €500</p>
                   </div>
                 </li>
@@ -134,7 +134,7 @@ export default function PrizePage() {
             ].map((prize) => (
               <Card key={prize.title} className="bg-[#1B2228] border-[#C1A461]/20">
                 <CardContent className="p-6 text-center">
-                  <h3 className="font-bold">{prize.title}</h3>
+                  <h3 className="font-bold text-gray-200">{prize.title}</h3>
                   <p className="mt-2 text-[#C1A461]/80">{prize.amount}</p>
                 </CardContent>
               </Card>
@@ -151,7 +151,7 @@ export default function PrizePage() {
           <div className="grid md:grid-cols-2 gap-4">
             <Card className="bg-[#1B2228] border-[#C1A461]/20">
               <CardHeader>
-                <CardTitle className="text-lg">Developer Feedback Rewards</CardTitle>
+                <CardTitle className="text-lg text-gray-200">Developer Feedback Rewards</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-[#C1A461]/80">€15 per person + One Key hardware wallet Lottery</p>
@@ -162,7 +162,7 @@ export default function PrizePage() {
             </Card>
             <Card className="bg-[#1B2228] border-[#C1A461]/20">
               <CardHeader>
-                <CardTitle className="text-lg">Team-Based Participation Prize</CardTitle>
+                <CardTitle className="text-lg text-gray-200">Team-Based Participation Prize</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-[#C1A461]/80">Prize Pool: €2,000</p>

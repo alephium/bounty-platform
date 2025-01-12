@@ -11,8 +11,9 @@ import { Bounties } from './pages/Bounties'
 import { Projects } from './pages/Projects'
 import { Grants } from './pages/Grants'
 import { Hackathon } from './pages/Hackathon'
+import Prize  from './pages/Prize'
 import Profile from './pages/Profile'
-import EditProfile from './pages/EditProfile'
+import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 
 interface ProtectedRouteProps {
@@ -54,6 +55,8 @@ const App = () => {
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
+              <Route path="/editprofile" element={<EditProfile />} />
+              <Route path="/prize" element={<Prize />} />
               <Route 
                 path="/profile" 
                 element={
@@ -63,16 +66,6 @@ const App = () => {
                 } 
               />
               <Route path="/profile/:username" element={<Profile />} />
-
-              {/* Protected routes */}
-              <Route
-                path="/editprofile"
-                element={
-                  <ProtectedRoute user={user} loading={loading}>
-                    <EditProfile />
-                  </ProtectedRoute>
-                }
-              />
 
               {/* Catch-all route for 404 */}
               <Route path="*" element={<Navigate to="/" replace />} />

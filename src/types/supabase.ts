@@ -89,7 +89,6 @@ export interface User {
   
   // Work related fields - all optional
   web3_interests: Web3Interest[] | null
-  community_affiliations: string[] | null
   work_experience: WorkExperience | null
   location: string | null
   current_employer: string | null
@@ -98,6 +97,8 @@ export interface User {
   frontend_skills: string[] | null
   backend_skills: string[] | null
   blockchain_skills: string[] | null
+  design_skills: string[] | null
+  content_skills: string[] | null
 
   achievements?: UserAchievement[]
   total_earnings?: {
@@ -107,8 +108,7 @@ export interface User {
   completed_bounties_count?: number
   completed_grants_count?: number
   completed_hackathons_count?: number
-  
-  is_private: boolean              // Required but with default
+               // Required but with default
   created_at: string              // Required but auto-generated
   updated_at: string              // Required but auto-generated
 }
@@ -136,3 +136,135 @@ export type BountyInsert = Omit<Bounty, 'id' | 'created_at' | 'updated_at'>
 export type GrantInsert = Omit<Grant, 'id' | 'created_at' | 'updated_at'>
 export type UserUpdate = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
 export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated_at'>
+
+
+export interface Team {
+  id: string
+  name: string
+  created_at: string
+  updated_at: string
+  description: string | null
+  team_size: number
+  status: 'registered' | 'active' | 'completed' | 'disqualified'
+}
+
+export interface HackathonProject {
+  id: string
+  team_id: string
+  title: string
+  description: string | null
+  repository_url: string | null
+  deployment_url: string | null
+  created_at: string
+  updated_at: string
+  submission_status: 'draft' | 'submitted' | 'qualified' | 'disqualified'
+  contract_deployed: boolean
+  category: string[]
+}
+
+export interface TeamMember {
+  id: string
+  team_id: string
+  user_id: string
+  role: 'leader' | 'member'
+  joined_at: string
+}
+
+export interface EvaluationCriteria {
+  id: string
+  name: string
+  description: string | null
+  weight: number
+  created_at: string
+}
+
+export interface Evaluation {
+  id: string
+  hackathonproject_id: string
+  criteria_id: string
+  judge_id: string
+  score: number
+  feedback: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Prize {
+  id: string
+  name: string
+  description: string | null
+  amount: number
+  category: 'main_prize' | 'specific_category' | 'individual_hacker' | 'bonus' | 'participation'
+  sub_category: string | null
+  max_winners: number
+  created_at: string
+}
+
+export interface PrizeWinner {
+  id: string
+  prize_id: string
+  team_id: string | null
+  user_id: string | null
+  hackathonproject_id: string | null
+  awarded_amount: number
+  awarded_at: string
+}
+
+// Database interface for type safety
+export interface Database {
+  public: {
+    Tables: {
+      teams: {
+        Row: Team
+        Insert: Omit<Team, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Team, 'id'>>
+      }
+      hackathonprojects: {
+        Row: HackathonProject
+        Insert: Omit<HackathonProject, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<HackathonProject, 'id'>>
+      }
+      team_members: {
+        Row: TeamMember
+        Insert: Omit<TeamMember, 'id' | 'joined_at'>
+        Update: Partial<Omit<TeamMember, 'id'>>
+      }
+      evaluation_criteria: {
+        Row: EvaluationCriteria
+        Insert: Omit<EvaluationCriteria, 'id' | 'created_at'>
+        Update: Partial<Omit<EvaluationCriteria, 'id'>>
+      }
+      evaluations: {
+        Row: Evaluation
+        Insert: Omit<Evaluation, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Evaluation, 'id'>>
+      }
+      prizes: {
+        Row: Prize
+        Insert: Omit<Prize, 'id' | 'created_at'>
+        Update: Partial<Omit<Prize, 'id'>>
+      }
+      prize_winners: {
+        Row: PrizeWinner
+        Insert: Omit<PrizeWinner, 'id' | 'awarded_at'>
+        Update: Partial<Omit<PrizeWinner, 'id'>>
+      }
+    }
+    Views: {
+      [key: string]: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+    }
+    Functions: {
+      [key: string]: {
+        Args: Record<string, unknown>
+        Returns: unknown
+      }
+    }
+    Enums: {
+      [key: string]: unknown
+    }
+  }
+}

@@ -247,7 +247,7 @@ export default function Profile() {
                   <Button 
                     variant="outline" 
                     className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/20`}
-                    onClick={() => navigate('/edit-profile')}
+                    onClick={() => navigate('/editprofile')}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Profile
