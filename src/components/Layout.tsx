@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState } from 'react'
-import { Link, useNavigate, Outlet } from 'react-router-dom'
+import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { Search, Sun, Moon } from 'lucide-react'
 import { Card, CardContent } from "./ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -14,17 +14,18 @@ const Layout = () => {
   const { user } = useUser()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    if (!user && !window.location.pathname.includes('/auth')) {
+    if (!user && !location.pathname.includes('/auth')) {
       const timer = setTimeout(() => {
         setShowAuthPrompt(true)
       }, 15000)
       return () => clearTimeout(timer)
     }
-  }, [user])
+  }, [user, location.pathname])
 
   useEffect(() => {
     if (showAuthPrompt) {

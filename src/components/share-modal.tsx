@@ -33,7 +33,7 @@ export default function ShareModal() {
         url = `https://wa.me/?text=${encodeURIComponent(shareUrl)}`
         break
     }
-    if (url) window.open(url, "_blank")
+    // if (url) window.open(url, "_blank")
   }
 
   return (
