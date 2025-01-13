@@ -1,26 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
+import { Button } from "../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
+import { Input } from "../components/ui/input"
 import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
-import { Project, User } from '../types/supabase'
+import { Project, User, ProofOfWork, ProofOfWorkInsert, ProjectCategory } from '../types/supabase'
 import { toast } from "sonner"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Label } from "../components/ui/label"
+import { Textarea } from "../components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "../components/ui/select"
 
 type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
 
@@ -98,7 +98,7 @@ export default function Profile() {
   const { theme } = useTheme()
   const { user: currentUser } = useUser()
   const [profileUser, setProfileUser] = useState<User | null>(null)
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ProofOfWork[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
@@ -106,7 +106,7 @@ export default function Profile() {
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false)
   const [description, setDescription] = useState("")
   const maxLength = 180
-  const [selectedCategory, setSelectedCategory] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<SkillCategory | "">("")
   const [selectedSubSkill, setSelectedSubSkill] = useState("")
   const [projectTitle, setProjectTitle] = useState("")
   const [projectUrl, setProjectUrl] = useState("")
@@ -229,7 +229,7 @@ export default function Profile() {
               <div className="flex justify-between items-start">
               <div className="flex items-end gap-4">
                 <Avatar className="w-32 h-32 border-4 border-[#1B2228] rounded-full">
-                  <AvatarImage src={profileUser.avatar_url || '/placeholder.svg'} alt={profileUser.username} />
+                  <AvatarImage src={profileUser.avatar_url || '/placeholder.svg'} />
                   <AvatarFallback className="text-2xl">
                     {profileUser.first_name?.[0]}{profileUser.last_name?.[0]}
                   </AvatarFallback>
@@ -291,11 +291,11 @@ export default function Profile() {
                   <CardContent className="p-6">
                     <h2 className={`text-lg font-bold ${textColor} mb-4`}>Skills</h2>
                     <div className="space-y-4">
-                      {profileUser.frontend_skills?.length > 0 && (
+                      {(profileUser?.frontend_skills || []).length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>FRONTEND</h3>
                           <div className="flex flex-wrap gap-2">
-                            {profileUser.frontend_skills.map((skill) => (
+                            {(profileUser.frontend_skills??[]).map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -307,11 +307,11 @@ export default function Profile() {
                         </div>
                       )}
                       
-                      {profileUser.backend_skills?.length > 0 && (
+                      {(profileUser.backend_skills || []).length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>BACKEND</h3>
                           <div className="flex flex-wrap gap-2">
-                            {profileUser.backend_skills.map((skill) => (
+                            {(profileUser.backend_skills??[]).map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -323,11 +323,11 @@ export default function Profile() {
                         </div>
                       )}
                       
-                      {profileUser.blockchain_skills?.length > 0 && (
+                      {(profileUser.blockchain_skills|| []).length > 0 && (
                         <div>
                           <h3 className={`text-sm ${mutedTextColor} mb-2`}>BLOCKCHAIN</h3>
                           <div className="flex flex-wrap gap-2">
-                            {profileUser.blockchain_skills.map((skill) => (
+                            {(profileUser.blockchain_skills?? []).map((skill) => (
                               <Badge 
                                 key={skill}
                                 className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
@@ -560,7 +560,11 @@ export default function Profile() {
                       <Label className="text-[#C1A461]">
                         Skills <span className="text-red-500">*</span>
                       </Label>
-                      <Select onValueChange={setSelectedCategory} value={selectedCategory}>
+                      {/* <Select onValueChange={setSelectedCategory} value={selectedCategory}> */}
+                      <Select 
+                        onValueChange={(value) => setSelectedCategory(value as SkillCategory | "")} 
+                        value={selectedCategory}
+                      >
                         <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus:ring-[#C1A461]">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>

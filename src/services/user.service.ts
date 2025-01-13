@@ -109,10 +109,10 @@ export class UserService {
       })
       
       if (error) throw error
-      return data
+      return { data, error: null }
     } catch (error) {
       console.error('Error signing in with Google:', error)
-      throw error
+      return { data: null, error }
     }
   }
   static async signOut() {

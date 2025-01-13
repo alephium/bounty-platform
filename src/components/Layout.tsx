@@ -127,14 +127,14 @@ const Layout = () => {
                 <div>
                   <div className="flex items-center gap-2 text-2xl font-bold">
                     <span className="text-[#C1A461]">◈</span>
-                    <span className="text-[#C1A461]">2,846,080</span>
+                    <span className="text-[#C1A461]">5000</span>
                   </div>
                   <div className="text-sm text-[#C1A461]">Total Treasure Earned</div>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 text-2xl font-bold">
                     <span className="text-[#C1A461]">◈</span>
-                    <span className="text-[#C1A461]">1347</span>
+                    <span className="text-[#C1A461]">8</span>
                   </div>
                   <div className="text-sm text-[#C1A461]">Quests Available</div>
                 </div>

@@ -8,7 +8,7 @@ import {
   CardTitle,
   CardDescription,
   CardFooter
-} from "@/components/ui/card"
+} from "../components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -16,19 +16,31 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useUser } from "@/contexts/UserContext"
-import { toast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase"
+} from "../components/ui/dialog"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { useUser } from "../contexts/UserContext"
+import { toast } from "../components/ui/use-toast"
+import { supabase } from "../lib/supabase"
+
+interface User {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+}
 
 interface TeamMember {
   id: string;
   full_name: string;
   username: string;
   role: 'leader' | 'member';
+}
+
+interface TeamMemberResponse {
+  id: string;
+  role: 'leader' | 'member';
+  users: User | null;  // matches your Supabase join query
 }
 
 interface Team {
@@ -90,18 +102,20 @@ export default function HackathonPage() {
             username
           )
         `)
-        .eq('team_id', team.id)
+        .eq('team_id', team.id) as { data: TeamMemberResponse[] | null, error: any }
 
       if (membersError) throw membersError
 
+      const membersData: TeamMember[] = members?.map(m => ({
+        id: m.id,
+        full_name: m.users?.full_name || '',
+        username: m.users?.username || '',
+        role: m.role
+      })) || []
+
       setCurrentTeam({
         ...team,
-        members: members.map(m => ({
-          id: m.id,
-          full_name: m.users.full_name,
-          username: m.users.username,
-          role: m.role
-        }))
+        members: membersData
       })
 
     } catch (error) {

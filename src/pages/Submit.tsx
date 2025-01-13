@@ -1,28 +1,28 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { X } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Textarea } from "../components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "../components/ui/select"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { supabase } from "@/lib/supabase"
-import { useUser } from "@/contexts/UserContext"
-import { toast } from "@/components/ui/use-toast"
+} from "../components/ui/card"
+import { Checkbox } from "../components/ui/checkbox"
+import { supabase } from "../lib/supabase"
+import { useUser } from "../contexts/UserContext"
+import { toast } from "../components/ui/use-toast"
 
 interface FormData {
   title: string

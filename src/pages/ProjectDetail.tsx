@@ -1,10 +1,10 @@
 'use client'
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
+import { Button } from "../components/ui/button"
+import { Card, CardContent } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Clock, Globe, MessageSquare, AlertTriangle, Send } from 'lucide-react'
 import { Link } from "react-router-dom"
 // import Image from "next/image"

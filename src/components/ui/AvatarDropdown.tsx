@@ -4,12 +4,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "./dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar"
 import { useNavigate } from 'react-router-dom'
 import { User, LogOut, Settings } from 'lucide-react'
-import { UserService } from '@/services/user.service'
-import { useTheme } from '@/contexts/ThemeContext'
+import { UserService } from '../../services/user.service'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface AvatarDropdownProps {
   user: {

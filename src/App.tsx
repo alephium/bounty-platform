@@ -44,38 +44,27 @@ const App = () => {
   const [loading, setLoading] = useState(true)
 
   return (
-    <UserProvider user={user} loading={loading}>
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              {/* Public routes */}
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/" element={<Home />} />
-              <Route path="/bounties" element={<Bounties />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/grants" element={<Grants />} />
-              <Route path="/hackathon" element={<Hackathon />} />
-              <Route path="/editprofile" element={<EditProfile />} />
-              <Route path="/hackathon/prize" element={<Prize />} />
-              <Route path="/hackathon/submit" element={<Submit />} />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute user={user} loading={loading}>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/profile/:username" element={<Profile />} />
-
-              {/* Catch-all route for 404 */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </UserProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            {/* Public routes */}
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/bounties" element={<Bounties />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/grants" element={<Grants />} />
+            <Route path="/hackathon" element={<Hackathon />} />
+            <Route path="/editprofile" element={<EditProfile />} />
+            <Route path="/hackathon/prize" element={<Prize />} />
+            <Route path="/hackathon/submit" element={<Submit />} />
+            <Route path="/profile/:username" element={<Profile />} />
+            {/* Catch-all route for 404 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 

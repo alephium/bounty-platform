@@ -1,15 +1,19 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+
+// Add variant type
+type ToastVariant = "default" | "destructive" | "success"
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: ToastVariant
 }
 
 const actionTypes = {
@@ -183,4 +187,4 @@ function useToast() {
   }
 }
 
-export { useToast, toast } 
+export { useToast, toast }

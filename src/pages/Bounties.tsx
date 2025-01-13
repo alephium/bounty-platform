@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Category, Status, Bounty } from '../types/supabase'
+import { Card, CardContent } from "../components/ui/card"
+import { Badge } from "../components/ui/badge"
 
 const categories: Category[] = ['content', 'design', 'development', 'other']
 const statuses: Status[] = ['open', 'in review', 'completed']

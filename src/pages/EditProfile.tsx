@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Checkbox } from '../components/ui/checkbox'
 import { useToast } from '../components/ui/use-toast'
 import { useTheme } from '../contexts/ThemeContext'
+import { Web3Interest, WorkExperience } from '../types/supabase'
 
 interface FormData {
   username: string
@@ -35,8 +36,8 @@ interface FormData {
   telegramUrl: string
   websiteUrl: string
   currentEmployer: string
-  web3Interests: string[]
-  workExperience: string
+  web3Interests: Web3Interest[]
+  workExperience: WorkExperience
   location: string
 }
 
@@ -251,7 +252,7 @@ export const EditProfile = () => {
     websiteUrl: user?.website_url || '',
     currentEmployer: user?.current_employer || '',
     web3Interests: user?.web3_interests || [],
-    workExperience: user?.work_experience || '',
+    workExperience: user?.work_experience || '0-2',
     location: user?.location || '',
   })
 
@@ -300,7 +301,7 @@ export const EditProfile = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'web3Interests') {
-      const values = value.split(',').filter(Boolean)
+      const values = value.split(',').filter(Boolean) as Web3Interest[]
       setFormData(prev => ({
         ...prev,
         [name]: values

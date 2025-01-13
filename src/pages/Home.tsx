@@ -1,5 +1,4 @@
-// src/pages/Home.tsx
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useUser } from '../contexts/UserContext'
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar"
 import { Card, CardContent } from "../components/ui/card"
@@ -10,9 +9,187 @@ import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-rea
 import { Link } from "react-router-dom"
 import { useTheme } from '../contexts/ThemeContext'
 
+interface Bounty {
+  id: number;
+  type: 'HIGH_QUALITY_SOCIAL' | 'SPREADING_VIBES' | 'EXPLAIN_ALPH';
+  title: string;
+  submissionType: string;
+  rewardAmount: {
+    min?: number;
+    max?: number;
+    fixed?: number;
+    total?: number;
+  };
+  rewardCurrency: string;
+  maxSubmissionsPerMonth: number | string;
+  epoch: {
+    start: string;
+    end: string;
+  };
+}
+
+interface OpportunityDisplay {
+  id: number;
+  title: string;
+  company: string;
+  type: string;
+  dueIn: string;
+  responses: number;
+  amount: string;
+  verified: boolean;
+}
+
+function mapBountiesToOpportunities(bounties: Bounty[]): OpportunityDisplay[] {
+  return bounties.map(bounty => ({
+    id: bounty.id,
+    title: bounty.title,
+    company: 'Blockflow Alliance DAO',
+    type: bounty.type === 'HIGH_QUALITY_SOCIAL' ? 'Content' :
+          bounty.type === 'SPREADING_VIBES' ? 'Social' :
+          'Documentation',
+    dueIn: `${bounty.epoch.end.split('.')[1]}m`,
+    responses: Math.floor(Math.random() * 20),
+    amount: bounty.rewardAmount.fixed ? 
+            `${bounty.rewardAmount.fixed}` :
+            bounty.rewardAmount.min && bounty.rewardAmount.max ?
+            `${bounty.rewardAmount.min}-${bounty.rewardAmount.max}` :
+            `${bounty.rewardAmount.total}`,
+    verified: true
+  }));
+}
+
+const bounties: Bounty[] = [
+  {
+    id: 1,
+    type: 'HIGH_QUALITY_SOCIAL',
+    title: 'Technical Reddit Threads',
+    submissionType: 'Technical reddit threads',
+    rewardAmount: {
+      fixed: 80
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 3,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 2,
+    type: 'HIGH_QUALITY_SOCIAL',
+    title: 'Video Shorts Creation',
+    submissionType: 'Video shorts on Alephium: explainers or comparisons, intros (YT, TikTok, IG)',
+    rewardAmount: {
+      fixed: 200
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 2,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 3,
+    type: 'HIGH_QUALITY_SOCIAL',
+    title: 'Hosting AMAs',
+    submissionType: 'Hosting X or TG AMAs about Alephium to the right audiences',
+    rewardAmount: {
+      fixed: 250
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 2,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 4,
+    type: 'HIGH_QUALITY_SOCIAL',
+    title: 'Creative Content',
+    submissionType: 'Alephium memes, art and other content',
+    rewardAmount: {
+      total: 350
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 'Top three submissions are rewarded each month.',
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 5,
+    type: 'SPREADING_VIBES',
+    title: 'YouTube Mentions',
+    submissionType: 'Direct mentions or highlighted section on youtube videos with over 5k views (for at least 20s)',
+    rewardAmount: {
+      fixed: 150
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 2,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 6,
+    type: 'SPREADING_VIBES',
+    title: 'Longer Explainer Videos',
+    submissionType: 'Longer Alephium Explainer videos (10m - 20m)',
+    rewardAmount: {
+      min: 200,
+      max: 700
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 1,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 7,
+    type: 'EXPLAIN_ALPH',
+    title: 'Developer Guides',
+    submissionType: 'Write developer guides on how to build with RALPH & Alephium*',
+    rewardAmount: {
+      min: 200,
+      max: 500
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 2,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  },
+  {
+    id: 8,
+    type: 'EXPLAIN_ALPH',
+    title: 'Beginner Guides',
+    submissionType: 'Write basic Alephium guides for beginners*',
+    rewardAmount: {
+      min: 100,
+      max: 300
+    },
+    rewardCurrency: 'ALPH',
+    maxSubmissionsPerMonth: 2,
+    epoch: {
+      start: '2024.12',
+      end: '2025.02'
+    }
+  }
+];
+
 export default function Home() {
   const { user, loading, refreshUser } = useUser()
   const { theme } = useTheme()
+  
+  // Map bounties to opportunities format
+  const opportunities = mapBountiesToOpportunities(bounties);
 
   useEffect(() => {
     refreshUser()
@@ -29,32 +206,47 @@ export default function Home() {
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  const categoryFilters = ["All Quests", "Content","Social","Documentation", "Design", "Development", "Other"]
+  const [selectedCategory, setSelectedCategory] = useState<string>("All Quests")
+  
+  // Define category mappings
+  const categoryMappings = {
+    "Content": ["HIGH_QUALITY_SOCIAL"],
+    "Social": ["SPREADING_VIBES"],
+    "Documentation": ["EXPLAIN_ALPH"]
+  }
+
+  const filteredOpportunities = opportunities.filter(opp => {
+    if (selectedCategory === "All Quests") return true;
+    return opp.type === selectedCategory;
+  })
 
   return (
     <div className={`min-h-screen ${bgColor} w-full px-4`}>
       <div className="max-w-7xl mx-auto">
         <main>
+          {/* Welcome Card */}
           <Card className={`${theme === 'dark' ? 
             'bg-gradient-to-br from-amber-500/20 to-amber-500/5' : 
             'bg-gradient-to-br from-amber-100 to-amber-50'} 
             ${borderColor} mb-6`}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                 <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
-                    {user?.avatar_url ? (
-                      <AvatarImage
-                        src={user.avatar_url}
-                        alt={user.full_name || 'User avatar'}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg'
-                        }}
-                      />
-                    ) : (
-                      <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
-                        {getInitials(user?.full_name || null)}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
+                <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
+                  {user?.avatar_url ? (
+                    <AvatarImage
+                      src={user.avatar_url}
+                      alt={user.full_name || 'User avatar'}
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg'
+                      }}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
+                      {getInitials(user?.full_name || null)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div>
                   <h1 className={`text-2xl font-bold ${textColor}`}>
                     Welcome aboard, Captain {user?.full_name || 'Guest'}
@@ -65,22 +257,29 @@ export default function Home() {
             </CardContent>
           </Card>
 
+          {/* Main Content */}
           <div className="space-y-4">
+            {/* Category Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {["All Quests", "Content", "Design", "Development", "Other"].map((filter) => (
+              {categoryFilters.map((filter) => (
                 <Button 
                   key={filter}
                   variant="outline" 
                   className={`rounded-full ${borderColor} bg-transparent ${textColor} 
                     ${theme === 'dark' ? 
                       'hover:bg-amber-500/20 hover:text-amber-400' : 
-                      'hover:bg-amber-100 hover:text-amber-700'}`}
+                      'hover:bg-amber-100 hover:text-amber-700'}
+                    ${selectedCategory === filter ? 
+                      theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700' 
+                      : ''}`}
+                  onClick={() => setSelectedCategory(filter)}
                 >
                   {filter}
                 </Button>
               ))}
             </div>
 
+            {/* Quests Card */}
             <Card className={`${cardBg} ${borderColor}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -128,7 +327,7 @@ export default function Home() {
                                   <span>{opp.type}</span>
                                 </div>
                                 <span>Due in {opp.dueIn}</span>
-                                {opp.responses && (
+                                {opp.responses > 0 && (
                                   <div className="flex items-center gap-1">
                                     <MessageSquare className="w-4 h-4" />
                                     <span>{opp.responses}</span>
@@ -143,17 +342,15 @@ export default function Home() {
                                 <span className={textColor}>◈</span>
                                 <span className={`font-medium ${textColor}`}>{opp.amount}</span>
                               </div>
-                              <span className={`text-sm ${mutedTextColor}`}>USDC</span>
+                              <span className={`text-sm ${mutedTextColor}`}>ALPH</span>
                             </div>
-                            {opp.type === "Project" && (
-                              <Button 
-                                variant="outline"
-                                className={`${borderColor} bg-transparent ${textColor} 
-                                  ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
-                              >
-                                Join Crew
-                              </Button>
-                            )}
+                            <Button 
+                              variant="outline"
+                              className={`${borderColor} bg-transparent ${textColor} 
+                                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                            >
+                              View Details
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -168,36 +365,3 @@ export default function Home() {
     </div>
   )
 }
-
-const opportunities = [
-  {
-    id: 1,
-    title: "Chart the Unknown Waters",
-    company: "LightDao",
-    type: "Quest",
-    dueIn: "1d",
-    responses: 21,
-    amount: "150",
-    verified: false
-  },
-  {
-    id: 2,
-    title: "Forge the Solana AI Compass",
-    company: "SendAI",
-    type: "Quest",
-    dueIn: "3d",
-    responses: 3,
-    amount: "3,000",
-    verified: false
-  },
-  {
-    id: 3,
-    title: "Map the DeFi Seas",
-    company: "Etherfuse",
-    type: "Quest",
-    dueIn: "4d",
-    responses: 36,
-    amount: "8,000",
-    verified: true
-  }
-]

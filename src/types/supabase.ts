@@ -88,8 +88,8 @@ export interface User {
   website_url: string | null
   
   // Work related fields - all optional
-  web3_interests: Web3Interest[] | null
-  work_experience: WorkExperience | null
+  web3_interests: Web3Interest[]| null
+  work_experience: WorkExperience
   location: string | null
   current_employer: string | null
   
@@ -107,13 +107,13 @@ export interface User {
   completed_projects_count?: number
   completed_bounties_count?: number
   completed_grants_count?: number
-  completed_hackathons_count?: number
-               // Required but with default
+  completed_hackathons_count?: number      
   created_at: string              // Required but auto-generated
   updated_at: string              // Required but auto-generated
 }
 
 export interface ProofOfWork {
+  id: string
   user_id: string
   title: string
   description: string

@@ -10,7 +10,7 @@ export const BountyCard = ({ bounty }: BountyCardProps) => {
         <img src={bounty.company.logo} alt={bounty.company.name} className="w-12 h-12 rounded" />
         <div className="ml-4 flex-1">
           <h3 className="font-medium">{bounty.title}</h3>
-          <div className="flex items-center text-sm text-gray-500">
+          {/* <div className="flex items-center text-sm text-gray-500">
             <span>{bounty.company.name}</span>
             <span className="mx-2">•</span>
             <span>{bounty.type}</span>
@@ -22,7 +22,7 @@ export const BountyCard = ({ bounty }: BountyCardProps) => {
                 <span>{bounty.submissions} submissions</span>
               </>
             )}
-          </div>
+          </div> */}
         </div>
         <div className="text-right">
           <div className="font-medium">{bounty.reward.amount} {bounty.reward.token}</div>
