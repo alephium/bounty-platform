@@ -1,65 +1,216 @@
-import { useState } from 'react'
-import { Category, Status, Bounty } from '../types/supabase'
-import { Card, CardContent } from "../components/ui/card"
-import { Badge } from "../components/ui/badge"
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MessageSquare, Compass, Search, Anchor, MapPin, Ship, Filter } from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
+import { Bounty, Status } from '@/types/supabase'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
 
-const categories: Category[] = ['content', 'design', 'development', 'other']
-const statuses: Status[] = ['open', 'in review', 'completed']
+export function Bounties() {
+  const navigate = useNavigate()
+  const { theme } = useTheme()
+  
+  const [bounties, setBounties] = useState<Bounty[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+  const [selectedStatus, setSelectedStatus] = useState<Status>('open')
+  const [searchQuery, setSearchQuery] = useState('')
 
-export const Bounties = () => {
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all')
-  const [selectedStatus, setSelectedStatus] = useState<Status | 'all'>('all')
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+
+  useEffect(() => {
+    const fetchBounties = async () => {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('bounties')
+          .select('*')
+          .eq('status', selectedStatus)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        setBounties(data || [])
+      } catch (error) {
+        console.error('Error fetching bounties:', error)
+        toast.error('Failed to load bounties')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBounties()
+  }, [selectedStatus])
+
+  const categoryFilters = ["All", "Content", "Design", "Development", "Other"]
+
+  const filteredBounties = bounties.filter(bounty => {
+    const matchesCategory = selectedCategory === "All" || 
+      bounty.category.toLowerCase() === selectedCategory.toLowerCase()
+    
+    const matchesSearch = searchQuery === '' || 
+      bounty.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bounty.company.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+    return matchesCategory && matchesSearch
+  })
+
+  const getTimeRemaining = (dueDate: string) => {
+    const remaining = new Date(dueDate).getTime() - new Date().getTime()
+    const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
+    return `${days}d`
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Bounties</h1>
-        <div className="flex gap-4">
-          <select 
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as Category | 'all')}
-            className="bg-white border border-amber-200 text-gray-900 rounded-lg px-3 py-2 hover:border-amber-300 focus:ring-2 focus:ring-amber-500"
+    <div className={`min-h-screen ${bgColor} w-full px-4`}>
+      <div className="max-w-7xl mx-auto py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h1 className={`text-2xl font-bold ${textColor}`}>Bounty Board</h1>
+            <p className={`${mutedTextColor}`}>Discover and complete bounties to earn rewards</p>
+          </div>
+          {/* <Button 
+            className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+            onClick={() => navigate('/bugbounty')}
           >
-            <option value="all">All Categories</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          <select 
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as Status | 'all')}
-            className="bg-white border border-amber-200 text-gray-900 rounded-lg px-3 py-2 hover:border-amber-300 focus:ring-2 focus:ring-amber-500"
-          >
-            <option value="all">All Statuses</option>
-            {statuses.map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
+            Bug Bounty Program
+          </Button> */}
         </div>
-      </div>
-      
-      {/* Bounty cards would go here */}
-      <div className="grid gap-4">
-        <Card className="bg-white border-amber-200 hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Bounty Title</h3>
-                <p className="text-gray-600">Description</p>
-                <div className="flex gap-2 mt-2">
-                  <Badge className="bg-amber-100 text-amber-700">
-                    Category
-                  </Badge>
-                  <Badge className="bg-green-100 text-green-700">
-                    Status
-                  </Badge>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-amber-600">$1000</p>
-                <p className="text-gray-600">Reward</p>
-              </div>
+
+        {/* Search and Filters */}
+        <div className="space-y-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className={`absolute left-3 top-3 h-4 w-4 ${mutedTextColor}`} />
+              <Input
+                placeholder="Search bounties..."
+                className={`pl-9 ${bgColor} border-${borderColor} ${textColor}`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+            <div className="flex gap-2 overflow-x-auto">
+              {categoryFilters.map((filter) => (
+                <Button 
+                  key={filter}
+                  variant="outline" 
+                  className={`rounded-full ${borderColor} bg-transparent ${textColor} 
+                    ${theme === 'dark' ? 
+                      'hover:bg-amber-500/20 hover:text-amber-400' : 
+                      'hover:bg-amber-100 hover:text-amber-700'}
+                    ${selectedCategory === filter ? 
+                      theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700' 
+                      : ''}`}
+                  onClick={() => setSelectedCategory(filter)}
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bounties List */}
+        <Card className={`${cardBg} ${borderColor}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Compass className={`w-6 h-6 ${textColor}`} />
+                <h2 className={`font-bold ${textColor}`}>Available Bounties</h2>
+              </div>
+              <span className={mutedTextColor}>{filteredBounties.length} bounties</span>
+            </div>
+
+            <Tabs value={selectedStatus} onValueChange={(value: Status) => setSelectedStatus(value)} className="w-full">
+              <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
+                {["open", "in review", "completed"].map((tab) => (
+                  <TabsTrigger 
+                    key={tab}
+                    value={tab as Status}
+                    className="data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900"
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredBounties.length === 0 ? (
+                    <div className={`text-center py-8 ${mutedTextColor}`}>
+                      No bounties found
+                    </div>
+                  ) : (
+                    filteredBounties.map((bounty) => (
+                      <Card key={bounty.id} className={`${cardBg} ${borderColor}`}>
+                        <CardContent className="flex items-center justify-between p-4">
+                          <div className="flex gap-4">
+                            <div className={`w-12 h-12 ${theme === 'dark' ? 
+                              'bg-amber-500/10' : 'bg-amber-100'} rounded-lg flex items-center justify-center`}>
+                              <Ship className={textColor} />
+                            </div>
+                            <div>
+                              <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                              <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                {bounty.company.name}
+                                <Badge variant="secondary" className={`${theme === 'dark' ? 
+                                  'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}>
+                                  <Anchor className="w-3 h-3 mr-1" />
+                                  Verified
+                                </Badge>
+                              </div>
+                              <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{bounty.category}</span>
+                                </div>
+                                <span>Due in {getTimeRemaining(bounty.due_date)}</span>
+                                {bounty.submissions_count > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <MessageSquare className="w-4 h-4" />
+                                    <span>{bounty.submissions_count}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="flex items-center gap-1">
+                                <span className={textColor}>◈</span>
+                                <span className={`font-medium ${textColor}`}>{bounty.reward.amount}</span>
+                              </div>
+                              <span className={`text-sm ${mutedTextColor}`}>{bounty.reward.token}</span>
+                            </div>
+                            <Button 
+                              variant="outline"
+                              className={`${borderColor} bg-transparent ${textColor} 
+                                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                              onClick={() => navigate(`/bounty/${bounty.id}`)}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              )}
+            </Tabs>
           </CardContent>
         </Card>
       </div>

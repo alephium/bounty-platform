@@ -106,13 +106,18 @@ export default function BountyDetails() {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]">
+                {/* <Button className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"> */}
+                <Button 
+                  variant="outline" 
+                  className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
+                  onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSc5i7wJ-8g1n5e_A4Cmbbprop_MdOurZtxnxCX1Zs22cEt3Hg/viewform', '_blank')}
+                >
                   Submit Proposal
                 </Button>
                 <div className="p-3 bg-[#C1A461]/10 rounded-lg border border-[#C1A461]/20">
                   <div className={`flex gap-2 text-sm ${textColor}`}>
                     <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-1" />
-                    <p>Submit your proposal first and wait for approval before starting work.</p>
+                    <p>Register first and wait for approval before starting work.</p>
                   </div>
                 </div>
               </CardContent>
@@ -139,8 +144,8 @@ export default function BountyDetails() {
               <CardContent className="p-4">
                 <h3 className={`font-bold ${textColor} mb-3`}>CONTACT</h3>
                 <Button 
-                  variant="outline" 
-                  className={`w-full border-[#C1A461]/20 ${textColor} hover:bg-[#C1A461]/20`}
+                  className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                  onClick={() => window.open('https://x.com/Blockflow_DAO', '_blank')}
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Contact Publisher
@@ -171,14 +176,14 @@ export default function BountyDetails() {
                   </div>
                 </div>
               </div>
-              <Button 
+              {/* <Button 
                 variant="outline" 
                 className={`border-[#C1A461]/20 bg-amber-500 text-gray-900`}
                 // className={'data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900'}
                 onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSc5i7wJ-8g1n5e_A4Cmbbprop_MdOurZtxnxCX1Zs22cEt3Hg/viewform', '_blank')}
               >
                 Subscribe
-              </Button>
+              </Button> */}
             </div>
 
             <Tabs defaultValue="details" className="w-full">
