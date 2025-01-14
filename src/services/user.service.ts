@@ -95,11 +95,11 @@ export class UserService {
   }
   static async signInWithGoogle() {
     try {
-      const { origin } = window.location
+      const origin = import.meta.env.DEV ? 'http://localhost:5173' : 'URL_ADDRESS'
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}`,
+          // redirectTo: origin,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -121,8 +121,8 @@ export class UserService {
       if (error) throw error
       
       // Clear any local storage items related to auth
-      window.localStorage.removeItem('contributium-auth')
-      window.localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('contributium-auth')
+      localStorage.removeItem('supabase.auth.token')
       
       return true
     } catch (error) {

@@ -31,6 +31,7 @@ export interface Bounty {
     amount: number
     token: string
   }
+  requirements: string [] | null
   due_date: string
   submissions_count: number
   created_at: string

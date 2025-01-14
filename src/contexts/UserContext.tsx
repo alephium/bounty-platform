@@ -45,6 +45,7 @@ export function UserProvider({
   useEffect(() => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(event)
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         refreshUser()
       } else if (event === 'SIGNED_OUT') {

@@ -8,14 +8,16 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
-import { Projects } from './pages/Projects'
-import { Grants } from './pages/Grants'
+import Projects from './pages/Projects'
+import Grants from './pages/Grants'
 import Hackathon from './pages/Hackathon'
 import Prize  from './pages/Prize'
 import Profile from './pages/Profile'
 import Submit from './pages/Submit'
 import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
+import EditBounty from './pages/EditBounty'
+import BountyDetail from './pages/BountyDetail'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -60,7 +62,8 @@ const App = () => {
               <Route path="/hackathon/prize" element={<Prize />} />
               <Route path="/hackathon/submit" element={<Submit />} />
               <Route path="/profile/:username" element={<Profile />} />
-              {/* Catch-all route for 404 */}
+              <Route path="/bounty/:id" element={<BountyDetail />} />
+              <Route path="/editbounty" element={<EditBounty />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

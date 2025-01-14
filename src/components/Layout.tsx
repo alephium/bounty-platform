@@ -1,22 +1,22 @@
-// src/components/Layout.tsx
 import { ReactNode, useEffect, useState } from 'react'
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'
-import { Search, Sun, Moon } from 'lucide-react'
+import { Search, Sun, Moon, Plus } from 'lucide-react'
 import { Card, CardContent } from "./ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { AuthPromptModal } from './AuthPromptModal'
 import { AvatarDropdown } from './ui/AvatarDropdown'
 
 const Layout = () => {
   const { user } = useUser()
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const isAlephiumTeam = user?.email?.endsWith('@alephium.org')
 
   useEffect(() => {
     if (!user && !location.pathname.includes('/auth')) {
@@ -49,7 +49,6 @@ const Layout = () => {
 
   return (
     <>
-      <AuthPromptModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <div className={`min-h-screen ${bgColor}`}>
         <nav className={`${bgColor} border-b ${borderColor}`}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
@@ -76,27 +75,25 @@ const Layout = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              {/* <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className={`${textColor} hover:opacity-80`}
-              >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </Button> */}
               <Search className={`w-5 h-5 ${textColor}`} />
               
               {user ? (
-                renderAvatar()
+                <div className="flex items-center gap-4">
+                  {isAlephiumTeam && (
+                    <Button 
+                      className={theme === 'dark' ? 
+                        "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                        "bg-amber-500 hover:bg-amber-600 text-white"}
+                      onClick={() => navigate('/bounties/edit')}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Edit Bounty
+                    </Button>
+                  )}
+                  {renderAvatar()}
+                </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Button 
-                    variant="ghost" 
-                    className={`${textColor} hover:opacity-80`}
-                    onClick={() => navigate('/sponsor')}
-                  >
-                    Become a Sponsor
-                  </Button>
                   <Button 
                     variant="ghost" 
                     className={`${textColor} hover:opacity-80`}
@@ -181,7 +178,7 @@ const Layout = () => {
               <CardContent className="p-4">
                 <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
                 <div>
-                        <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
+                  <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
                 </div>
               </CardContent>
             </Card>
