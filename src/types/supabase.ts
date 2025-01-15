@@ -5,6 +5,9 @@ export type WorkExperience = '0-2' | '2-5' | '5-10' | '10+'
 export type ProjectCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
 export type ProjectStatus = 'published' | 'draft' | 'archived'
 export type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
+export type ParticipationType = 'team' | 'solo'
+export type TeamStatus = 'active' | 'inactive'
+export type ProjectSubmissionStatus = 'draft' | 'submitted'
 
 // Project, Bounty, and Grant interfaces remain the same
 export interface Project {
@@ -138,134 +141,48 @@ export type GrantInsert = Omit<Grant, 'id' | 'created_at' | 'updated_at'>
 export type UserUpdate = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
 export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated_at'>
 
-
 export interface Team {
   id: string
   name: string
+  description: string | null
+  status: TeamStatus
+  member1: string
+  member2: string | null
+  member3: string | null
+  member4: string | null
+  member5: string | null
   created_at: string
   updated_at: string
-  description: string | null
-  team_size: number
-  status: 'registered' | 'active' | 'completed' | 'disqualified'
+}
+
+export interface HackathonParticipant {
+  id: string
+  user_id: string
+  team_id: string | null // null if solo
+  participation_type: ParticipationType
+  created_at: string
+  updated_at: string
 }
 
 export interface HackathonProject {
   id: string
-  team_id: string
   title: string
-  description: string | null
-  repository_url: string | null
-  deployment_url: string | null
+  description: string
+  github_url: string
+  demo_url: string | null
+  participant_id: string // References HackathonParticipant
+  prize_category: 'main' | 'specific' | 'individual'
+  specific_category?: 'creative' | 'ux' | 'code_quality' | 'security' | null
+  submission_status: ProjectSubmissionStatus
   created_at: string
   updated_at: string
-  submission_status: 'draft' | 'submitted' | 'qualified' | 'disqualified'
-  contract_deployed: boolean
-  category: string[]
-}
-
-export interface TeamMember {
-  id: string
-  team_id: string
-  user_id: string
-  role: 'leader' | 'member'
-  joined_at: string
-}
-
-export interface EvaluationCriteria {
-  id: string
-  name: string
-  description: string | null
-  weight: number
-  created_at: string
-}
-
-export interface Evaluation {
-  id: string
-  hackathonproject_id: string
-  criteria_id: string
-  judge_id: string
-  score: number
-  feedback: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface Prize {
-  id: string
-  name: string
-  description: string | null
-  amount: number
-  category: 'main_prize' | 'specific_category' | 'individual_hacker' | 'bonus' | 'participation'
-  sub_category: string | null
-  max_winners: number
-  created_at: string
 }
 
 export interface PrizeWinner {
   id: string
-  prize_id: string
-  team_id: string | null
-  user_id: string | null
-  hackathonproject_id: string | null
-  awarded_amount: number
+  team_id: string
+  prize_type: 'main' | 'specific' | 'individual'
+  prize_category: string | null // For specific prizes
+  prize_amount: number
   awarded_at: string
-}
-
-// Database interface for type safety
-export interface Database {
-  public: {
-    Tables: {
-      teams: {
-        Row: Team
-        Insert: Omit<Team, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Team, 'id'>>
-      }
-      hackathonprojects: {
-        Row: HackathonProject
-        Insert: Omit<HackathonProject, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<HackathonProject, 'id'>>
-      }
-      team_members: {
-        Row: TeamMember
-        Insert: Omit<TeamMember, 'id' | 'joined_at'>
-        Update: Partial<Omit<TeamMember, 'id'>>
-      }
-      evaluation_criteria: {
-        Row: EvaluationCriteria
-        Insert: Omit<EvaluationCriteria, 'id' | 'created_at'>
-        Update: Partial<Omit<EvaluationCriteria, 'id'>>
-      }
-      evaluations: {
-        Row: Evaluation
-        Insert: Omit<Evaluation, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Evaluation, 'id'>>
-      }
-      prizes: {
-        Row: Prize
-        Insert: Omit<Prize, 'id' | 'created_at'>
-        Update: Partial<Omit<Prize, 'id'>>
-      }
-      prize_winners: {
-        Row: PrizeWinner
-        Insert: Omit<PrizeWinner, 'id' | 'awarded_at'>
-        Update: Partial<Omit<PrizeWinner, 'id'>>
-      }
-    }
-    Views: {
-      [key: string]: {
-        Row: Record<string, unknown>
-        Insert: Record<string, unknown>
-        Update: Record<string, unknown>
-      }
-    }
-    Functions: {
-      [key: string]: {
-        Args: Record<string, unknown>
-        Returns: unknown
-      }
-    }
-    Enums: {
-      [key: string]: unknown
-    }
-  }
 }

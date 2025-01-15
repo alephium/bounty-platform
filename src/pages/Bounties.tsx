@@ -130,7 +130,7 @@ export function Bounties() {
               <span className={mutedTextColor}>{filteredBounties.length} bounties</span>
             </div>
 
-            <Tabs value={selectedStatus} onValueChange={(value: Status) => setSelectedStatus(value)} className="w-full">
+            <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
               <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
                 {["open", "in review", "completed"].map((tab) => (
                   <TabsTrigger 

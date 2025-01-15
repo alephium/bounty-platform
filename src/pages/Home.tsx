@@ -141,7 +141,7 @@ export default function Home() {
                   <h2 className={`font-bold ${textColor}`}>Available Quests</h2>
                 </div>
 
-                <Tabs value={selectedStatus} onValueChange={(value: Status) => setSelectedStatus(value)} className="w-full">
+                <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
                   <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
                     {["open", "in review", "completed"].map((tab) => (
                       <TabsTrigger 

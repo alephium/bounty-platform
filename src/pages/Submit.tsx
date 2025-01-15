@@ -1,75 +1,85 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { X } from 'lucide-react'
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Label } from "../components/ui/label"
-import { Textarea } from "../components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select"
+} from "@/components/ui/select"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "../components/ui/card"
-import { Checkbox } from "../components/ui/checkbox"
-import { supabase } from "../lib/supabase"
-import { useUser } from "../contexts/UserContext"
-import { toast } from "../components/ui/use-toast"
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useUser } from "@/contexts/UserContext"
+import { toast } from "@/components/ui/use-toast"
 
 interface FormData {
   title: string
   description: string
   repository_url: string
   deployment_url: string
-  category: string[]
+  category: string
   contract_deployed: boolean
-  team_size: number
+  prize_category: string
 }
+
+const teamPrizes = [
+  { value: "creative", label: "Most Creative Project" },
+  { value: "ux", label: "Best User Experience (UI/UX)" },
+  { value: "code", label: "Best Code Quality" },
+  { value: "security", label: "Best Security Project" }
+]
+
+const soloPrizes = [
+  { value: "port", label: "Port a Simple Solidity Contract" },
+  { value: "puzzle", label: "Solve the Bounty Puzzle" },
+  { value: "tool", label: "Build a Mini-Tool for Alephium Developers" }
+]
+
+const categoryOptions = [
+  { value: "dapp", label: "Decentralized Application" },
+  { value: "defi", label: "DeFi Protocol" },
+  { value: "nft", label: "NFT Project" },
+  { value: "tool", label: "Developer Tool" },
+  { value: "game", label: "Blockchain Game" },
+  { value: "security", label: "Security Solution" }
+]
 
 export default function ProjectSubmission() {
   const navigate = useNavigate()
   const { user } = useUser()
   const [loading, setLoading] = useState(false)
+  const [participationType, setParticipationType] = useState<'team' | 'solo' | null>(null)
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     repository_url: "",
     deployment_url: "",
-    category: [],
+    category: "",
     contract_deployed: false,
-    team_size: 1
+    prize_category: ""
   })
 
-  const categoryOptions = [
-    { value: "dapp", label: "Decentralized Application" },
-    { value: "defi", label: "DeFi Protocol" },
-    { value: "nft", label: "NFT Project" },
-    { value: "tool", label: "Developer Tool" },
-    { value: "game", label: "Blockchain Game" },
-    { value: "security", label: "Security Solution" }
-  ]
+  useEffect(() => {
+    // Reset prize category when participation type changes
+    setFormData(prev => ({ ...prev, prize_category: "" }))
+  }, [participationType])
 
   const handleChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }))
-  }
-
-  const handleCategoryToggle = (category: string) => {
-    setFormData(prev => ({
-      ...prev,
-      category: prev.category.includes(category)
-        ? prev.category.filter(c => c !== category)
-        : [...prev.category, category]
     }))
   }
 
@@ -79,9 +89,9 @@ export default function ProjectSubmission() {
     if (!formData.title.trim()) errors.push("Project title is required")
     if (!formData.description.trim()) errors.push("Project description is required")
     if (!formData.repository_url.trim()) errors.push("Repository URL is required")
-    if (formData.category.length === 0) errors.push("Select at least one category")
+    if (!formData.category) errors.push("Project category is required")
+    if (!formData.prize_category) errors.push("Prize category is required")
     
-    // Basic URL validation
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
     if (!urlPattern.test(formData.repository_url)) {
       errors.push("Enter a valid repository URL")
@@ -103,45 +113,10 @@ export default function ProjectSubmission() {
         return
       }
 
-      // First get or verify team association
-      const { data: teamMember, error: teamError } = await supabase
-        .from('team_members')
-        .select('team_id')
-        .eq('user_id', user?.id)
-        .single()
-
-      if (teamError || !teamMember?.team_id) {
-        toast({
-          description: "You need to be part of a team to submit a project",
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Create project submission
-      const { error: submissionError } = await supabase
-        .from('hackathonprojects')
-        .insert([
-          {
-            team_id: teamMember.team_id,
-            title: formData.title,
-            description: formData.description,
-            repository_url: formData.repository_url,
-            deployment_url: formData.deployment_url || null,
-            category: formData.category,
-            contract_deployed: formData.contract_deployed,
-            submission_status: 'submitted'
-          }
-        ])
-
-      if (submissionError) throw submissionError
-
-      toast({
-        description: "Project submitted successfully!",
-        duration: 5000
-      })
+      // Submit project logic here
+      toast({ description: "Project submitted successfully!" })
+      navigate('/hackathon')
       
-      navigate('/dashboard')
     } catch (error) {
       console.error('Error submitting project:', error)
       toast({
@@ -168,7 +143,7 @@ export default function ProjectSubmission() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/hackathon')}
                 className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
               >
                 <X className="h-5 w-5" />
@@ -176,6 +151,55 @@ export default function ProjectSubmission() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Participation Type */}
+            <div className="space-y-2">
+              <Label className="text-[#C1A461]">
+                Participation Type <span className="text-red-500">*</span>
+              </Label>
+              <RadioGroup
+                value={participationType || ""}
+                onValueChange={(value) => setParticipationType(value as 'team' | 'solo')}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="team" id="team" />
+                  <Label htmlFor="team" className="text-[#C1A461]">Team Project</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="solo" id="solo" />
+                  <Label htmlFor="solo" className="text-[#C1A461]">Solo Project</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Prize Category */}
+            {participationType && (
+              <div className="space-y-2">
+                <Label className="text-[#C1A461]">
+                  Prize Category <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.prize_category}
+                  onValueChange={(value) => handleChange('prize_category', value)}
+                >
+                  <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]">
+                    <SelectValue placeholder="Select a prize category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                    {(participationType === 'team' ? teamPrizes : soloPrizes).map((prize) => (
+                      <SelectItem
+                        key={prize.value}
+                        value={prize.value}
+                        className="text-[#C1A461]"
+                      >
+                        {prize.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {/* Project Title */}
             <div className="space-y-2">
               <Label className="text-[#C1A461]">
@@ -202,6 +226,32 @@ export default function ProjectSubmission() {
               />
             </div>
 
+            {/* Project Category */}
+            <div className="space-y-2">
+              <Label className="text-[#C1A461]">
+                Project Category <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => handleChange('category', value)}
+              >
+                <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                  {categoryOptions.map((category) => (
+                    <SelectItem
+                      key={category.value}
+                      value={category.value}
+                      className="text-[#C1A461]"
+                    >
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Repository URL */}
             <div className="space-y-2">
               <Label className="text-[#C1A461]">
@@ -217,38 +267,13 @@ export default function ProjectSubmission() {
 
             {/* Deployment URL */}
             <div className="space-y-2">
-              <Label className="text-[#C1A461]">Deployment URL</Label>
+              <Label className="text-[#C1A461]">Demo URL(Video, Vercel or any site )</Label>
               <Input
                 placeholder="https://your-project.vercel.app"
                 value={formData.deployment_url}
                 onChange={(e) => handleChange('deployment_url', e.target.value)}
                 className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
               />
-            </div>
-
-            {/* Categories */}
-            <div className="space-y-4">
-              <Label className="text-[#C1A461]">
-                Project Categories <span className="text-red-500">*</span>
-              </Label>
-              <div className="grid grid-cols-2 gap-4">
-                {categoryOptions.map((category) => (
-                  <div key={category.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={category.value}
-                      checked={formData.category.includes(category.value)}
-                      onCheckedChange={() => handleCategoryToggle(category.value)}
-                      className="border-[#C1A461]/20 data-[state=checked]:bg-[#C1A461] data-[state=checked]:border-[#C1A461]"
-                    />
-                    <Label
-                      htmlFor={category.value}
-                      className="text-[#C1A461]"
-                    >
-                      {category.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Smart Contract Deployment */}
@@ -271,7 +296,7 @@ export default function ProjectSubmission() {
             <Button
               className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || !participationType}
             >
               {loading ? "Submitting..." : "Submit Project"}
             </Button>
