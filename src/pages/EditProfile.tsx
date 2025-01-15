@@ -260,8 +260,8 @@ export const EditProfile = () => {
     switch (name) {
       case 'username':
         if (!value) return 'Username is required'
-        if (!/^[a-zA-Z0-9_]{3,20}$/.test(value)) {
-          return 'Username must be 3-20 characters and can only contain letters, numbers, and underscores'
+        if (!/^[a-zA-Z0-9_]{1,20}$/.test(value)) {
+          return 'Username must be 1-20 characters and can only contain letters, numbers, and underscores'
         }
         break
       case 'walletAddress':

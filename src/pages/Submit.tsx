@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { X } from 'lucide-react'
+import { X, Clock } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Select,
   SelectContent,
@@ -23,13 +24,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { useUser } from "@/contexts/UserContext"
 import { toast } from "@/components/ui/use-toast"
+import { useSubmissionDeadline } from "../hooks/submissionDeadlineUtils"
 
 interface FormData {
   title: string
   description: string
   repository_url: string
   deployment_url: string
-  category: string
   contract_deployed: boolean
   prize_category: string
 }
@@ -40,25 +41,16 @@ const teamPrizes = [
   { value: "code", label: "Best Code Quality" },
   { value: "security", label: "Best Security Project" }
 ]
-
 const soloPrizes = [
   { value: "port", label: "Port a Simple Solidity Contract" },
   { value: "puzzle", label: "Solve the Bounty Puzzle" },
   { value: "tool", label: "Build a Mini-Tool for Alephium Developers" }
 ]
 
-const categoryOptions = [
-  { value: "dapp", label: "Decentralized Application" },
-  { value: "defi", label: "DeFi Protocol" },
-  { value: "nft", label: "NFT Project" },
-  { value: "tool", label: "Developer Tool" },
-  { value: "game", label: "Blockchain Game" },
-  { value: "security", label: "Security Solution" }
-]
-
 export default function ProjectSubmission() {
   const navigate = useNavigate()
   const { user } = useUser()
+  const { isAfterDeadline, timeRemaining } = useSubmissionDeadline()
   const [loading, setLoading] = useState(false)
   const [participationType, setParticipationType] = useState<'team' | 'solo' | null>(null)
   const [formData, setFormData] = useState<FormData>({
@@ -66,15 +58,21 @@ export default function ProjectSubmission() {
     description: "",
     repository_url: "",
     deployment_url: "",
-    category: "",
     contract_deployed: false,
     prize_category: ""
   })
 
-  useEffect(() => {
-    // Reset prize category when participation type changes
-    setFormData(prev => ({ ...prev, prize_category: "" }))
-  }, [participationType])
+  // useEffect(() => {
+  //   if (isAfterDeadline) {
+  //     toast({
+  //       description: "The submission deadline has passed.",
+  //       variant: "destructive",
+  //       duration: 5000
+  //     })
+  //     navigate('/hackathon')
+  //   }
+  // }, [isAfterDeadline, navigate])
+
 
   const handleChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -89,7 +87,6 @@ export default function ProjectSubmission() {
     if (!formData.title.trim()) errors.push("Project title is required")
     if (!formData.description.trim()) errors.push("Project description is required")
     if (!formData.repository_url.trim()) errors.push("Repository URL is required")
-    if (!formData.category) errors.push("Project category is required")
     if (!formData.prize_category) errors.push("Prize category is required")
     
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
@@ -129,7 +126,7 @@ export default function ProjectSubmission() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1B2228] p-4 md:p-8">
+  <div className="min-h-screen bg-[#1B2228] p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
         <Card className="bg-[#1B2228] border-[#C1A461]/20">
           <CardHeader>
@@ -150,6 +147,19 @@ export default function ProjectSubmission() {
               </Button>
             </div>
           </CardHeader>
+
+          {/* <CardContent className="pb-0">
+            <Alert className="bg-[#C1A461]/10 border-[#C1A461]/20">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#C1A461]" />
+                <AlertDescription className="text-[#C1A461]">
+                  Time remaining: {timeRemaining}
+                </AlertDescription>
+              </div>
+              
+            </Alert>
+          </CardContent> */}
+
           <CardContent className="space-y-6">
             {/* Participation Type */}
             <div className="space-y-2">
@@ -159,7 +169,7 @@ export default function ProjectSubmission() {
               <RadioGroup
                 value={participationType || ""}
                 onValueChange={(value) => setParticipationType(value as 'team' | 'solo')}
-                className="flex flex-col space-y-2"
+                className="flex flex-col space-y-2 "
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="team" id="team" />
@@ -226,32 +236,6 @@ export default function ProjectSubmission() {
               />
             </div>
 
-            {/* Project Category */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">
-                Project Category <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleChange('category', value)}
-              >
-                <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
-                  {categoryOptions.map((category) => (
-                    <SelectItem
-                      key={category.value}
-                      value={category.value}
-                      className="text-[#C1A461]"
-                    >
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Repository URL */}
             <div className="space-y-2">
               <Label className="text-[#C1A461]">
@@ -296,9 +280,9 @@ export default function ProjectSubmission() {
             <Button
               className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
               onClick={handleSubmit}
-              disabled={loading || !participationType}
+              disabled={loading || !participationType || isAfterDeadline}
             >
-              {loading ? "Submitting..." : "Submit Project"}
+              {loading ? "Submitting..." : isAfterDeadline ? "Submission Closed" : "Submit Project"}
             </Button>
           </CardContent>
         </Card>

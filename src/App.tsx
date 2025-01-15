@@ -18,6 +18,7 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
+import JudgeReview from './pages/JudgeReview'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -61,6 +62,7 @@ const App = () => {
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/hackathon/prize" element={<Prize />} />
               <Route path="/hackathon/submit" element={<Submit />} />
+              <Route path="/hackathon/judgesreview" element={<JudgeReview />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />
