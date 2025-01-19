@@ -1,5 +1,4 @@
-// hooks/useHackathonParticipation.ts
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { HackathonParticipant, Team } from '../types/supabase'
 
@@ -9,7 +8,15 @@ export function useHackathonParticipation(userId: string) {
   const [loading, setLoading] = useState(true)
 
   // Fetch current participation
-  const fetchParticipation = async () => {
+  const fetchParticipation = useCallback(async () => {
+    if (!userId) {
+      setLoading(false)
+      return
+    }
+
+    let mounted = true
+    setLoading(true)
+
     try {
       const { data, error } = await supabase
         .from('hackathon_participants')
@@ -30,23 +37,50 @@ export function useHackathonParticipation(userId: string) {
           )
         `)
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
 
-      setParticipation(data)
-      setTeam(data?.team)
+      if (mounted) {
+        setParticipation(data || null)
+        setTeam(data?.team || null)
+      }
     } catch (error) {
       console.error('Error fetching participation:', error)
+      if (mounted) {
+        setParticipation(null)
+        setTeam(null)
+      }
     } finally {
-      setLoading(false)
+      if (mounted) {
+        setLoading(false)
+      }
     }
-  }
 
-  // Create team participation
+    return () => {
+      mounted = false
+    }
+  }, [userId])
+
+  useEffect(() => {
+    const cleanup = fetchParticipation()
+    return () => {
+      cleanup?.then(cleanupFn => cleanupFn?.())
+    }
+  }, [fetchParticipation])
+
   const createTeam = async (name: string, description: string) => {
     try {
-      // Create team with the current user as member1
+      const { data: existingParticipation } = await supabase
+        .from('hackathon_participants')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingParticipation) {
+        throw new Error('You are already participating in the hackathon')
+      }
+
       const { data: teamData, error: teamError } = await supabase
         .from('teams')
         .insert([{ 
@@ -54,46 +88,42 @@ export function useHackathonParticipation(userId: string) {
           description, 
           status: 'active',
           member1: userId,
-          member2: null,
-          member3: null,
-          member4: null,
-          member5: null
         }])
         .select()
         .single()
 
-      if (teamError) {
-        console.error('Team creation error:', teamError)
-        throw teamError
-      }
+      if (teamError) throw teamError
 
-      // Create participation
-      const { data: participationData, error: participationError } = await supabase
+      const { error: participationError } = await supabase
         .from('hackathon_participants')
         .insert([{
           user_id: userId,
           team_id: teamData.id,
           participation_type: 'team'
         }])
-        .select()
-        .single()
 
-      if (participationError) {
-        console.error('Participation error:', participationError)
-        throw participationError
-      }
+      if (participationError) throw participationError
 
       await fetchParticipation()
       return true
     } catch (error) {
       console.error('Error creating team:', error)
-      return false
+      throw error
     }
   }
 
-  // Register as solo
   const registerAsSolo = async () => {
     try {
+      const { data: existingParticipation } = await supabase
+        .from('hackathon_participants')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingParticipation) {
+        throw new Error('You are already participating in the hackathon')
+      }
+
       const { error } = await supabase
         .from('hackathon_participants')
         .insert([{
@@ -102,18 +132,19 @@ export function useHackathonParticipation(userId: string) {
         }])
 
       if (error) throw error
+
       await fetchParticipation()
       return true
     } catch (error) {
       console.error('Error registering as solo:', error)
-      return false
+      throw error
     }
   }
 
-  // Leave team or withdraw from solo participation
   const leaveParticipation = async () => {
+    if (!participation) return false
+
     try {
-      // Delete participation record
       const { error } = await supabase
         .from('hackathon_participants')
         .delete()
@@ -121,8 +152,7 @@ export function useHackathonParticipation(userId: string) {
 
       if (error) throw error
 
-      // If this was a team member and they were member1 (team leader), delete the team
-      if (team && team.member1 === userId) {
+      if (team?.member1 === userId) {
         const { error: teamError } = await supabase
           .from('teams')
           .delete()
@@ -136,45 +166,34 @@ export function useHackathonParticipation(userId: string) {
       return true
     } catch (error) {
       console.error('Error leaving participation:', error)
-      return false
+      throw error
     }
   }
 
-  useEffect(() => {
-    if (userId) {
-      fetchParticipation()
-    }
-  }, [userId])
+  const addTeamMember = useCallback(async (username: string) => {
+    if (!team) throw new Error('No team found')
 
-  const addTeamMember = async (username: string) => {
     try {
-      // First find the user by username
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id')
         .eq('username', username)
-        .single()
+        .maybeSingle()
 
       if (userError || !userData) {
         throw new Error('User not found')
       }
 
-      // Check if user is already in a team
-      const { data: existingParticipation, error: participationError } = await supabase
+      const { data: existingParticipation } = await supabase
         .from('hackathon_participants')
         .select('id')
         .eq('user_id', userData.id)
-        .single()
+        .maybeSingle()
 
       if (existingParticipation) {
         throw new Error('User is already participating in the hackathon')
       }
 
-      if (!team) {
-        throw new Error('No team found')
-      }
-
-      // Find first available member slot
       const memberSlot = !team.member2 ? 'member2'
         : !team.member3 ? 'member3'
         : !team.member4 ? 'member4'
@@ -185,7 +204,8 @@ export function useHackathonParticipation(userId: string) {
         throw new Error('Team is already full')
       }
 
-      // Update team with new member
+      await supabase.auth.getSession()
+
       const { error: updateError } = await supabase
         .from('teams')
         .update({ [memberSlot]: userData.id })
@@ -193,7 +213,6 @@ export function useHackathonParticipation(userId: string) {
 
       if (updateError) throw updateError
 
-      // Create participation record for new member
       const { error: addError } = await supabase
         .from('hackathon_participants')
         .insert([{
@@ -206,11 +225,11 @@ export function useHackathonParticipation(userId: string) {
 
       await fetchParticipation()
       return true
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding team member:', error)
       throw error
     }
-  }
+  }, [team, fetchParticipation])
 
   return {
     participation,

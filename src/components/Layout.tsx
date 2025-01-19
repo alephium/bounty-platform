@@ -174,14 +174,14 @@ const Layout = () => {
               </CardContent>
             </Card>
 
-            <Card className={`${bgColor} ${borderColor}`}>
+            {/* <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
                 <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
                 <div>
                   <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </aside>
         </div>
       </div>
