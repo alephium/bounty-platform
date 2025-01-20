@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { X, Clock } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Select,
   SelectContent,
@@ -24,7 +23,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { useUser } from "@/contexts/UserContext"
 import { toast } from "@/components/ui/use-toast"
-import { useSubmissionDeadline } from "../hooks/submissionDeadlineUtils"
+
+const GOOGLE_SCRIPT_URL = "1y8L73Ebg40aq-Ahw1QaEshn7TyBSPupkxvH9wn9_0t57Vj1NeiXZtlWj"
 
 interface FormData {
   title: string
@@ -33,6 +33,10 @@ interface FormData {
   deployment_url: string
   contract_deployed: boolean
   prize_category: string
+  team_type: 'team' | 'solo' | null
+  timestamp: string
+  email: string
+  full_name: string
 }
 
 const teamPrizes = [
@@ -41,6 +45,7 @@ const teamPrizes = [
   { value: "code", label: "Best Code Quality" },
   { value: "security", label: "Best Security Project" }
 ]
+
 const soloPrizes = [
   { value: "port", label: "Port a Simple Solidity Contract" },
   { value: "puzzle", label: "Solve the Bounty Puzzle" },
@@ -49,30 +54,21 @@ const soloPrizes = [
 
 export default function ProjectSubmission() {
   const navigate = useNavigate()
-  const { user } = useUser()
-  const { isAfterDeadline, timeRemaining } = useSubmissionDeadline()
-  const [loading, setLoading] = useState(false)
   const [participationType, setParticipationType] = useState<'team' | 'solo' | null>(null)
+  const { user } = useUser()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     repository_url: "",
     deployment_url: "",
     contract_deployed: false,
-    prize_category: ""
+    prize_category: "",
+    team_type: null,
+    timestamp: "",
+    email: user?.email || "",
+    full_name: user?.full_name || ""
   })
-
-  // useEffect(() => {
-  //   if (isAfterDeadline) {
-  //     toast({
-  //       description: "The submission deadline has passed.",
-  //       variant: "destructive",
-  //       duration: 5000
-  //     })
-  //     navigate('/hackathon')
-  //   }
-  // }, [isAfterDeadline, navigate])
-
 
   const handleChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -88,6 +84,7 @@ export default function ProjectSubmission() {
     if (!formData.description.trim()) errors.push("Project description is required")
     if (!formData.repository_url.trim()) errors.push("Repository URL is required")
     if (!formData.prize_category) errors.push("Prize category is required")
+    if (!formData.team_type) errors.push("Participation type is required")
     
     const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
     if (!urlPattern.test(formData.repository_url)) {
@@ -100,193 +97,228 @@ export default function ProjectSubmission() {
     return errors
   }
 
+  const submitToGoogleSheets = async (data: FormData) => {
+    try {
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          timestamp: new Date().toISOString(),
+          type: "project_submission"
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+
+      const result = await response.json()
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error submitting to Google Sheets:', error)
+      throw error
+    }
+  }
+
   const handleSubmit = async () => {
     try {
       setLoading(true)
       const errors = validateForm()
       
       if (errors.length > 0) {
-        errors.forEach(error => toast({ description: error, variant: "destructive" }))
+        errors.forEach(error => toast({ 
+          description: error, 
+          variant: "destructive" 
+        }))
         return
       }
 
-      // Submit project logic here
-      toast({ description: "Project submitted successfully!" })
+      await submitToGoogleSheets(formData)
+      
+      toast({ 
+        description: "Project submitted successfully! Our team will review your submission." 
+      })
       navigate('/hackathon')
       
     } catch (error) {
       console.error('Error submitting project:', error)
       toast({
-        description: "Failed to submit project. Please try again.",
+        description: "Failed to submit project. Please try again or contact support.",
         variant: "destructive"
       })
     } finally {
       setLoading(false)
     }
   }
-
   return (
-  <div className="min-h-screen bg-[#1B2228] p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
-        <Card className="bg-[#1B2228] border-[#C1A461]/20">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl text-[#C1A461]">Submit Your Project</CardTitle>
-                <CardDescription className="text-[#C1A461]/80">
-                  Share your hackathon project with the community
-                </CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/hackathon')}
-                className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </CardHeader>
-
-          {/* <CardContent className="pb-0">
-            <Alert className="bg-[#C1A461]/10 border-[#C1A461]/20">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#C1A461]" />
-                <AlertDescription className="text-[#C1A461]">
-                  Time remaining: {timeRemaining}
-                </AlertDescription>
-              </div>
-              
-            </Alert>
-          </CardContent> */}
-
-          <CardContent className="space-y-6">
-            {/* Participation Type */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">
-                Participation Type <span className="text-red-500">*</span>
-              </Label>
-              <RadioGroup
-                value={participationType || ""}
-                onValueChange={(value) => setParticipationType(value as 'team' | 'solo')}
-                className="flex flex-col space-y-2 "
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="team" id="team" />
-                  <Label htmlFor="team" className="text-[#C1A461]">Team Project</Label>
+    <div className="min-h-screen bg-[#1B2228] p-4 md:p-8">
+        <div className="max-w-3xl mx-auto">
+          <Card className="bg-[#1B2228] border-[#C1A461]/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl text-[#C1A461]">Submit Your Project</CardTitle>
+                  <CardDescription className="text-[#C1A461]/80">
+                    Share your hackathon project with the community
+                  </CardDescription>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="solo" id="solo" />
-                  <Label htmlFor="solo" className="text-[#C1A461]">Solo Project</Label>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/hackathon')}
+                  className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardHeader>
+  
+            {/* <CardContent className="pb-0">
+              <Alert className="bg-[#C1A461]/10 border-[#C1A461]/20">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#C1A461]" />
+                  <AlertDescription className="text-[#C1A461]">
+                    Time remaining: {timeRemaining}
+                  </AlertDescription>
                 </div>
-              </RadioGroup>
-            </div>
-
-            {/* Prize Category */}
-            {participationType && (
+                
+              </Alert>
+            </CardContent> */}
+  
+            <CardContent className="space-y-6">
+              {/* Participation Type */}
               <div className="space-y-2">
                 <Label className="text-[#C1A461]">
-                  Prize Category <span className="text-red-500">*</span>
+                  Participation Type <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={formData.prize_category}
-                  onValueChange={(value) => handleChange('prize_category', value)}
+                <RadioGroup
+                  value={participationType || ""}
+                  onValueChange={(value) => setParticipationType(value as 'team' | 'solo')}
+                  className="flex flex-col space-y-2 "
                 >
-                  <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]">
-                    <SelectValue placeholder="Select a prize category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
-                    {(participationType === 'team' ? teamPrizes : soloPrizes).map((prize) => (
-                      <SelectItem
-                        key={prize.value}
-                        value={prize.value}
-                        className="text-[#C1A461]"
-                      >
-                        {prize.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="team" id="team" />
+                    <Label htmlFor="team" className="text-[#C1A461]">Team Project</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="solo" id="solo" />
+                    <Label htmlFor="solo" className="text-[#C1A461]">Solo Project</Label>
+                  </div>
+                </RadioGroup>
               </div>
-            )}
-
-            {/* Project Title */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">
-                Project Title <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                placeholder="Enter your project title"
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
-              />
-            </div>
-
-            {/* Project Description */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">
-                Project Description <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                placeholder="Describe your project..."
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                className="min-h-[150px] bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
-              />
-            </div>
-
-            {/* Repository URL */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">
-                Repository URL <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                placeholder="https://github.com/yourusername/project"
-                value={formData.repository_url}
-                onChange={(e) => handleChange('repository_url', e.target.value)}
-                className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
-              />
-            </div>
-
-            {/* Deployment URL */}
-            <div className="space-y-2">
-              <Label className="text-[#C1A461]">Demo URL(Video, Vercel or any site )</Label>
-              <Input
-                placeholder="https://your-project.vercel.app"
-                value={formData.deployment_url}
-                onChange={(e) => handleChange('deployment_url', e.target.value)}
-                className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
-              />
-            </div>
-
-            {/* Smart Contract Deployment */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="contract_deployed"
-                checked={formData.contract_deployed}
-                onCheckedChange={(checked) => handleChange('contract_deployed', checked)}
-                className="border-[#C1A461]/20 data-[state=checked]:bg-[#C1A461] data-[state=checked]:border-[#C1A461]"
-              />
-              <Label
-                htmlFor="contract_deployed"
-                className="text-[#C1A461]"
+  
+              {/* Prize Category */}
+              {participationType && (
+                <div className="space-y-2">
+                  <Label className="text-[#C1A461]">
+                    Prize Category <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.prize_category}
+                    onValueChange={(value) => handleChange('prize_category', value)}
+                  >
+                    <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]">
+                      <SelectValue placeholder="Select a prize category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                      {(participationType === 'team' ? teamPrizes : soloPrizes).map((prize) => (
+                        <SelectItem
+                          key={prize.value}
+                          value={prize.value}
+                          className="text-[#C1A461]"
+                        >
+                          {prize.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+  
+              {/* Project Title */}
+              <div className="space-y-2">
+                <Label className="text-[#C1A461]">
+                  Project Title <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="Enter your project title"
+                  value={formData.title}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
+                />
+              </div>
+  
+              {/* Project Description */}
+              <div className="space-y-2">
+                <Label className="text-[#C1A461]">
+                  Project Description <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  placeholder="Describe your project..."
+                  value={formData.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  className="min-h-[150px] bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
+                />
+              </div>
+  
+              {/* Repository URL */}
+              <div className="space-y-2">
+                <Label className="text-[#C1A461]">
+                  Repository URL <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  placeholder="https://github.com/yourusername/project"
+                  value={formData.repository_url}
+                  onChange={(e) => handleChange('repository_url', e.target.value)}
+                  className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
+                />
+              </div>
+  
+              {/* Deployment URL */}
+              <div className="space-y-2">
+                <Label className="text-[#C1A461]">Demo URL(Video, Vercel or any site )</Label>
+                <Input
+                  placeholder="https://your-project.vercel.app"
+                  value={formData.deployment_url}
+                  onChange={(e) => handleChange('deployment_url', e.target.value)}
+                  className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] placeholder:text-[#C1A461]/40"
+                />
+              </div>
+  
+              {/* Smart Contract Deployment */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="contract_deployed"
+                  checked={formData.contract_deployed}
+                  onCheckedChange={(checked) => handleChange('contract_deployed', checked)}
+                  className="border-[#C1A461]/20 data-[state=checked]:bg-[#C1A461] data-[state=checked]:border-[#C1A461]"
+                />
+                <Label
+                  htmlFor="contract_deployed"
+                  className="text-[#C1A461]"
+                >
+                  Project includes deployed smart contracts
+                </Label>
+              </div>
+  
+              {/* Submit Button */}
+              {/* <Button
+                className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                onClick={handleSubmit}
+                disabled={loading || !participationType || isAfterDeadline}
               >
-                Project includes deployed smart contracts
-              </Label>
-            </div>
-
-            {/* Submit Button */}
-            <Button
-              className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-              onClick={handleSubmit}
-              disabled={loading || !participationType || isAfterDeadline}
-            >
-              {loading ? "Submitting..." : isAfterDeadline ? "Submission Closed" : "Submit Project"}
-            </Button>
-          </CardContent>
-        </Card>
+                {loading ? "Submitting..." : isAfterDeadline ? "Submission Closed" : "Submit Project"}
+              </Button> */}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
-  )
+    )
 }

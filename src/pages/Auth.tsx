@@ -85,13 +85,13 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with Google'}
             </Button>
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
               <span className={mutedTextColor}>or</span>
               <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
-            </div>
+            </div> */}
 
-            <Button
+            {/* <Button
               variant="outline"
               className={`w-full ${borderColor} ${textColor} 
                 ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-50'}`}
@@ -100,7 +100,7 @@ export default function AuthPage() {
             >
               <Mail className="w-5 h-5 mr-2" />
               Continue with Email
-            </Button>
+            </Button> */}
 
             <p className={`text-center text-sm ${mutedTextColor}`}>
               By continuing, you agree to our{' '}

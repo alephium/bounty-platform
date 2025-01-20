@@ -4,18 +4,16 @@ import { User } from '../types/supabase'
 export class UserService {
   static async getCurrentUser(): Promise<User | null> {
     try {
-      // First check if we have a session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession
       if (sessionError) throw sessionError
       if (!session?.user) return null
-
-      // Get the user data from our users table
+      console.log("11111", session.user)
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', session.user.id)
         .single()
-
+      console.log("22222")
       if (error) throw error
       return data
     } catch (error) {
