@@ -4,39 +4,47 @@ import { User } from '../types/supabase'
 export class UserService {
   static async getCurrentUser(): Promise<User | null> {
     try {
-      // Get current session
       const { data: { session } } = await supabase.auth.getSession()
-      console.log("1111", session)
-      if (!session?.user) return null
+      console.log("getCurrentUser session:", session?.user?.id)
 
-      // Get user data from users table
-      const { data, error } = await supabase
+      if (!session?.user?.id) {
+        console.log("No valid session")
+        return null
+      }
+
+      // Short timeout for database query
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 3000)
+      );
+
+      const queryPromise = supabase
         .from('users')
         .select('*')
         .eq('id', session.user.id)
-        .single()
+        .single();
 
-      if (error) throw error
-      return data
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise])
+        .catch(error => {
+          console.error("Query error:", error);
+          return { data: null, error };
+        });
+
+      if (error) {
+        console.error("Database error:", error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
-      console.error('Error getting current user:', error)
-      return null
+      console.error('Error in getCurrentUser:', error);
+      return null;
     }
   }
 
   static async createOrUpdateUser(authUser: any): Promise<User | null> {
     try {
-      // Check if user exists
-      console.log("22222 ", authUser)
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
+      console.log("Creating/updating user:", authUser.id);
 
-      if (existingUser) return existingUser
-
-      // Create new user if doesn't exist
       const newUser: Partial<User> = {
         id: authUser.id,
         email: authUser.email,
@@ -45,19 +53,23 @@ export class UserService {
         avatar_url: authUser.user_metadata?.avatar_url,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      }
+      };
 
       const { data, error } = await supabase
         .from('users')
-        .insert([newUser])
+        .upsert([newUser])
         .select()
-        .single()
+        .single();
 
-      if (error) throw error
-      return data
+      if (error) {
+        console.error("Error creating user:", error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
-      console.error('Error in createOrUpdateUser:', error)
-      return null
+      console.error('Error in createOrUpdateUser:', error);
+      return null;
     }
   }
 
