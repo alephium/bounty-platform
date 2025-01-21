@@ -9,11 +9,17 @@ import { Button } from "../components/ui/button"
 import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { Bounty, Status } from '@/types/supabase'
-import { supabase } from '@/lib/supabase'
+// import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
+import { useSession } from "../contexts/SessionContext";
+import supabase from "../supabase";
+import { Link } from "react-router-dom";
 
 export default function Home() {
-  const { user, loading: userLoading, refreshUser } = useUser()
+  // const { session } = useSession();
+
+  const { user} = useUser() 
+  console.log(user)
   const { theme } = useTheme()
   const navigate = useNavigate()
   
@@ -52,10 +58,6 @@ export default function Home() {
     fetchBounties()
   }, [selectedStatus])
 
-  useEffect(() => {
-    refreshUser()
-  }, [])
-
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
@@ -89,8 +91,8 @@ export default function Home() {
                 <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
                   {user?.avatar_url ? (
                     <AvatarImage
-                      src={user.avatar_url}
-                      alt={user.full_name || 'User avatar'}
+                      src={user?.avatar_url}
+                      alt={user?.full_name || 'User avatar'}
                       onError={(e) => {
                         e.currentTarget.src = '/placeholder.svg'
                       }}
@@ -154,12 +156,7 @@ export default function Home() {
                     ))}
                   </TabsList>
 
-                  {loading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
+                  { <div className="space-y-4">
                       {filteredBounties.map((bounty) => (
                         <Card key={bounty.id} className={`${cardBg} ${borderColor}`}>
                           <CardContent className="flex items-center justify-between p-4">
@@ -214,7 +211,7 @@ export default function Home() {
                         </Card>
                       ))}
                     </div>
-                  )}
+                  }
                 </Tabs>
               </CardContent>
             </Card>

@@ -19,6 +19,8 @@ import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
 import JudgeReview from './pages/JudgeReview'
+// import SignInPage from './pages/auth/SignInPage'
+// import SignUpPage from './pages/auth/SignUpPage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -66,6 +68,8 @@ const App = () => {
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />
+              {/* <Route path="/auth/sign-in" element={<SignInPage />} />
+              <Route path="/auth/sign-up" element={<SignUpPage />} /> */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

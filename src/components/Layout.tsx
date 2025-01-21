@@ -7,6 +7,7 @@ import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AvatarDropdown } from './ui/AvatarDropdown'
+import { SessionProvider } from "../contexts/SessionContext";
 
 const Layout = () => {
   const { user } = useUser()
@@ -18,14 +19,20 @@ const Layout = () => {
 
   const isAlephiumTeam = user?.email?.endsWith('@alephium.org')
 
+  // useEffect(() => {
+  //   if (!user && !location.pathname.includes('/auth')) {
+  //     const timer = setTimeout(() => {
+  //       setShowAuthPrompt(true)
+  //     }, 15000)
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [user, location.pathname])
+
   useEffect(() => {
-    if (!user && !location.pathname.includes('/auth')) {
-      const timer = setTimeout(() => {
-        setShowAuthPrompt(true)
-      }, 15000)
-      return () => clearTimeout(timer)
+    if (user && location.pathname.includes('/auth')) {
+      navigate('/')
     }
-  }, [user, location.pathname])
+  }, [user, location.pathname, navigate])
 
   useEffect(() => {
     if (showAuthPrompt) {
@@ -49,6 +56,7 @@ const Layout = () => {
 
   return (
     <>
+    <SessionProvider>
       <div className={`min-h-screen ${bgColor}`}>
         <nav className={`${bgColor} border-b ${borderColor}`}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
@@ -94,20 +102,20 @@ const Layout = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Button 
+                  {/* <Button 
                     variant="ghost" 
                     className={`${textColor} hover:opacity-80`}
                     onClick={() => navigate('/auth')}
                   >
                     Login
-                  </Button>
+                  </Button> */}
                   <Button 
                     className={theme === 'dark' ? 
                       "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                       "bg-amber-500 hover:bg-amber-600 text-white"}
                     onClick={() => navigate('/auth')}
                   >
-                    Sign Up
+                    Sign in
                   </Button>
                 </div>
               )}
@@ -185,6 +193,7 @@ const Layout = () => {
           </aside>
         </div>
       </div>
+      </SessionProvider>
     </>
   )
 }

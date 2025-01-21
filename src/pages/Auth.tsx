@@ -8,6 +8,7 @@ import { UserService } from '../services/user.service'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { toast } from '../components/ui/use-toast'
+import { supabase } from '../lib/supabase'
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -25,18 +26,32 @@ export default function AuthPage() {
     : 'bg-amber-500 hover:bg-amber-600 text-white'
 
   const handleGoogleSignIn = async () => {
+    console.log('trigger')
+    const { origin } = window.location
     try {
       setIsLoading(true)
-      const { error } = await UserService.signInWithGoogle()
-      
-      if (error) {
-        toast({
-          variant: "destructive",
-          description: "Failed to sign in with Google. Please try again.",
-          duration: 3000
-        })
-        throw error
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      options: {
+        redirectTo: `${origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
       }
+      })
+      
+      // const { error } = await UserService.signInWithGoogle()
+      // console.log(error)
+      
+      // if (error) {
+      //   toast({
+      //     variant: "destructive",
+      //     description: "Failed to sign in with Google. Please try again.",
+      //     duration: 3000
+      //   })
+      //   throw error
+      // }
     } catch (error) {
       console.error('Error signing in with Google:', error)
     } finally {

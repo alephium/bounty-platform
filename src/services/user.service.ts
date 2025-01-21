@@ -4,16 +4,18 @@ import { User } from '../types/supabase'
 export class UserService {
   static async getCurrentUser(): Promise<User | null> {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession
-      if (sessionError) throw sessionError
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log("1111", session)
       if (!session?.user) return null
-      console.log("11111", session.user)
+
+      // Get user data from users table
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', session.user.id)
         .single()
-      console.log("22222")
+
       if (error) throw error
       return data
     } catch (error) {
@@ -21,142 +23,79 @@ export class UserService {
       return null
     }
   }
-  private static async generateUniqueUsername(fullName: string): Promise<string> {
-    // Get first name and convert to lowercase
-    const firstName = fullName.split(' ')[0].toLowerCase()
-    // Remove special characters and spaces
-    const baseUsername = firstName.replace(/[^a-z0-9]/g, '')
-    
-    let username = baseUsername
-    let counter = 1
 
-    while (true) {
+  static async createOrUpdateUser(authUser: any): Promise<User | null> {
+    try {
+      // Check if user exists
+      console.log("22222 ", authUser)
       const { data: existingUser } = await supabase
         .from('users')
-        .select('username')
-        .eq('username', username)
-        .single()
-
-      if (!existingUser) break
-      username = `${baseUsername}${counter}`
-      counter++
-    }
-
-    return username
-  }
-
-  static async createOrUpdateUser(supabaseUser: any): Promise<User | null> {
-    try {
-      const { data: existingUser, error } = await supabase
-        .from('users')
         .select('*')
-        .eq('id', supabaseUser.id)
+        .eq('id', authUser.id)
         .single()
-      if (existingUser) {
-        return existingUser
-      }
 
-      // Generate username from full name
-      const fullName = supabaseUser.user_metadata?.full_name || ''
-      const username = await this.generateUniqueUsername(fullName)
+      if (existingUser) return existingUser
 
-      // Split full name into first and last name
-      const nameParts = fullName.split(' ')
-      const firstName = nameParts[0]
-      const lastName = nameParts.slice(1).join(' ')
-
-      // Only proceed to create if we definitely don't have a user
+      // Create new user if doesn't exist
       const newUser: Partial<User> = {
-        id: supabaseUser.id,
-        email: supabaseUser.email,
-        username,
-        full_name: fullName,
-        first_name: firstName,
-        last_name: lastName,
-        avatar_url: supabaseUser.user_metadata?.avatar_url,
+        id: authUser.id,
+        email: authUser.email,
+        username: await this.generateUniqueUsername(authUser.user_metadata?.full_name || ''),
+        full_name: authUser.user_metadata?.full_name || '',
+        avatar_url: authUser.user_metadata?.avatar_url,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
-      const { data, error: insertError } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .insert([newUser])
         .select()
         .single()
 
-      if (insertError) throw insertError
+      if (error) throw error
       return data
     } catch (error) {
       console.error('Error in createOrUpdateUser:', error)
       return null
     }
   }
-  static async signInWithGoogle() {
-    try {
-      const origin = import.meta.env.DEV ? 'http://localhost:5173' : 'URL_ADDRESS'
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          // redirectTo: origin,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          scopes: 'email profile',
-        },
-      })
-      
-      if (error) throw error
-      return { data, error: null }
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-      return { data: null, error }
-    }
-  }
-  static async signOut() {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      
-      // Clear any local storage items related to auth
-      localStorage.removeItem('contributium-auth')
-      localStorage.removeItem('supabase.auth.token')
-      
-      return true
-    } catch (error) {
-      console.error('Error signing out:', error)
-      throw error
-    }
-  }
 
-  static async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', userId)
-        .select()
-        .single()
+  private static async generateUniqueUsername(fullName: string): Promise<string> {
+    const baseUsername = fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
+    let username = baseUsername
+    let counter = 1
 
-      if (error) throw error
-      return data
-    } catch (error) {
-      console.error('Error updating profile:', error)
-      return null
-    }
-  }
-
-  static async isUsernameAvailable(username: string): Promise<boolean> {
-    try {
-      const { data: existingUser } = await supabase
+    while (true) {
+      const { data } = await supabase
         .from('users')
         .select('username')
         .eq('username', username)
         .single()
 
-      return !existingUser
-    } catch {
-      return true // If there's an error, assume username is available
+      if (!data) break
+      username = `${baseUsername}${counter++}`
     }
+
+    return username
+  }
+
+  static async signInWithGoogle() {
+    const { origin } = window.location
+    console.log(origin)
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    })
+  }
+
+  static async signOut() {
+    return supabase.auth.signOut()
   }
 }
