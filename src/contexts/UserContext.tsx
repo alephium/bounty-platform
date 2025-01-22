@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { UserService } from "../services/user.service";
 import LoadingPage from "../pages/LoadingPage";
-import { Session } from "@supabase/supabase-js";
+import { Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { User } from "../types/supabase";
 
 const UserContext = createContext<{
@@ -19,12 +19,16 @@ export const useUser = () => {
   return context;
 };
 
-type Props = { children: React.ReactNode };
-export const UserProvider = ({ children }: Props) => {
-  const [user, setUser] = useState<User | null>(null);
+interface Props {
+  children: React.ReactNode;
+  initialUser: User | null;
+}
+
+export const UserProvider = ({ children, initialUser }: Props) => {
+  const [user, setUser] = useState<User | null>(initialUser);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleAuthChange = async (event: string, session: Session | null) => {
+  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
     console.log('Auth state changed:', { 
       event, 
       userId: session?.user?.id,
@@ -78,7 +82,7 @@ export const UserProvider = ({ children }: Props) => {
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
           setIsLoading(true);
-          await handleAuthChange('INITIAL', session);
+          await handleAuthChange('INITIAL' as AuthChangeEvent, session);
           setIsLoading(false);
         }
       } catch (error) {
@@ -95,7 +99,7 @@ export const UserProvider = ({ children }: Props) => {
       async (event, session) => {
         if (mounted) {
           // Only show loading for initial sign in or sign out
-          const shouldShowLoading = event === 'INITIAL' || 
+          const shouldShowLoading = event === 'INITIAL_SESSION' || 
                                   event === 'SIGNED_OUT' || 
                                   (event === 'SIGNED_IN' && !user);
 

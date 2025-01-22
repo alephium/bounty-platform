@@ -18,7 +18,6 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
-import JudgeReview from './pages/JudgeReview'
 // import SignInPage from './pages/auth/SignInPage'
 // import SignUpPage from './pages/auth/SignUpPage'
 
@@ -48,6 +47,19 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    const initUser = async () => {
+      const currentUser = await UserService.getCurrentUser()
+      setUser(currentUser)
+      setLoading(false)
+    }
+    initUser()
+  }, [])
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
   return (
     <UserProvider initialUser={user}>
       <ThemeProvider>
@@ -64,7 +76,6 @@ const App = () => {
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/hackathon/prize" element={<Prize />} />
               <Route path="/hackathon/submit" element={<Submit />} />
-              <Route path="/hackathon/judgesreview" element={<JudgeReview />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />
