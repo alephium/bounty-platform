@@ -18,8 +18,7 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
-// import SignInPage from './pages/auth/SignInPage'
-// import SignUpPage from './pages/auth/SignUpPage'
+import LoadingPage from './pages/LoadingPage'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -65,6 +64,7 @@ const App = () => {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
+          <Route path="/hackathon/prize" element={<Prize />} />
             <Route element={<Layout />}>
               {/* Public routes */}
               <Route path="/auth" element={<AuthPage />} />
@@ -74,7 +74,7 @@ const App = () => {
               <Route path="/grants" element={<Grants />} />
               <Route path="/hackathon" element={<Hackathon />} />
               <Route path="/editprofile" element={<EditProfile />} />
-              <Route path="/hackathon/prize" element={<Prize />} />
+              <Route path="/loading" element={<LoadingPage />} />
               <Route path="/hackathon/submit" element={<Submit />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
