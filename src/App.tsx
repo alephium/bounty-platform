@@ -19,6 +19,8 @@ import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
 import LoadingPage from './pages/LoadingPage'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -68,6 +70,8 @@ const App = () => {
             <Route element={<Layout />}>
               {/* Public routes */}
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/" element={<Home />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/projects" element={<Projects />} />
