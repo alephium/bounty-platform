@@ -10,10 +10,10 @@ import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
 import Projects from './pages/Projects'
 import Grants from './pages/Grants'
-import Hackathon from './pages/Hackathon'
-import Prize  from './pages/Prize'
+// import Hackathon from './pages/Hackathon'
+// import Prize  from './pages/Prize'
 import Profile from './pages/Profile'
-import Submit from './pages/Submit'
+// import Submit from './pages/Submit'
 import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
@@ -66,7 +66,7 @@ const App = () => {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
-          <Route path="/hackathon/prize" element={<Prize />} />
+          {/* <Route path="/hackathon/prize" element={<Prize />} /> */}
             <Route element={<Layout />}>
               {/* Public routes */}
               <Route path="/auth" element={<AuthPage />} />
@@ -76,15 +76,13 @@ const App = () => {
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
-              <Route path="/hackathon" element={<Hackathon />} />
+              {/* <Route path="/hackathon" element={<Hackathon />} /> */}
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/loading" element={<LoadingPage />} />
-              <Route path="/hackathon/submit" element={<Submit />} />
+              {/* <Route path="/hackathon/submit" element={<Submit />} /> */}
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />
-              {/* <Route path="/auth/sign-in" element={<SignInPage />} />
-              <Route path="/auth/sign-up" element={<SignUpPage />} /> */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

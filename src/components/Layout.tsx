@@ -65,18 +65,18 @@ const Layout = () => {
                 <img src="/logo_small.jpg" alt="Logo" className="h-10 w-auto" />
               </Link>
               <div className="hidden md:flex items-center gap-6">
-                {["Bounties", "Projects", "Grants", "Hackathon"].map((item) => (
+                {["Bounties", "Projects", "Grants"].map((item) => (
                   <Link 
                     key={item}
                     to={`/${item.toLowerCase()}`}
                     className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors relative`}
                   >
                     {item}
-                    {item === "Hackathon" && (
+                    {/* {item === "Hackathon" && (
                       <span className="absolute -top-3 -right-6 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-pulse">
                         HOT
                       </span>
-                    )}
+                    )} */}
                   </Link>
                 ))}
               </div>
@@ -182,14 +182,14 @@ const Layout = () => {
               </CardContent>
             </Card>
 
-            {/* <Card className={`${bgColor} ${borderColor}`}>
+            <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
                 <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
                 <div>
                   <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
                 </div>
               </CardContent>
-            </Card> */}
+            </Card>
           </aside>
         </div>
       </div>
