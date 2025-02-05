@@ -8,6 +8,7 @@ import { useUser } from '../contexts/UserContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AvatarDropdown } from './ui/AvatarDropdown'
 import { SessionProvider } from "../contexts/SessionContext";
+import { ThemeToggle } from './ThemeToggle'
 
 const Layout = () => {
   const { user } = useUser()
@@ -58,59 +59,61 @@ const Layout = () => {
     <>
     <SessionProvider>
       <div className={`min-h-screen ${bgColor}`}>
-        <nav className={`${bgColor} border-b ${borderColor}`}>
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-            <div className="flex items-center gap-8">
-              <Link to="/">
-                <img src="/logo_small.jpg" alt="Logo" className="h-10 w-auto" />
-              </Link>
-              <div className="hidden md:flex items-center gap-6">
-                {["Bounties", "Projects", "Grants"].map((item) => (
-                  <Link 
-                    key={item}
-                    to={`/${item.toLowerCase()}`}
-                    className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors relative`}
-                  >
-                    {item}
-                  </Link>
-                ))}
-              </div>
+      <nav className={`${bgColor} border-b ${borderColor}`}>
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+          {/* Left side remains the same */}
+          <div className="flex items-center gap-8">
+            <Link to="/">
+              <img src="/logo_small.jpg" alt="Logo" className="h-10 w-auto" />
+            </Link>
+            <div className="hidden md:flex items-center gap-6">
+              {["Bounties", "Projects", "Grants"].map((item) => (
+                <Link 
+                  key={item}
+                  to={`/${item.toLowerCase()}`}
+                  className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors relative`}
+                >
+                  {item}
+                </Link>
+              ))}
             </div>
+          </div>
+          
+          {/* Right side updated with theme toggle */}
+          <div className="flex items-center gap-4">
+            <Search className={`w-5 h-5 ${textColor}`} />
+            <ThemeToggle />  {/* Add theme toggle here */}
             
-            <div className="flex items-center gap-4">
-              <Search className={`w-5 h-5 ${textColor}`} />
-              
-              {user ? (
-                <div className="flex items-center gap-4">
-                  {isAlephiumTeam && (
-                    <Button 
-                      className={theme === 'dark' ? 
-                        "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                        "bg-amber-500 hover:bg-amber-600 text-white"}
-                      onClick={() => navigate('/bounties/edit')}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Edit Bounty
-                    </Button>
-                  )}
-                  {renderAvatar()}
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-4">
+                {isAlephiumTeam && (
                   <Button 
                     className={theme === 'dark' ? 
                       "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                       "bg-amber-500 hover:bg-amber-600 text-white"}
-                    onClick={() => navigate('/auth')}
+                    onClick={() => navigate('/bounties/edit')}
                   >
-                    Sign in
+                    <Plus className="w-4 h-4 mr-2" />
+                    Edit Bounty
                   </Button>
-                </div>
-              )}
-            </div>
+                )}
+                {renderAvatar()}
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Button 
+                  className={theme === 'dark' ? 
+                    "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                    "bg-amber-500 hover:bg-amber-600 text-white"}
+                  onClick={() => navigate('/auth')}
+                >
+                  Sign in
+                </Button>
+              </div>
+            )}
           </div>
-        </nav>
-
+        </div>
+      </nav>
         <div className="max-w-7xl mx-auto flex py-6 px-4">
           <main className="mx-auto w-full px-4">
             <Outlet />
