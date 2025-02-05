@@ -72,11 +72,6 @@ const Layout = () => {
                     className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors relative`}
                   >
                     {item}
-                    {/* {item === "Hackathon" && (
-                      <span className="absolute -top-3 -right-6 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-pulse">
-                        HOT
-                      </span>
-                    )} */}
                   </Link>
                 ))}
               </div>
@@ -102,13 +97,6 @@ const Layout = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  {/* <Button 
-                    variant="ghost" 
-                    className={`${textColor} hover:opacity-80`}
-                    onClick={() => navigate('/auth')}
-                  >
-                    Login
-                  </Button> */}
                   <Button 
                     className={theme === 'dark' ? 
                       "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 

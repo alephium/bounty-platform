@@ -26,7 +26,7 @@ export default function AuthPage() {
     : 'bg-amber-500 hover:bg-amber-600 text-white'
 
   const handleGoogleSignIn = async () => {
-    console.log('trigger')
+    // console.log('trigger')
     const { origin } = window.location
     try {
       setIsLoading(true)
@@ -40,18 +40,6 @@ export default function AuthPage() {
         }
       }
       })
-      
-      // const { error } = await UserService.signInWithGoogle()
-      // console.log(error)
-      
-      // if (error) {
-      //   toast({
-      //     variant: "destructive",
-      //     description: "Failed to sign in with Google. Please try again.",
-      //     duration: 3000
-      //   })
-      //   throw error
-      // }
     } catch (error) {
       console.error('Error signing in with Google:', error)
     } finally {
@@ -100,11 +88,11 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with Google'}
             </Button>
 
-            {/* <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
               <span className={mutedTextColor}>or</span>
               <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
-            </div> */}
+            </div>
 
             {/* <Button
               variant="outline"
