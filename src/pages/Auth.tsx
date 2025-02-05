@@ -2,17 +2,12 @@ import { useState } from 'react'
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Separator } from "../components/ui/separator"
-import { Mail } from 'lucide-react'
 import { Link } from "react-router-dom"
 import { UserService } from '../services/user.service'
-import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
-import { toast } from '../components/ui/use-toast'
-import { supabase } from '../lib/supabase'
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
   const { theme } = useTheme()
 
   // Theme-specific styles
@@ -25,23 +20,22 @@ export default function AuthPage() {
     ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' 
     : 'bg-amber-500 hover:bg-amber-600 text-white'
 
-  const handleGoogleSignIn = async () => {
-    // console.log('trigger')
-    const { origin } = window.location
+  const handleAuthProvider = async (provider: 'google' | 'github' | 'twitter') => {
     try {
       setIsLoading(true)
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent'
-        }
+      switch (provider) {
+        case 'google':
+          await UserService.signInWithGoogle()
+          break
+        case 'github':
+          await UserService.signInWithGithub()
+          break
+        case 'twitter':
+          await UserService.signInWithTwitter()
+          break
       }
-      })
     } catch (error) {
-      console.error('Error signing in with Google:', error)
+      console.error(`Error signing in with ${provider}:`, error)
     } finally {
       setIsLoading(false)
     }
@@ -61,10 +55,11 @@ export default function AuthPage() {
           </div>
 
           <div className="space-y-4">
+            {/* Google Login */}
             <Button 
               className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
               size="lg"
-              onClick={handleGoogleSignIn}
+              onClick={() => handleAuthProvider('google')}
               disabled={isLoading}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -88,22 +83,37 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with Google'}
             </Button>
 
-            <div className="flex items-center gap-2">
-              <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
-              <span className={mutedTextColor}>or</span>
-              <Separator className={theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-200'} />
-            </div>
-
-            {/* <Button
-              variant="outline"
-              className={`w-full ${borderColor} ${textColor} 
-                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-50'}`}
+            {/* GitHub Login */}
+            <Button 
+              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
               size="lg"
-              onClick={() => navigate('/auth/email')}
+              onClick={() => handleAuthProvider('github')}
+              disabled={isLoading}
             >
-              <Mail className="w-5 h-5 mr-2" />
-              Continue with Email
-            </Button> */}
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                />
+              </svg>
+              {isLoading ? 'Loading...' : 'Continue with GitHub'}
+            </Button>
+
+            {/* Twitter (X) Login */}
+            <Button 
+              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
+              size="lg"
+              onClick={() => handleAuthProvider('twitter')}
+              disabled={isLoading}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+              {isLoading ? 'Loading...' : 'Continue with X'}
+            </Button>
 
             <p className={`text-center text-sm ${mutedTextColor}`}>
               By continuing, you agree to our{' '}
