@@ -69,15 +69,15 @@ export class UserService {
     })
   }
 
-  static async signInWithTwitter() {
-    const { origin } = window.location
-    return supabase.auth.signInWithOAuth({
-      provider: 'twitter',
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-      },
-    })
-  }
+  // static async signInWithTwitter() {
+  //   const { origin } = window.location
+  //   return supabase.auth.signInWithOAuth({
+  //     provider: 'twitter',
+  //     options: {
+  //       redirectTo: `${origin}/auth/callback`,
+  //     },
+  //   })
+  // }
 
   static async createOrUpdateUser(supabaseUser: any): Promise<User | null> {
     try {
