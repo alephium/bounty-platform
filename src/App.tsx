@@ -1,70 +1,42 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { supabase } from './lib/supabase'
 import { UserService } from './services/user.service'
 import { User } from './types/supabase'
 import { UserProvider } from './contexts/UserContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout'
+import LoadingPage from './pages/LoadingPage'
 import Home from './pages/Home'
 import { Bounties } from './pages/Bounties'
 import Projects from './pages/Projects'
 import Grants from './pages/Grants'
-// import Hackathon from './pages/Hackathon'
-// import Prize  from './pages/Prize'
 import Profile from './pages/Profile'
-// import Submit from './pages/Submit'
 import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
 import BountyPublischer from './pages/BountyPublisher'
-import LoadingPage from './pages/LoadingPage'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
-import {CreateSponsorProfile} from './components/CreateSponsorProfile'
+import { CreateSponsorProfile } from './components/CreateSponsorProfile'
 
-interface ProtectedRouteProps {
-  children: React.ReactNode
-  user: User | null
-  loading: boolean
-}
-
-const ProtectedRoute = ({ children, user, loading }: ProtectedRouteProps) => {
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#1B2228] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />
-  }
-
-  return children
-}
-
-const App = () => {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function App() {
+  const [initialUser, setInitialUser] = useState<User | null>(null)
+  const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
-    const initUser = async () => {
-      const currentUser = await UserService.getCurrentUser()
-      setUser(currentUser)
-      setLoading(false)
-    }
-    initUser()
+    UserService.getCurrentUser()
+      .then(setInitialUser)
+      .catch(console.error)
+      .finally(() => setInitializing(false))
   }, [])
 
-  if (loading) {
-    return <div>Loading...</div>
+  if (initializing) {
+    return <LoadingPage />
   }
 
   return (
-    <UserProvider initialUser={user}>
+    <UserProvider initialUser={initialUser}>
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
@@ -79,7 +51,6 @@ const App = () => {
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/editprofile" element={<EditProfile />} />
-              <Route path="/loading" element={<LoadingPage />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />
@@ -91,5 +62,3 @@ const App = () => {
     </UserProvider>
   )
 }
-
-export default App

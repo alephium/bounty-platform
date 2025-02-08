@@ -1,142 +1,98 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import { UserService } from "../services/user.service";
-import LoadingPage from "../pages/LoadingPage";
-import { Session, AuthChangeEvent } from "@supabase/supabase-js";
-import { User } from "../types/supabase";
+import { createContext, useContext, useEffect, useState } from "react"
+import { supabase } from "../lib/supabase"
+import { UserService } from "../services/user.service"
+import { User } from "../types/supabase"
+import LoadingPage from "../pages/LoadingPage"
 
-const UserContext = createContext<{
-  user: User | null;
-}>({
-  user: null,
-});
-
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
-  }
-  return context;
-};
-
-interface Props {
-  children: React.ReactNode;
-  initialUser: User | null;
+interface UserContextValue {
+  user: User | null
 }
 
-export const UserProvider = ({ children, initialUser }: Props) => {
-  const [user, setUser] = useState<User | null>(initialUser);
-  const [isLoading, setIsLoading] = useState(true);
+const UserContext = createContext<UserContextValue>({
+  user: null
+})
 
-  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
-    console.log('Auth state changed:', { 
-      event, 
-      userId: session?.user?.id,
-      currentUserId: user?.id 
-    });
+export const useUser = () => {
+  const context = useContext(UserContext)
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider")
+  }
+  return context
+}
 
-    try {
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        return;
-      }
+interface UserProviderProps {
+  children: React.ReactNode
+  initialUser: User | null
+}
 
-      // No session case
-      if (!session?.user) {
-        setUser(null);
-        return;
-      }
-
-      // Check if we already have the correct user loaded
-      if (user?.id === session.user.id) {
-        console.log('User already loaded correctly, skipping refresh');
-        return;
-      }
-
-      // Get user data
-      let userData = await UserService.getCurrentUser();
-      
-      if (!userData) {
-        console.log('User not found in database, creating...');
-        userData = await UserService.createOrUpdateUser(session.user);
-        
-        if (!userData) {
-          throw new Error('Failed to create user record');
-        }
-      }
-
-      setUser(userData);
-    } catch (error) {
-      console.error('Error handling auth change:', error);
-      setUser(null);
-    }
-  };
+export function UserProvider({ children, initialUser }: UserProviderProps) {
+  const [user, setUser] = useState<User | null>(initialUser)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
 
-    // Initialize
-    const initialize = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          setIsLoading(true);
-          await handleAuthChange('INITIAL' as AuthChangeEvent, session);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error in initialization:', error);
-        if (mounted) {
-          setUser(null);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Set up auth state listener
+    // Handle auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (mounted) {
-          // Only show loading for initial sign in or sign out
-          const shouldShowLoading = event === 'INITIAL_SESSION' || 
-                                  event === 'SIGNED_OUT' || 
-                                  (event === 'SIGNED_IN' && !user);
+        if (!mounted) return
 
-          if (shouldShowLoading) {
-            setIsLoading(true);
+        try {
+          if (event === 'SIGNED_OUT') {
+            setUser(null)
+            return
           }
 
-          await handleAuthChange(event, session);
-
-          if (shouldShowLoading) {
-            setIsLoading(false);
+          if (!session?.user) {
+            setUser(null)
+            return
           }
+
+          // Get or create user
+          let userData = await UserService.getCurrentUser()
+          if (!userData) {
+            userData = await UserService.createOrUpdateUser(session.user)
+          }
+
+          setUser(userData)
+        } catch (error) {
+          console.error('Auth state change error:', error)
+          setUser(null)
+        } finally {
+          setIsLoading(false)
         }
       }
-    );
+    )
 
-    initialize();
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
+
+      if (session?.user) {
+        UserService.getCurrentUser().then(userData => {
+          if (mounted) {
+            setUser(userData)
+            setIsLoading(false)
+          }
+        })
+      } else {
+        setIsLoading(false)
+      }
+    })
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [user]); // Added user to dependency array to track changes
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Provider State:', {
-      hasUser: !!user,
-      isLoading,
-      userId: user?.id,
-      event: 'state-update'
-    });
-  }, [user, isLoading]);
+  if (isLoading) {
+    return <LoadingPage />
+  }
 
   return (
     <UserContext.Provider value={{ user }}>
-      {isLoading ? <LoadingPage /> : children}
+      {children}
     </UserContext.Provider>
-  );
-};
+  )
+}
