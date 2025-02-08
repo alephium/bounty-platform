@@ -9,6 +9,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { AvatarDropdown } from './ui/AvatarDropdown'
 import { SessionProvider } from "../contexts/SessionContext";
 import { ThemeToggle } from './ThemeToggle'
+import { useRewards } from '../hooks/useRewards'
 
 const Layout = () => {
   const { user } = useUser()
@@ -17,6 +18,7 @@ const Layout = () => {
   const location = useLocation()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { metrics, loading } = useRewards()
 
   const isAlephiumTeam = user?.email?.endsWith('@alephium.org')
 
@@ -119,24 +121,33 @@ const Layout = () => {
             <Outlet />
           </main>
           <aside className="space-y-6 w-60">
-            <Card className={`${bgColor} ${borderColor}`}>
-              <CardContent className="p-4 space-y-4">
-                <div>
-                  <div className="flex items-center gap-2 text-2xl font-bold">
-                    <span className="text-[#C1A461]">◈</span>
-                    <span className="text-[#C1A461]">5000</span>
-                  </div>
-                  <div className="text-sm text-[#C1A461]">Total Treasure Earned</div>
+          <Card className={`${bgColor} ${borderColor}`}>
+            <CardContent className="p-4 space-y-4">
+              <div>
+                <div className="flex items-center gap-2 text-2xl font-bold">
+                  <span className="text-[#C1A461]">◈</span>
+                  <span className="text-[#C1A461]">
+                    {loading ? '...' : new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    }).format(metrics.totalOpenRewards)}
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 text-2xl font-bold">
-                    <span className="text-[#C1A461]">◈</span>
-                    <span className="text-[#C1A461]">8</span>
-                  </div>
-                  <div className="text-sm text-[#C1A461]">Quests Available</div>
+                <div className="text-sm text-[#C1A461]">Total Treasure Open</div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-2xl font-bold">
+                  <span className="text-[#C1A461]">◈</span>
+                  <span className="text-[#C1A461]">
+                    {loading ? '...' : metrics.availableQuests}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="text-sm text-[#C1A461]">Quests Available</div>
+              </div>
+            </CardContent>
+          </Card>
 
             <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
