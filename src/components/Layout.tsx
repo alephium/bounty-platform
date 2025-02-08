@@ -91,10 +91,10 @@ const Layout = () => {
                     className={theme === 'dark' ? 
                       "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                       "bg-amber-500 hover:bg-amber-600 text-white"}
-                    onClick={() => navigate('/bounties/edit')}
+                    onClick={() => navigate('/bounty/publisher')}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Edit Bounty
+                    My Bounty
                   </Button>
                 )}
                 {renderAvatar()}

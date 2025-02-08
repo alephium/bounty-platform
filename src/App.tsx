@@ -18,9 +18,11 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
+import BountyPublischer from './pages/BountyPublisher'
 import LoadingPage from './pages/LoadingPage'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import {CreateSponsorProfile} from './components/CreateSponsorProfile'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -66,20 +68,18 @@ const App = () => {
       <ThemeProvider>
         <BrowserRouter>
           <Routes>
-          {/* <Route path="/hackathon/prize" element={<Prize />} /> */}
             <Route element={<Layout />}>
-              {/* Public routes */}
+              <Route path="/" element={<Home />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
-              <Route path="/" element={<Home />} />
+              <Route path="/sponsor" element={<CreateSponsorProfile />} />
               <Route path="/bounties" element={<Bounties />} />
+              <Route path="/bounties/publisher" element={<BountyPublischer />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
-              {/* <Route path="/hackathon" element={<Hackathon />} /> */}
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/loading" element={<LoadingPage />} />
-              {/* <Route path="/hackathon/submit" element={<Submit />} /> */}
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
               <Route path="/editbounty" element={<EditBounty />} />

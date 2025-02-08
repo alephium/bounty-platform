@@ -9,6 +9,18 @@ export type ParticipationType = 'team' | 'solo'
 export type TeamStatus = 'active' | 'inactive'
 export type ProjectSubmissionStatus = 'draft' | 'submitted'
 
+
+export interface Sponsor {
+  id: string
+  company_name: string
+  company_logo_url: string | null
+  website_url: string | null
+  twitter_handle: string | null
+  is_verified: boolean
+  created_at: string
+  updated_at: string
+}
+
 // Project, Bounty, and Grant interfaces remain the same
 export interface Project {
   id: string
@@ -26,6 +38,8 @@ export interface Bounty {
   description: string | null
   category: Category
   status: Status
+  publisher_id: string // Add publisher reference
+  publisher_email: string // For notifications
   company: {
     name: string
     logo: string
@@ -33,10 +47,27 @@ export interface Bounty {
   reward: {
     amount: number
     token: string
+    usd_equivalent: number // Add USD equivalent tracking
   }
-  requirements: string [] | null
+  requirements: string[] | null
   due_date: string
   submissions_count: number
+  max_submissions: number // Add submission limit
+  submission_guidelines: string | null // Add guidelines
+  review_timeframe: number // Days to review submission
+  created_at: string
+  updated_at: string
+}
+
+export interface BountySubmission {
+  id: string
+  bounty_id: string
+  user_id: string
+  title: string
+  description: string
+  submission_url: string
+  status: 'submitted' | 'in_review' | 'accepted' | 'rejected'
+  feedback: string | null
   created_at: string
   updated_at: string
 }
@@ -135,8 +166,69 @@ export interface Skill {
 }
 
 
+export type SponsorInsert = Omit<Sponsor, 'id' | 'created_at' | 'updated_at' | 'is_verified'>
+export type SponsorUpdate = Partial<Omit<Sponsor, 'id' | 'created_at' | 'updated_at'>>
 export type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'>
 export type BountyInsert = Omit<Bounty, 'id' | 'created_at' | 'updated_at'>
 export type GrantInsert = Omit<Grant, 'id' | 'created_at' | 'updated_at'>
 export type UserUpdate = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
 export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated_at'>
+
+export interface Database {
+  public: {
+    Tables: {
+      sponsors: {
+        Row: Sponsor
+        Insert: SponsorInsert
+        Update: SponsorUpdate
+      }
+      projects: {
+        Row: Project
+        Insert: ProjectInsert
+        Update: Partial<Omit<Project, 'id'>>
+      }
+      bounties: {
+        Row: Bounty
+        Insert: BountyInsert
+        Update: Partial<Omit<Bounty, 'id'>>
+      }
+      grants: {
+        Row: Grant
+        Insert: GrantInsert
+        Update: Partial<Omit<Grant, 'id'>>
+      }
+      users: {
+        Row: User
+        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>
+        Update: UserUpdate
+      }
+      skills: {
+        Row: Skill
+        Insert: Omit<Skill, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Skill, 'id'>>
+      }
+      proof_of_work: {
+        Row: ProofOfWork
+        Insert: ProofOfWorkInsert
+        Update: Partial<Omit<ProofOfWork, 'id'>>
+      }
+      // ... rest of your existing table definitions
+    }
+    Views: {
+      [key: string]: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+    }
+    Functions: {
+      [key: string]: {
+        Args: Record<string, unknown>
+        Returns: unknown
+      }
+    }
+    Enums: {
+      [key: string]: unknown
+    }
+  }
+}
