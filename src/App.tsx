@@ -19,6 +19,7 @@ import BountyPublischer from './pages/BountyPublisher'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import { CreateSponsorProfile } from './components/CreateSponsorProfile'
+import { PostListing } from './components/PostListing'
 
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/sponsor" element={<CreateSponsorProfile />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/publisher" element={<BountyPublischer />} />
+              <Route path="/PostListing" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/editprofile" element={<EditProfile />} />

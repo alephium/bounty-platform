@@ -1,4 +1,3 @@
-// Basic type definitions
 export type Category = 'content' | 'design' | 'development' | 'other'
 export type Status = 'open' | 'in_review' | 'completed'
 export type Web3Interest = 'defi' | 'nft' | 'dao' | 'other'
@@ -6,8 +5,14 @@ export type WorkExperience = '0-2' | '2-5' | '5-10' | '10+'
 export type ProjectCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
 export type ProjectStatus = 'published' | 'draft' | 'archived'
 export type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design'
+export type SponsorInsert = Omit<Sponsor, 'id' | 'created_at' | 'updated_at' | 'is_verified'>
+export type SponsorUpdate = Partial<Omit<Sponsor, 'id' | 'created_at' | 'updated_at'>>
+export type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'>
+export type BountyInsert = Omit<Bounty, 'id' | 'created_at' | 'updated_at'>
+export type UserUpdate = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
+export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated_at'>
 
-// Sponsor interface with improved fields
+
 export interface Sponsor {
   id: string
   name: string
@@ -25,7 +30,19 @@ export interface Sponsor {
   updated_at: string
 }
 
-// Project interface with sponsor relationship
+export interface Notification {
+  id: string
+  sponsor_id: string
+  user_id: string
+  submission_id: string
+  submission_type: 'bounty' | 'project'
+  status: 'unread' | 'read'
+  title: string
+  message: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Project {
   id: string
   sponsor_id: string
@@ -90,6 +107,10 @@ export interface BountySubmission {
   completed_at: string | null
   created_at: string
   updated_at: string
+  user?: {
+    full_name: string | null
+    avatar_url: string | null
+  }
 }
 
 export interface ProjectSubmission {
@@ -106,9 +127,12 @@ export interface ProjectSubmission {
   completed_at: string | null
   created_at: string
   updated_at: string
+  user?: {
+    full_name: string | null
+    avatar_url: string | null
+  }
 }
 
-// Database interface for type safety
 export interface Database {
   public: {
     Tables: {
@@ -140,6 +164,86 @@ export interface Database {
           'review_started_at' | 'completed_at'>
         Update: Partial<Omit<ProjectSubmission, 'id' | 'created_at' | 'updated_at'>>
       }
+      notifications: {
+        Row: Notification
+        Insert: Omit<Notification, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Notification, 'id'>>
+      }
     }
   }
+}
+
+export interface UserAchievement {
+  id: string
+  user_id: string
+  project_id?: string
+  bounty_id?: string
+  type: 'project' | 'bounty' | 'grant' | 'hackathon'
+  status: Status
+  earnings?: {
+    amount: number
+    token: string
+    Prize: string
+  }
+  completed_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface User {
+  id: string
+  email: string                  
+  username: string | null         
+  first_name: string | null        
+  last_name: string | null         
+  full_name: string | null         
+  bio: string | null               
+  avatar_url: string | null        
+  wallet_address: string | null   
+  
+  github_url: string | null
+  twitter_url: string | null
+  linkedin_url: string | null
+  telegram_url: string | null
+  website_url: string | null
+  
+  web3_interests: Web3Interest[]| null
+  work_experience: WorkExperience
+  location: string | null
+  current_employer: string | null
+  
+  frontend_skills: string[] | null
+  backend_skills: string[] | null
+  blockchain_skills: string[] | null
+  design_skills: string[] | null
+  content_skills: string[] | null
+
+  achievements?: UserAchievement[]
+  total_earnings?: {
+    [key: string]: number
+  }
+  completed_projects_count?: number
+  completed_bounties_count?: number
+  completed_grants_count?: number
+  completed_hackathons_count?: number      
+  created_at: string              
+  updated_at: string            
+}
+
+export interface ProofOfWork {
+  id: string
+  user_id: string
+  title: string
+  description: string
+  category: ProjectCategory
+  skills: string[]       
+  project_url: string
+}
+
+export interface Skill {
+  id: string
+  name: string
+  category: SkillCategory
+  created_at: string
+  updated_at: string
 }
