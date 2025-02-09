@@ -154,41 +154,97 @@ export default function Profile() {
     }
   }
   
+  // useEffect(() => {
+  //   const fetchProfileData = async () => {
+  //     try {
+  //       setLoading(true)
+  //       setError(null)
+
+  //       if (!username && currentUser) {
+  //         setProfileUser(currentUser)
+  //         navigate(`/profile/${currentUser.username}`, { replace: true })
+  //         return
+  //       }
+
+  //       const { data: userData, error: userError } = await supabase
+  //         .from('users')
+  //         .select('*')
+  //         .eq('username', username)
+  //         .single()
+
+  //       if (userError) throw userError
+
+  //       if (!userData) {
+  //         throw new Error('User not found')
+  //       }
+
+  //       setProfileUser(userData)
+
+  //       const { data: projectsData, error: projectsError } = await supabase
+  //       .from('proof_of_work')
+  //       .select('*')
+  //       .eq('user_id', userData.id)  // Changed from 'id' to 'user_id'
+  //       .order('created_at', { ascending: false })
+
+  //       if (projectsError) throw projectsError
+
+  //       setProjects(projectsData || [])
+  //     } catch (err: any) {
+  //       console.error('Profile error:', err)
+  //       setError(err.message || 'An error occurred')
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
+
+  //   fetchProfileData()
+  // }, [username, currentUser, navigate])
+
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         setLoading(true)
         setError(null)
-
+  
+        // If no username provided but user is logged in, use current user's profile
         if (!username && currentUser) {
           setProfileUser(currentUser)
           navigate(`/profile/${currentUser.username}`, { replace: true })
+          setLoading(false)
           return
         }
-
+  
+        // If we have a username, fetch that user's profile
+        const usernameToFetch = username || currentUser?.username
+  
+        if (!usernameToFetch) {
+          throw new Error('No username provided')
+        }
+  
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('*')
-          .eq('username', username)
+          .eq('username', usernameToFetch)
           .single()
-
+  
         if (userError) throw userError
-
+  
         if (!userData) {
           throw new Error('User not found')
         }
-
+  
         setProfileUser(userData)
-
+  
+        // Fetch projects after setting user
         const { data: projectsData, error: projectsError } = await supabase
-        .from('proof_of_work')
-        .select('*')
-        .eq('user_id', userData.id)  // Changed from 'id' to 'user_id'
-        .order('created_at', { ascending: false })
-
+          .from('proof_of_work')
+          .select('*')
+          .eq('user_id', userData.id)
+          .order('created_at', { ascending: false })
+  
         if (projectsError) throw projectsError
-
         setProjects(projectsData || [])
+  
       } catch (err: any) {
         console.error('Profile error:', err)
         setError(err.message || 'An error occurred')
@@ -196,7 +252,7 @@ export default function Profile() {
         setLoading(false)
       }
     }
-
+  
     fetchProfileData()
   }, [username, currentUser, navigate])
 
