@@ -1,9 +1,9 @@
-import { CreateProfile } from "../components/CreateSponsorProfile"
+import { CreateSponsorProfile } from "../components/CreateSponsorProfile"
 import { PostListing } from "../components/PostListing"
 import { ViewSubmissions } from "../components/ViewSubmission"
 import { Zap, Briefcase, Check } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Card, CardContent } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion"
+import { Card, CardContent } from "../components/ui/card"
 
 export default function OnboardingSteps() {
   return (
@@ -74,7 +74,7 @@ export default function OnboardingSteps() {
             <h2 className="text-lg font-bold text-[#C1A461]">STEP 1</h2>
             <p className="text-[#C1A461]/60">Create a profile</p>
           </div>
-          <CreateProfile />
+          <CreateSponsorProfile />
         </div>
 
         <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
@@ -100,7 +100,7 @@ export default function OnboardingSteps() {
               {
                 question: "Who qualifies to be a sponsor?",
                 answer:
-                  "Any team or project that is building in the Solana ecosystem can sponsor a listing on Superteam Earn. Size of the team or operations don't matter — you can be a tokenised project or a small grantee; as long as you are building on the Solana blockchain, you can add a listing on Earn.",
+                  "Any team or project that is building in the Alephium ecosystem can sponsor a listing on Contribium. Size of the team or operations don't matter — you can be a tokenised project or a small grantee; as long as you are building on the Alephium blockchain, you can add a listing on Contribium.",
               },
               {
                 question: "How much money do I need to put up?",
@@ -118,14 +118,14 @@ export default function OnboardingSteps() {
                   "No, all fees and charges are transparent and discussed upfront before listing your bounty or project.",
               },
               {
-                question: "What can I use Superteam Earn for?",
+                question: "What can I use Contribium for?",
                 answer:
-                  "You can use Superteam Earn for a wide range of tasks including development, design, marketing, content creation, and community management.",
+                  "You can use Contribium for a wide range of tasks including development, design, marketing, content creation, and community management.",
               },
               {
                 question: "I need help with my listing. How can I get in touch?",
                 answer:
-                  "Our support team is available to help. You can reach out through our support channels or contact form.",
+                  "Our support team is available to help. You can reach out through our support channels or contact yuanying.li@alephium.org.",
               },
             ].map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`} className="border-[#C1A461]/20">

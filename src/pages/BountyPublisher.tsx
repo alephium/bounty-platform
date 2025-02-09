@@ -89,12 +89,12 @@ export default function BountyPublisher() {
       const bountyData = {
         title: formData.title,
         description: formData.description,
-        category: formData.category,
+        category: formData.category as Category,
         publisher_id: user.id,
         publisher_email: user.email,
         company: {
           name: 'Alephium',
-          logo: '/alephium-logo.png'
+          logo: '/alephium.png'
         },
         reward: {
           amount: parseFloat(formData.reward_amount),

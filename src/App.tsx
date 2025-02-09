@@ -20,6 +20,8 @@ import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import { CreateSponsorProfile } from './components/CreateSponsorProfile'
 import { PostListing } from './components/PostListing'
+import OnboardingSteps from './pages/Sponsor'
+
 
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
@@ -46,7 +48,8 @@ export default function App() {
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
-              <Route path="/sponsor" element={<CreateSponsorProfile />} />
+              <Route path="/sponsor" element={<OnboardingSteps />} />
+              {/* <Route path="/sponsor" element={<CreateSponsorProfile />} /> */}
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/publisher" element={<BountyPublischer />} />
               <Route path="/PostListing" element={<PostListing />} />

@@ -99,10 +99,28 @@ const Layout = () => {
                     My Bounty
                   </Button>
                 )}
+                <Button 
+                  variant="outline"
+                  className={theme === 'dark' ? 
+                    "border-[#C1A461] text-[#C1A461] hover:bg-[#C1A461]/10" : 
+                    "border-amber-500 text-amber-500 hover:bg-amber-50"}
+                  onClick={() => navigate('/sponsor')}
+                >
+                  Become a Sponsor
+                </Button>
                 {renderAvatar()}
               </div>
             ) : (
               <div className="flex items-center gap-4">
+                <Button 
+                  variant="outline"
+                  className={theme === 'dark' ? 
+                    "border-[#C1A461] text-[#C1A461] hover:bg-[#C1A461]/10" : 
+                    "border-amber-500 text-amber-500 hover:bg-amber-50"}
+                  onClick={() => navigate('/sponsor')}
+                >
+                  Become a Sponsor
+                </Button>
                 <Button 
                   className={theme === 'dark' ? 
                     "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
@@ -115,6 +133,7 @@ const Layout = () => {
             )}
           </div>
         </div>
+        
       </nav>
         <div className="max-w-7xl mx-auto flex py-6 px-4">
           <main className="mx-auto w-full px-4">

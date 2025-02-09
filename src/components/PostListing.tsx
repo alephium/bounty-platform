@@ -22,7 +22,7 @@ import { Calendar } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
 import { toast } from '@/components/ui/use-toast'
-import type { BountyInsert, ProjectInsert, Category } from '@/types/supabase'
+import type { BountyInsert, ProjectInsert, Category, Status } from '@/types/supabase'
 
 interface FormData {
   title: string
@@ -102,7 +102,8 @@ export function PostListing() {
           estimated_hours: formData.estimated_hours || 0,
           submission_guidelines: '',
           max_submissions: 10,
-          current_submissions: 0
+          current_submissions: 0,
+          status: 'open' as Status
         }
 
         const { error } = await supabase
@@ -119,6 +120,7 @@ export function PostListing() {
           repository_url: null,
           documentation_url: null,
           submission_count: 0,
+          status: 'open' as Status
         }
 
         const { error } = await supabase
