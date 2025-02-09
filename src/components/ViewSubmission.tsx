@@ -20,6 +20,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface SubmissionProps {
   bountyId?: string
@@ -41,11 +42,34 @@ function getInitials(name: string | null) {
 
 export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
   const { user } = useUser()
+  const { theme } = useTheme()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [bountySubmissions, setBountySubmissions] = useState<BountySubmission[]>([])
   const [projectSubmissions, setProjectSubmissions] = useState<ProjectSubmission[]>([])
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
+
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const hoverBorderColor = theme === 'dark' ? 'hover:border-[#C1A461]/40' : 'hover:border-amber-300'
+  const avatarBg = theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'
+
+  const statusColors = {
+    submitted: theme === 'dark' 
+      ? "bg-yellow-500/20 text-yellow-400" 
+      : "bg-yellow-100 text-yellow-600",
+    in_review: theme === 'dark' 
+      ? "bg-blue-500/20 text-blue-400" 
+      : "bg-blue-100 text-blue-600",
+    accepted: theme === 'dark' 
+      ? "bg-green-500/20 text-green-400" 
+      : "bg-green-100 text-green-600",
+    rejected: theme === 'dark' 
+      ? "bg-red-500/20 text-red-400" 
+      : "bg-red-100 text-red-600"
+  }
 
   useEffect(() => {
     async function fetchSubmissions() {
@@ -140,13 +164,6 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     return sub.status === activeTab
   })
 
-  const statusColors = {
-    submitted: "bg-yellow-500/10 text-yellow-500",
-    in_review: "bg-blue-500/10 text-blue-500",
-    accepted: "bg-green-500/10 text-green-500",
-    rejected: "bg-red-500/10 text-red-500"
-  }
-
   if (loading) {
     return (
       <Card className="bg-background border-border">
@@ -157,52 +174,62 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     )
   }
 
-  return (
-    <Card className="bg-background border-border">
+return (
+    <Card className={`${bgColor} border-${borderColor}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Submissions ({filteredSubmissions.length})</CardTitle>
+          <CardTitle className={textColor}>
+            Submissions ({filteredSubmissions.length})
+          </CardTitle>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="submitted">Pending</TabsTrigger>
-              <TabsTrigger value="accepted">Accepted</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            <TabsList className={`${bgColor} border-${borderColor}`}>
+              <TabsTrigger value="all" className={`${textColor} data-[state=active]:${textColor}`}>
+                All
+              </TabsTrigger>
+              <TabsTrigger value="submitted" className={`${textColor} data-[state=active]:${textColor}`}>
+                Pending
+              </TabsTrigger>
+              <TabsTrigger value="accepted" className={`${textColor} data-[state=active]:${textColor}`}>
+                Accepted
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className={`${textColor} data-[state=active]:${textColor}`}>
+                Rejected
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {filteredSubmissions.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className={`text-center py-8 ${mutedTextColor}`}>
             No submissions found
           </div>
         ) : (
           filteredSubmissions.map((submission) => (
             <div
               key={submission.id}
-              className="flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
+              className={`flex items-center justify-between p-4 rounded-lg border ${borderColor} ${hoverBorderColor} transition-colors`}
             >
               <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src={submission.user?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/10">
+                  <AvatarFallback className={avatarBg}>
                     {getInitials(submission.user?.full_name || null)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-medium text-foreground">
+                  <h3 className={`font-medium ${textColor}`}>
                     {submission.user?.full_name}'s Submission
                   </h3>
                   <div className="flex items-center gap-4 mt-1">
-                    <p className="text-sm text-muted-foreground">
+                    <p className={`text-sm ${mutedTextColor}`}>
                       {submission.submission_url}
                     </p>
                     <Badge variant="outline" className={statusColors[submission.status]}>
                       {submission.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                  <div className={`flex items-center gap-2 mt-2 text-xs ${mutedTextColor}`}>
                     <Calendar className="w-3 h-3" />
                     <span>Submitted {formatDate(submission.created_at)}</span>
                   </div>
@@ -213,6 +240,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
                 <Button
                   variant="ghost"
                   size="icon"
+                  className={`${textColor} hover:${bgColor} hover:${textColor}`}
                   onClick={() => window.open(submission.submission_url, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4" />
@@ -221,18 +249,25 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
                 {submission.status === 'submitted' && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className={`${textColor} hover:${bgColor} hover:${textColor}`}
+                      >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent 
+                      align="end" 
+                      className={`${bgColor} border-${borderColor}`}
+                    >
                       <DropdownMenuItem
                         onClick={() => handleStatusUpdate(
                           submission.id,
                           'accepted',
                           'bounty_id' in submission ? 'bounty' : 'project'
                         )}
-                        className="text-green-500"
+                        className={theme === 'dark' ? "text-green-400" : "text-green-600"}
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Accept Submission
@@ -243,7 +278,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
                           'rejected',
                           'bounty_id' in submission ? 'bounty' : 'project'
                         )}
-                        className="text-red-500"
+                        className={theme === 'dark' ? "text-red-400" : "text-red-600"}
                       >
                         <XCircle className="w-4 h-4 mr-2" />
                         Reject Submission

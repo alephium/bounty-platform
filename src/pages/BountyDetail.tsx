@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Clock, Globe, MessageSquare, AlertTriangle, Send } from 'lucide-react'
 import { useTheme } from "@/contexts/ThemeContext"
 import { useUser } from "@/contexts/UserContext"
 import { supabase } from "@/lib/supabase"
+import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
 
@@ -19,6 +23,12 @@ export default function BountyDetails() {
   const { user } = useUser()
   const [bounty, setBounty] = useState<Bounty | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false)
+  const [submissionForm, setSubmissionForm] = useState({
+    title: '',
+    description: '',
+    submissionUrl: ''
+  })
 
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -46,6 +56,56 @@ export default function BountyDetails() {
     fetchBounty()
   }, [id])
 
+  const handleSubmitOpen = () => {
+    if (!user) {
+      toast.error("Please sign in to submit")
+      return
+    }
+    setSubmissionForm({
+      title: `${user.full_name}'s submission for ${bounty?.title}`,
+      description: '',
+      submissionUrl: ''
+    })
+    setIsSubmitDialogOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    if (!user || !bounty) return
+
+    if (!submissionForm.submissionUrl) {
+      toast.error("Please provide a submission URL")
+      return
+    }
+
+    const result = await handleBountySubmission(
+      bounty,
+      user.id,
+      submissionForm.submissionUrl,
+      submissionForm.title,
+      submissionForm.description
+    )
+
+    if (result.success) {
+      toast.success("Submission successful!")
+      setIsSubmitDialogOpen(false)
+    } else {
+      toast.error("Failed to submit. Please try again.")
+    }
+  }
+
+  const timeRemaining = () => {
+    if (!bounty) return ""
+    const now = new Date()
+    const deadline = new Date(bounty.end_date)
+    const diff = deadline.getTime() - now.getTime()
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    
+    return `${days}d:${hours}h:${minutes}m`
+  }
+
   if (loading) {
     return (
       <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
@@ -60,18 +120,6 @@ export default function BountyDetails() {
         Bounty not found
       </div>
     )
-  }
-
-  const timeRemaining = () => {
-    const now = new Date()
-    const deadline = new Date(bounty.due_date)
-    const diff = deadline.getTime() - now.getTime()
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-    
-    return `${days}d:${hours}h:${minutes}m`
   }
 
   return (
@@ -95,7 +143,7 @@ export default function BountyDetails() {
                   <div className="flex justify-between items-center">
                     <span className={`${textColor}/60`}>Submissions</span>
                     <span className={`${textColor} font-bold`}>
-                      {bounty.submissions_count}
+                      {bounty.current_submissions}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -106,13 +154,12 @@ export default function BountyDetails() {
                     </div>
                   </div>
                 </div>
-                {/* <Button className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"> */}
                 <Button 
                   variant="outline" 
                   className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
-                  onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSc5i7wJ-8g1n5e_A4Cmbbprop_MdOurZtxnxCX1Zs22cEt3Hg/viewform', '_blank')}
+                  onClick={handleSubmitOpen}
                 >
-                  Submit Proposal
+                  Submit
                 </Button>
                 <div className="p-3 bg-[#C1A461]/10 rounded-lg border border-[#C1A461]/20">
                   <div className={`flex gap-2 text-sm ${textColor}`}>
@@ -260,6 +307,57 @@ export default function BountyDetails() {
           </div>
         </div>
       </main>
+
+      {/* Submit Dialog */}
+      <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+        <DialogContent className={`${bgColor} ${borderColor}`}>
+          <DialogHeader>
+            <DialogTitle className={textColor}>Submit Solution</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className={`text-sm ${textColor}`}>Title</label>
+              <Input
+                value={submissionForm.title}
+                onChange={(e) => setSubmissionForm(prev => ({ ...prev, title: e.target.value }))}
+                className={`${bgColor} ${borderColor} ${textColor}`}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className={`text-sm ${textColor}`}>Description</label>
+              <Textarea
+                value={submissionForm.description}
+                onChange={(e) => setSubmissionForm(prev => ({ ...prev, description: e.target.value }))}
+                className={`${bgColor} ${borderColor} ${textColor}`}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className={`text-sm ${textColor}`}>Submission URL</label>
+              <Input
+                value={submissionForm.submissionUrl}
+                onChange={(e) => setSubmissionForm(prev => ({ ...prev, submissionUrl: e.target.value }))}
+                placeholder="https://github.com/your-repo"
+                className={`${bgColor} ${borderColor} ${textColor}`}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsSubmitDialogOpen(false)}
+              className={`border-[#C1A461]/20 ${textColor}`}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+            >
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

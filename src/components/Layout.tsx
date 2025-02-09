@@ -93,21 +93,19 @@ const Layout = () => {
                     className={theme === 'dark' ? 
                       "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                       "bg-amber-500 hover:bg-amber-600 text-white"}
-                    onClick={() => navigate('/bounty/publisher')}
+                    onClick={() => navigate('/sponsor')}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    My Bounty
+                    Become a Sponsor
                   </Button>
                 )}
-                <Button 
-                  variant="outline"
+                {/* <Button 
                   className={theme === 'dark' ? 
-                    "border-[#C1A461] text-[#C1A461] hover:bg-[#C1A461]/10" : 
-                    "border-amber-500 text-amber-500 hover:bg-amber-50"}
+                    "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                    "bg-amber-500 hover:bg-amber-600 text-white"}
                   onClick={() => navigate('/sponsor')}
                 >
                   Become a Sponsor
-                </Button>
+                </Button> */}
                 {renderAvatar()}
               </div>
             ) : (

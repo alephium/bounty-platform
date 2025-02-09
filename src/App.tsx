@@ -15,7 +15,7 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
-import BountyPublischer from './pages/BountyPublisher'
+// import BountyPublischer from './pages/BountyPublisher'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
 import { CreateSponsorProfile } from './components/CreateSponsorProfile'
@@ -51,7 +51,7 @@ export default function App() {
               <Route path="/sponsor" element={<OnboardingSteps />} />
               {/* <Route path="/sponsor" element={<CreateSponsorProfile />} /> */}
               <Route path="/bounties" element={<Bounties />} />
-              <Route path="/bounties/publisher" element={<BountyPublischer />} />
+              {/* <Route path="/bounties/publisher" element={<BountyPublischer />} /> */}
               <Route path="/PostListing" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
