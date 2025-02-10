@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
 import { Input } from "../components/ui/input"
-import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send } from 'lucide-react'
+import PersonalProjectCard from "../components/PersonalProjectCard"
+import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send, Plus} from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
@@ -153,60 +154,13 @@ export default function Profile() {
       toast.error("Failed to copy")
     }
   }
-  
-  // useEffect(() => {
-  //   const fetchProfileData = async () => {
-  //     try {
-  //       setLoading(true)
-  //       setError(null)
-
-  //       if (!username && currentUser) {
-  //         setProfileUser(currentUser)
-  //         navigate(`/profile/${currentUser.username}`, { replace: true })
-  //         return
-  //       }
-
-  //       const { data: userData, error: userError } = await supabase
-  //         .from('users')
-  //         .select('*')
-  //         .eq('username', username)
-  //         .single()
-
-  //       if (userError) throw userError
-
-  //       if (!userData) {
-  //         throw new Error('User not found')
-  //       }
-
-  //       setProfileUser(userData)
-
-  //       const { data: projectsData, error: projectsError } = await supabase
-  //       .from('proof_of_work')
-  //       .select('*')
-  //       .eq('user_id', userData.id)  // Changed from 'id' to 'user_id'
-  //       .order('created_at', { ascending: false })
-
-  //       if (projectsError) throw projectsError
-
-  //       setProjects(projectsData || [])
-  //     } catch (err: any) {
-  //       console.error('Profile error:', err)
-  //       setError(err.message || 'An error occurred')
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   }
-
-  //   fetchProfileData()
-  // }, [username, currentUser, navigate])
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         setLoading(true)
         setError(null)
-  
-        // If no username provided but user is logged in, use current user's profile
+
         if (!username && currentUser) {
           setProfileUser(currentUser)
           navigate(`/profile/${currentUser.username}`, { replace: true })
@@ -214,7 +168,6 @@ export default function Profile() {
           return
         }
   
-        // If we have a username, fetch that user's profile
         const usernameToFetch = username || currentUser?.username
   
         if (!usernameToFetch) {
@@ -486,85 +439,59 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Projects Section */}
               <div className="space-y-6">
                 <Tabs defaultValue="personal-projects" className="w-full">
-                  <TabsList className={`${bgColor} border-${borderColor} w-full justify-start rounded-none p-0 h-auto`}>
-                    <TabsTrigger
-                      value="personal-projects"
-                      className={`rounded-none border-b-2 border-transparent data-[state=active]:border-[#C1A461] 
-                        data-[state=active]:bg-transparent ${mutedTextColor} data-[state=active]:${textColor} px-4 py-2`}
+                  <div className="flex justify-between items-center">
+                    <TabsList className={`${bgColor} border-${borderColor} justify-start rounded-none p-0 h-auto`}>
+                      <TabsTrigger
+                        value="personal-projects"
+                        className={`rounded-none border-b-2 border-transparent data-[state=active]:border-[#C1A461] 
+                          data-[state=active]:bg-transparent ${mutedTextColor} data-[state=active]:${textColor} px-4 py-2`}
+                      >
+                        Personal Projects
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <Button 
+                      className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center gap-2"
+                      onClick={() => setIsAddProjectModalOpen(true)}
                     >
-                      Personal Projects
-                    </TabsTrigger>
-                  </TabsList>
+                      <Plus className="w-4 h-4" />
+                      Add Project
+                    </Button>
+                  </div>
 
                   <TabsContent value="personal-projects" className="py-6">
                     {projects.length > 0 ? (
                       <div className="grid gap-4 md:grid-cols-2">
                         {projects.map((project) => (
-                          <Card key={project.id} className={`${cardBg} border-${borderColor}`}>
-                            <CardContent className="p-4">
-                              {/* Project Title */}
-                              <h3 className={`font-medium ${textColor}`}>
-                                {project.title}
-                              </h3>
-                              
-                              {/* Project Description */}
-                              <p className={`mt-2 ${mutedTextColor}`}>
-                                {project.description}
-                              </p>
-                              
-                              {/* Category and Skills */}
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {/* Main Category Badge */}
-                                <Badge className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30">
-                                  {project.category}
-                                </Badge>
-                                
-                                {/* Skills Badges */}
-                                {project.skills?.map((skill, index) => (
-                                  <Badge 
-                                    key={`${skill}-${index}`}
-                                    variant="outline" 
-                                    className="border-[#C1A461]/20 text-[#C1A461]"
-                                  >
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
-
-                              {/* Project URL */}
-                              {project.project_url && (
-                                <a 
-                                  href={project.project_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`mt-3 inline-flex items-center text-sm ${mutedTextColor} hover:${textColor}`}
-                                >
-                                  <Globe className="w-4 h-4 mr-1" />
-                                  View Project
-                                </a>
-                              )}
-                            </CardContent>
-                          </Card>
+                          <PersonalProjectCard
+                            key={project.id}
+                            project={project}
+                            isOwner={currentUser?.id === project.user_id}
+                            onUpdate={(updatedProject) => {
+                              setProjects(prev => 
+                                prev.map(p => p.id === updatedProject.id ? 
+                                  { ...updatedProject, 
+                                    category: updatedProject.category as ProjectCategory,
+                                    project_url: updatedProject.project_url || '' 
+                                  } 
+                                  : p
+                                )
+                              )
+                            }}
+                            onDelete={(id) => {
+                              setProjects(prev => prev.filter(p => p.id !== id))
+                            }}
+                          />
                         ))}
                       </div>
                     ) : (
-                      // Your existing "No projects" view
                       <div className="text-center space-y-4">
                         <div className="w-20 h-20 bg-[#C1A461]/10 rounded-full flex items-center justify-center mx-auto">
                           <div className="w-8 h-8 bg-[#C1A461]/20 rounded" />
                         </div>
                         <h3 className={textColor}>No projects yet</h3>
-                        <div className="flex flex-col gap-2 max-w-xs mx-auto">
-                          <Button 
-                            className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-                            onClick={() => setIsAddProjectModalOpen(true)}
-                          >
-                            Add Project
-                          </Button>
-                        </div>
                       </div>
                     )}
                   </TabsContent>
