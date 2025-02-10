@@ -136,4 +136,39 @@ export class UserService {
   static async signOut() {
     return supabase.auth.signOut()
   }
+
+  static async isUsernameAvailable(username: string): Promise<boolean> {
+    const { data } = await supabase
+      .from('users')
+      .select('username')
+      .eq('username', username)
+      .single()
+    
+    return !data
+  }
+
+  static async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single()
+  
+      if (error) {
+        console.error('Supabase error:', error)
+        throw new Error(error.message)
+      }
+      
+      if (!data) {
+        throw new Error('No data returned from update operation')
+      }
+  
+      return data
+    } catch (error) {
+      console.error('Error in updateProfile:', error)
+      throw error // Re-throw to be handled by the component
+    }
+  }
 }

@@ -6,10 +6,12 @@ import LoadingPage from "../pages/LoadingPage"
 
 interface UserContextValue {
   user: User | null
+  refreshUser: () => Promise<void>
 }
 
 const UserContext = createContext<UserContextValue>({
-  user: null
+  user: null,
+  refreshUser: async () => {}
 })
 
 export const useUser = () => {
@@ -86,12 +88,17 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
     }
   }, [])
 
+  const refreshUser = async () => {
+    const userData = await UserService.getCurrentUser()
+    setUser(userData)
+  }
+
   if (isLoading) {
     return <LoadingPage />
   }
 
   return (
-    <UserContext.Provider value={{ user }}>
+    <UserContext.Provider value={{ user, refreshUser }}>
       {children}
     </UserContext.Provider>
   )

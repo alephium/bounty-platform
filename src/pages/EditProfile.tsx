@@ -23,6 +23,15 @@ import { Checkbox } from '../components/ui/checkbox'
 import { useToast } from '../components/ui/use-toast'
 import { useTheme } from '../contexts/ThemeContext'
 import { Web3Interest, WorkExperience } from '../types/supabase'
+import { useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
+import { getAllCountries } from '../constants/countries'
+import { 
+  SKILLS_BY_CATEGORY, 
+  type SkillCategory, 
+  type SkillOption 
+} from '../constants/skills'
+
 
 interface FormData {
   username: string
@@ -43,76 +52,6 @@ interface FormData {
 
 interface FormErrors {
   [key: string]: string
-}
-
-type SkillCategory = 'frontend' | 'backend' | 'blockchain' | 'design' | 'content'
-
-interface SkillOption {
-  value: string
-  label: string
-}
-
-const skillOptions: Record<SkillCategory, SkillOption[]> = {
-  frontend: [
-    { value: "react", label: "React" },
-    { value: "vue", label: "Vue.js" },
-    { value: "angular", label: "Angular" },
-    { value: "nextjs", label: "Next.js" },
-    { value: "typescript", label: "TypeScript" },
-    { value: "html", label: "HTML5" },
-    { value: "css", label: "CSS3" },
-    { value: "tailwind", label: "Tailwind CSS" },
-    { value: "sass", label: "Sass/SCSS" },
-    { value: "mui", label: "Material UI" }
-  ],
-  backend: [
-    { value: "nodejs", label: "Node.js" },
-    { value: "python", label: "Python" },
-    { value: "java", label: "Java" },
-    { value: "csharp", label: "C#" },
-    { value: "golang", label: "Go" },
-    { value: "ruby", label: "Ruby" },
-    { value: "php", label: "PHP" },
-    { value: "postgresql", label: "PostgreSQL" },
-    { value: "mongodb", label: "MongoDB" },
-    { value: "mysql", label: "MySQL" },
-    { value: "redis", label: "Redis" },
-    { value: "docker", label: "Docker" }
-  ],
-  blockchain: [
-    { value: "solidity", label: "Solidity" },
-    { value: "rust", label: "Rust" },
-    { value: "ralph", label: "Ralph" },
-    { value: "web3js", label: "Web3.js" },
-    { value: "ethersjs", label: "Ethers.js" },
-    { value: "hardhat", label: "Hardhat" },
-    { value: "truffle", label: "Truffle" },
-    { value: "defi", label: "DeFi Development" },
-    { value: "nft", label: "NFT Development" },
-    { value: "smartcontracts", label: "Smart Contracts" },
-    { value: "ipfs", label: "IPFS" }
-  ],
-  design: [
-    { value: "figma", label: "Figma" },
-    { value: "sketch", label: "Sketch" },
-    { value: "adobe_xd", label: "Adobe XD" },
-    { value: "photoshop", label: "Photoshop" },
-    { value: "illustrator", label: "Illustrator" },
-    { value: "ui_design", label: "UI Design" },
-    { value: "ux_design", label: "UX Design" },
-    { value: "motion", label: "Motion Design" },
-    { value: "3d", label: "3D Design" }
-  ],
-  content: [
-    { value: "writing", label: "Content Writing" },
-    { value: "editing", label: "Content Editing" },
-    { value: "seo", label: "SEO Writing" },
-    { value: "technical", label: "Technical Writing" },
-    { value: "copywriting", label: "Copywriting" },
-    { value: "social", label: "Social Media" },
-    { value: "research", label: "Research" },
-    { value: "storytelling", label: "Storytelling" }
-  ]
 }
 
 interface SelectedSkills extends Record<SkillCategory, string[]> {}
@@ -330,31 +269,12 @@ export const EditProfile = () => {
     }
   }
 
-  const uploadAvatar = async (): Promise<string | null> => {
-    if (!avatarFile || !user) return null
-    
-    const fileExt = avatarFile.name.split('.').pop()
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`
-    
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, avatarFile)
-      
-    if (error) throw error
-    
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName)
-      
-    return publicUrl
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user?.id) return
-
+  
     setIsLoading(true)
-
+  
     try {
       // Check username availability if it changed
       if (formData.username !== user.username) {
@@ -365,15 +285,33 @@ export const EditProfile = () => {
             description: "Username is already taken",
             variant: "destructive"
           })
+          setIsLoading(false) // Important: Reset loading state
           return
         }
       }
-
+  
+      // Upload avatar first if there's a new one
       let avatarUrl = user.avatar_url
       if (avatarFile) {
         avatarUrl = await uploadAvatar()
+        // Add error check for avatar upload
+        if (!avatarUrl) {
+          setIsLoading(false)
+          return
+        }
       }
-
+  
+      // Validate required fields before update
+      if (!formData.username || !formData.firstName || !formData.lastName || !formData.walletAddress) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        })
+        setIsLoading(false)
+        return
+      }
+  
       const updates: Partial<User> = {
         username: formData.username,
         first_name: formData.firstName,
@@ -397,25 +335,111 @@ export const EditProfile = () => {
         avatar_url: avatarUrl || undefined,
         updated_at: new Date().toISOString()
       }
-
+  
+      console.log('Updating profile with:', updates) // Add logging
+  
       const updatedUser = await UserService.updateProfile(user.id, updates)
-      if (!updatedUser) throw new Error('Failed to update profile')
-
+      if (!updatedUser) {
+        throw new Error('Failed to update profile: No response from server')
+      }
+  
       await refreshUser()
       
       toast({
         title: "Success",
         description: "Profile updated successfully"
       })
+  
+      // Optional: Navigate away after successful update
+      navigate(`/profile/${updatedUser.username}`)
+  
     } catch (error) {
       console.error('Error updating profile:', error)
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive"
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (!file) return
+  
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 5MB",
+        variant: "destructive"
+      })
+      return
+    }
+  
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please upload an image file",
+        variant: "destructive"
+      })
+      return
+    }
+  
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+  }, [toast])
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+    },
+    maxFiles: 1
+  })
+
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user) return null
+    
+    try {
+      // First remove old avatar if exists
+      if (user.avatar_url) {
+        const oldFileName = user.avatar_url.split('/').pop()
+        if (oldFileName) {
+          await supabase.storage
+            .from('avatars')
+            .remove([oldFileName])
+        }
+      }
+      
+      const fileExt = avatarFile.name.split('.').pop()
+      const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, avatarFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+        
+      if (uploadError) throw uploadError
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+        
+      return publicUrl
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar",
+        variant: "destructive"
+      })
+      return null
     }
   }
 
@@ -617,8 +641,10 @@ export const EditProfile = () => {
                           <SelectValue placeholder="Select location" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 h-48 overflow-y-auto">
-                          {COUNTRIES.map((country) => (
-                            <SelectItem key={country.value} value={country.value}>{country.label}</SelectItem>
+                          {getAllCountries().map((country) => (
+                            <SelectItem key={country.value} value={country.value}>
+                              {country.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -644,7 +670,7 @@ export const EditProfile = () => {
                         </span>
                       </Label>
                       <div className="space-y-4 mt-4">
-                        {(Object.entries(skillOptions) as [SkillCategory, SkillOption[]][]).map(([category, options]) => (
+                        {(Object.entries(SKILLS_BY_CATEGORY) as [SkillCategory, SkillOption[]][]).map(([category, options]) => (
                           <div key={category}>
                             <h3 className="text-sm font-medium text-[#C1A461] mb-2">
                               {category.charAt(0).toUpperCase() + category.slice(1)}
