@@ -280,6 +280,38 @@ export default function Profile() {
                           </div>
                         </div>
                       )}
+
+                      {(profileUser.design_skills || []).length > 0 && (
+                        <div>
+                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>DESIGN</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {(profileUser.design_skills ?? []).map((skill) => (
+                              <Badge 
+                                key={skill}
+                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {(profileUser.content_skills || []).length > 0 && (
+                        <div>
+                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>CONTENT</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {(profileUser.content_skills ?? []).map((skill) => (
+                              <Badge 
+                                key={skill}
+                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

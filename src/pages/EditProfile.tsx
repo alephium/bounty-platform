@@ -369,7 +369,18 @@ export const EditProfile = () => {
     const file = acceptedFiles[0]
     if (!file) return
   
-    // Check file size (5MB limit)
+    // Validate file type explicitly
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Please upload a valid image file (JPG, PNG, or GIF)",
+        variant: "destructive"
+      })
+      return
+    }
+  
+    // Size check (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Error",
@@ -379,33 +390,59 @@ export const EditProfile = () => {
       return
     }
   
-    // Check file type
-    if (!file.type.startsWith('image/')) {
+    try {
+      // Create a preview
+      const preview = URL.createObjectURL(file)
+      setAvatarPreview(preview)
+      setAvatarFile(file)
+    } catch (error) {
+      console.error('Error handling file:', error)
       toast({
         title: "Error",
-        description: "Please upload an image file",
+        description: "Failed to process image. Please try again.",
         variant: "destructive"
       })
-      return
     }
-  
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
   }, [toast])
   
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif']
     },
-    maxFiles: 1
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB in bytes
   })
 
   const uploadAvatar = async (): Promise<string | null> => {
     if (!avatarFile || !user) return null
     
     try {
-      // First remove old avatar if exists
+      // Check if bucket exists, create if it doesn't
+      const { data: buckets } = await supabase
+        .storage
+        .listBuckets()
+  
+      const avatarsBucket = buckets?.find(bucket => bucket.name === 'avatars')
+      
+      if (!avatarsBucket) {
+        // Create the bucket if it doesn't exist
+        const { error: createBucketError } = await supabase
+          .storage
+          .createBucket('avatars', {
+            public: true, // or false if you want private
+            fileSizeLimit: 5 * 1024 * 1024 // 5MB in bytes
+          })
+  
+        if (createBucketError) {
+          console.error('Error creating bucket:', createBucketError)
+          throw createBucketError
+        }
+      }
+  
+      // Rest of your upload code
       if (user.avatar_url) {
         const oldFileName = user.avatar_url.split('/').pop()
         if (oldFileName) {
@@ -415,28 +452,39 @@ export const EditProfile = () => {
         }
       }
       
-      const fileExt = avatarFile.name.split('.').pop()
+      const fileExt = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg'
       const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`
       
-      const { error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, avatarFile, {
+          contentType: avatarFile.type,
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         })
         
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        console.error('Upload error details:', uploadError)
+        throw uploadError
+      }
+  
+      if (!data?.path) {
+        throw new Error('No data path returned from upload')
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName)
-        
+        .getPublicUrl(data.path)
+      
       return publicUrl
+      
     } catch (error) {
       console.error('Error uploading avatar:', error)
       toast({
         title: "Error",
-        description: "Failed to upload avatar",
+        description: error instanceof Error 
+          ? error.message 
+          : "Failed to upload avatar. Please try again.",
         variant: "destructive"
       })
       return null
@@ -456,34 +504,41 @@ export const EditProfile = () => {
               <h2 className="text-lg font-semibold text-[#C1A461]">PERSONAL INFO</h2>
               
               <div className="space-y-4">
-                {/* Profile Picture */}
-                <div>
-                  <Label>Profile Picture</Label>
-                  <div className="mt-2 flex items-center gap-4">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={avatarPreview || user?.avatar_url || "/placeholder.svg"} />
-                      <AvatarFallback>{formData.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 border-2 border-dashed border-[#C1A461]/20 rounded-lg p-4 text-center">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        id="avatar-upload"
-                      />
-                      <Label htmlFor="avatar-upload" className="cursor-pointer">
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Choose or drag and drop media
-                        </Button>
-                      </Label>
-                      <p className="text-sm text-[#C1A461]/60 mt-2">Maximum size 5 MB</p>
-                    </div>
+                <Label>Profile Picture</Label>
+                <div className="mt-2 flex items-center gap-4">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={avatarPreview || user?.avatar_url || "/placeholder.svg"} />
+                    <AvatarFallback>{formData.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div 
+                    {...getRootProps()} 
+                    className={`flex-1 border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                      ${isDragActive 
+                        ? 'border-[#C1A461] bg-[#C1A461]/10' 
+                        : 'border-[#C1A461]/20'} 
+                      hover:border-[#C1A461]/40 cursor-pointer`}
+                  >
+                    <input {...getInputProps()} />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isDragActive 
+                        ? 'Drop the image here'
+                        : 'Choose or drag and drop image'
+                      }
+                    </Button>
+                    <p className="text-sm text-[#C1A461]/60 mt-2">
+                      Maximum size 5 MB - PNG, JPG, GIF
+                    </p>
+                    {avatarFile && (
+                      <p className="text-sm text-[#C1A461] mt-2">
+                        Selected: {avatarFile.name}
+                      </p>
+                    )}
                   </div>
                 </div>
 
