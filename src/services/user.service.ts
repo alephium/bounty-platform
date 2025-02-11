@@ -149,6 +149,13 @@ export class UserService {
 
   static async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     try {
+      if (updates.wallet_address) {
+        const isAvailable = await this.isWalletAddressAvailable(updates.wallet_address, userId)
+        if (!isAvailable) {
+          throw new Error('Wallet address is already registered')
+        }
+      }
+      
       const { data, error } = await supabase
         .from('users')
         .update(updates)
@@ -169,6 +176,28 @@ export class UserService {
     } catch (error) {
       console.error('Error in updateProfile:', error)
       throw error // Re-throw to be handled by the component
+    }
+  }
+
+  static async isWalletAddressAvailable(walletAddress: string, userId?: string): Promise<boolean> {
+    try {
+      let query = supabase
+        .from('users')
+        .select('id')
+        .eq('wallet_address', walletAddress)
+  
+      // If updating an existing user, exclude their current record
+      if (userId) {
+        query = query.neq('id', userId)
+      }
+  
+      const { data } = await query
+      
+      // If no data or empty array, the wallet address is available
+      return !data || data.length === 0
+    } catch (error) {
+      console.error('Error checking wallet address:', error)
+      return false // Return false to be safe in case of errors
     }
   }
 }

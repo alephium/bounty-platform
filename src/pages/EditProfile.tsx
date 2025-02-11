@@ -203,24 +203,6 @@ export const EditProfile = () => {
           return 'Username must be 1-20 characters and can only contain letters, numbers, and underscores'
         }
         break
-      case 'walletAddress':
-        if (!value) return 'Wallet address is required'
-        break
-      case 'firstName':
-        if (!value) return 'First name is required'
-        break
-      case 'lastName':
-        if (!value) return 'Last name is required'
-        break
-      // URL validations
-      case 'githubUrl':
-      case 'twitterUrl':
-      case 'linkedinUrl':
-      case 'websiteUrl':
-        if (value && !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(value)) {
-          return 'Invalid URL format'
-        }
-        break
     }
     return ''
   }
@@ -289,8 +271,20 @@ export const EditProfile = () => {
           return
         }
       }
+
+      if (formData.walletAddress !== user.wallet_address) {
+        const isAvailable = await UserService.isWalletAddressAvailable(formData.walletAddress, user.id)
+        if (!isAvailable) {
+          toast({
+            title: "Error",
+            description: "Wallet address is already registered",
+            variant: "destructive"
+          })
+          setIsLoading(false)
+          return
+        }
+      }  
   
-      // Upload avatar first if there's a new one
       let avatarUrl = user.avatar_url
       if (avatarFile) {
         avatarUrl = await uploadAvatar()
@@ -420,61 +414,25 @@ export const EditProfile = () => {
     if (!avatarFile || !user) return null
     
     try {
-      // Check if bucket exists, create if it doesn't
-      const { data: buckets } = await supabase
-        .storage
-        .listBuckets()
-  
-      const avatarsBucket = buckets?.find(bucket => bucket.name === 'avatars')
-      
-      if (!avatarsBucket) {
-        // Create the bucket if it doesn't exist
-        const { error: createBucketError } = await supabase
-          .storage
-          .createBucket('avatars', {
-            public: true, // or false if you want private
-            fileSizeLimit: 5 * 1024 * 1024 // 5MB in bytes
-          })
-  
-        if (createBucketError) {
-          console.error('Error creating bucket:', createBucketError)
-          throw createBucketError
-        }
-      }
-  
-      // Rest of your upload code
-      if (user.avatar_url) {
-        const oldFileName = user.avatar_url.split('/').pop()
-        if (oldFileName) {
-          await supabase.storage
-            .from('avatars')
-            .remove([oldFileName])
-        }
-      }
-      
       const fileExt = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-      const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`
+      const fileName = `${Date.now()}.${fileExt}`
       
       const { data, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, avatarFile, {
           contentType: avatarFile.type,
-          cacheControl: '3600',
           upsert: true
         })
         
       if (uploadError) {
-        console.error('Upload error details:', uploadError)
+        console.error('Upload error:', uploadError)
         throw uploadError
       }
   
-      if (!data?.path) {
-        throw new Error('No data path returned from upload')
-      }
-      
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(data.path)
+        .getPublicUrl(fileName)
       
       return publicUrl
       
@@ -482,9 +440,7 @@ export const EditProfile = () => {
       console.error('Error uploading avatar:', error)
       toast({
         title: "Error",
-        description: error instanceof Error 
-          ? error.message 
-          : "Failed to upload avatar. Please try again.",
+        description: "Failed to upload avatar. Please try again.",
         variant: "destructive"
       })
       return null
@@ -562,7 +518,7 @@ export const EditProfile = () => {
                 {/* First and Last Name */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label htmlFor="firstName">First Name *</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input 
                       id="firstName"
                       name="firstName"
@@ -577,7 +533,7 @@ export const EditProfile = () => {
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input 
                       id="lastName"
                       name="lastName"
@@ -608,7 +564,7 @@ export const EditProfile = () => {
 
                 {/* Wallet Address */}
                 <div className="space-y-1">
-                  <Label htmlFor="walletAddress">Your Alephium Wallet Address *</Label>
+                  <Label htmlFor="walletAddress">Your Alephium Wallet Address</Label>
                   <Input 
                     id="walletAddress"
                     name="walletAddress"
