@@ -95,16 +95,34 @@ export default function BountyDetails() {
   }
 
   const timeRemaining = () => {
-    if (!bounty) return ""
-    const now = new Date()
-    const deadline = new Date(bounty.end_date)
-    const diff = deadline.getTime() - now.getTime()
+    if (!bounty?.end_date) return "N/A"
     
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-    
-    return `${days}d:${hours}h:${minutes}m`
+    try {
+      const now = new Date()
+      const deadline = new Date(bounty.end_date)
+      
+      // Check if deadline is valid
+      if (isNaN(deadline.getTime())) {
+        console.error('Invalid end_date:', bounty.end_date)
+        return "Invalid date"
+      }
+      
+      const diff = deadline.getTime() - now.getTime()
+      
+      // Check if the bounty has expired
+      if (diff < 0) {
+        return "Expired"
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      
+      return `${days}d:${hours}h:${minutes}m`
+    } catch (error) {
+      console.error('Error calculating time remaining:', error)
+      return "Error"
+    }
   }
 
   if (loading) {
@@ -210,7 +228,7 @@ export default function BountyDetails() {
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
-                  <span>by {bounty.sponsor_id.name}</span>
+                  <span>by {bounty.sponsor?.name}</span>
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}
                   </Badge>
@@ -220,7 +238,7 @@ export default function BountyDetails() {
                   </div>
                   <div className="flex items-center gap-1">
                     <MessageSquare className="w-4 h-4" />
-                    <span>{bounty.submissions_count}</span>
+                    <span>{bounty.current_submissions}</span>
                   </div>
                 </div>
               </div>
@@ -278,7 +296,7 @@ export default function BountyDetails() {
                 <section>
                   <h2 className={`text-lg font-bold ${textColor} mb-4`}>Timeline</h2>
                   <p className={`${textColor}/80`}>
-                    Due by: {new Date(bounty.due_date).toLocaleDateString()}
+                    Due by: {new Date(bounty.end_date).toLocaleDateString()}
                   </p>
                 </section>
 
