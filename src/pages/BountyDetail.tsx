@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase"
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
+import { SubmissionDialog } from '../components/ui/submission-dialog'
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -209,7 +210,7 @@ export default function BountyDetails() {
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
-                  <span>by {bounty.company.name}</span>
+                  <span>by {bounty.sponsor_id.name}</span>
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}
                   </Badge>
@@ -309,55 +310,31 @@ export default function BountyDetails() {
       </main>
 
       {/* Submit Dialog */}
-      <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-        <DialogContent className={`${bgColor} ${borderColor}`}>
-          <DialogHeader>
-            <DialogTitle className={textColor}>Submit Solution</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className={`text-sm ${textColor}`}>Title</label>
-              <Input
-                value={submissionForm.title}
-                onChange={(e) => setSubmissionForm(prev => ({ ...prev, title: e.target.value }))}
-                className={`${bgColor} ${borderColor} ${textColor}`}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className={`text-sm ${textColor}`}>Description</label>
-              <Textarea
-                value={submissionForm.description}
-                onChange={(e) => setSubmissionForm(prev => ({ ...prev, description: e.target.value }))}
-                className={`${bgColor} ${borderColor} ${textColor}`}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className={`text-sm ${textColor}`}>Submission URL</label>
-              <Input
-                value={submissionForm.submissionUrl}
-                onChange={(e) => setSubmissionForm(prev => ({ ...prev, submissionUrl: e.target.value }))}
-                placeholder="https://github.com/your-repo"
-                className={`${bgColor} ${borderColor} ${textColor}`}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsSubmitDialogOpen(false)}
-              className={`border-[#C1A461]/20 ${textColor}`}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-            >
-              Submit
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SubmissionDialog 
+        bounty={bounty}
+        userId={user?.id || ''}
+        isOpen={isSubmitDialogOpen}
+        onClose={() => setIsSubmitDialogOpen(false)}
+        onSubmissionComplete={() => {
+          // Refresh bounty data
+          const fetchBounty = async () => {
+            try {
+              const { data, error } = await supabase
+                .from('bounties')
+                .select('*')
+                .eq('id', id)
+                .single()
+
+              if (error) throw error
+              setBounty(data)
+            } catch (error) {
+              console.error('Error fetching bounty:', error)
+              toast.error("Failed to refresh bounty details")
+            }
+          }
+          fetchBounty()
+        }}
+      />
     </div>
   )
 }

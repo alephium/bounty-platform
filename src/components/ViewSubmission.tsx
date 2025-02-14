@@ -22,6 +22,8 @@ import { useToast } from "@/components/ui/use-toast"
 import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
 import { useTheme } from '@/contexts/ThemeContext'
 
+type RealtimeSubscription = ReturnType<ReturnType<typeof supabase.channel>['subscribe']>
+
 interface SubmissionProps {
   bountyId?: string
   projectId?: string
@@ -71,51 +73,98 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
       : "bg-red-100 text-red-600"
   }
 
-  useEffect(() => {
-    async function fetchSubmissions() {
-      try {
-        setLoading(true)
-        
-        if (bountyId) {
-          const { data: bountyData, error: bountyError } = await supabase
-            .from('bounty_submissions')
-            .select(`
-              *,
-              user:users(full_name, avatar_url)
-            `)
-            .eq('bounty_id', bountyId)
-            .order('created_at', { ascending: false })
-
-          if (bountyError) throw bountyError
-          if (bountyData) setBountySubmissions(bountyData)
-        }
-
-        if (projectId) {
-          const { data: projectData, error: projectError } = await supabase
-            .from('project_submissions')
-            .select(`
-              *,
-              user:users(full_name, avatar_url)
-            `)
-            .eq('project_id', projectId)
-            .order('created_at', { ascending: false })
-
-          if (projectError) throw projectError
-          if (projectData) setProjectSubmissions(projectData)
-        }
-      } catch (error) {
-        console.error('Error fetching submissions:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load submissions",
-          variant: "destructive"
-        })
-      } finally {
-        setLoading(false)
+  const fetchSubmissions = async () => {
+    try {
+      setLoading(true)
+      
+      if (bountyId) {
+        const { data: bountyData, error: bountyError } = await supabase
+          .from('bounty_submissions')
+          .select(`
+            *,
+            user:users(full_name, avatar_url)
+          `)
+          .eq('bounty_id', bountyId)
+          .order('created_at', { ascending: false })
+  
+        if (bountyError) throw bountyError
+        if (bountyData) setBountySubmissions(bountyData)
       }
+  
+      if (projectId) {
+        const { data: projectData, error: projectError } = await supabase
+          .from('project_submissions')
+          .select(`
+            *,
+            user:users(full_name, avatar_url)
+          `)
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false })
+  
+        if (projectError) throw projectError
+        if (projectData) setProjectSubmissions(projectData)
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load submissions",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
 
     fetchSubmissions()
+    const subscriptions: RealtimeSubscription[] = []
+
+    if (bountyId) {
+      const bountySubscription = supabase
+        .channel('bounty_submissions_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bounty_submissions',
+            filter: `bounty_id=eq.${bountyId}`
+          },
+          () => {
+            fetchSubmissions() // Refresh data when changes occur
+          }
+        )
+        .subscribe()
+  
+      subscriptions.push(bountySubscription)
+    }
+  
+    if (projectId) {
+      const projectSubscription = supabase
+        .channel('project_submissions_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'project_submissions',
+            filter: `project_id=eq.${projectId}`
+          },
+          () => {
+            fetchSubmissions() // Refresh data when changes occur
+          }
+        )
+        .subscribe()
+  
+      subscriptions.push(projectSubscription)
+    }
+  
+    // Cleanup subscriptions
+    return () => {
+      subscriptions.forEach(subscription => subscription.unsubscribe())
+    }
   }, [bountyId, projectId])
 
   const handleStatusUpdate = async (submissionId: string, newStatus: string, type: 'bounty' | 'project') => {
@@ -128,27 +177,16 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
           review_started_at: new Date().toISOString()
         })
         .eq('id', submissionId)
-
+  
       if (error) throw error
-
+  
       toast({
         description: `Submission ${newStatus} successfully`
       })
-
-      // Refresh submissions
-      const updatedSubmissions = type === 'bounty' 
-        ? bountySubmissions.map(sub => 
-            sub.id === submissionId ? { ...sub, status: newStatus } : sub
-          )
-        : projectSubmissions.map(sub =>
-            sub.id === submissionId ? { ...sub, status: newStatus } : sub
-          )
-
-      if (type === 'bounty') {
-        setBountySubmissions(updatedSubmissions as BountySubmission[])
-      } else {
-        setProjectSubmissions(updatedSubmissions as ProjectSubmission[])
-      }
+  
+      // Refresh the data instead of manually updating state
+      await fetchSubmissions()
+  
     } catch (error) {
       console.error('Error updating submission status:', error)
       toast({
@@ -158,7 +196,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
       })
     }
   }
-
+  
   const filteredSubmissions = [...bountySubmissions, ...projectSubmissions].filter(sub => {
     if (activeTab === 'all') return true
     return sub.status === activeTab

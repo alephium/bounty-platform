@@ -1,8 +1,5 @@
-// submissionHandlers.ts
-import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
-import type { Bounty } from '@/types/supabase'
-
+import { Bounty } from '../types/supabase'
+import supabase from '../supabase/index'
 export async function handleBountySubmission(
   bounty: Bounty,
   userId: string,
@@ -11,7 +8,19 @@ export async function handleBountySubmission(
   description: string
 ) {
   try {
-    // First, create the bounty submission
+    // First, check if user has already submitted
+    const { data: existingSubmission } = await supabase
+      .from('bounty_submissions')
+      .select('id')
+      .eq('bounty_id', bounty.id)
+      .eq('user_id', userId)
+      .single()
+
+    if (existingSubmission) {
+      throw new Error('You have already submitted to this bounty')
+    }
+
+    // Then, create the bounty submission
     const { data: submissionData, error: submissionError } = await supabase
       .from('bounty_submissions')
       .insert({
@@ -27,7 +36,17 @@ export async function handleBountySubmission(
 
     if (submissionError) throw submissionError
 
-    // Then, create a notification for the sponsor
+    // Update bounty's current_submissions count
+    const { error: updateError } = await supabase
+      .from('bounties')
+      .update({ 
+        current_submissions: bounty.current_submissions + 1 
+      })
+      .eq('id', bounty.id)
+
+    if (updateError) throw updateError
+
+    // Create notification for the sponsor
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
@@ -42,19 +61,12 @@ export async function handleBountySubmission(
 
     if (notificationError) throw notificationError
 
-    // Update the bounty's current_submissions count
-    const { error: updateError } = await supabase
-      .from('bounties')
-      .update({ 
-        current_submissions: bounty.current_submissions + 1 
-      })
-      .eq('id', bounty.id)
-
-    if (updateError) throw updateError
-
     return { success: true, submission: submissionData }
   } catch (error) {
     console.error('Error handling submission:', error)
-    return { success: false, error }
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An error occurred during submission'
+    }
   }
 }
