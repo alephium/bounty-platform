@@ -25,7 +25,7 @@ export class BountyService {
     return data
   }
 
-  static async updateBountyStatus(id: string, status: 'open' | 'in review' | 'completed') {
+  static async updateBountyStatus(id: string, status: 'open' | 'in_review' | 'completed') {
     return this.updateBounty(id, { status })
   }
 

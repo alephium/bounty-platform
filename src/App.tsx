@@ -15,13 +15,11 @@ import { EditProfile } from './pages/EditProfile'
 import AuthPage from './pages/Auth'
 import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
-// import BountyPublischer from './pages/BountyPublisher'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
-import { CreateSponsorProfile } from './components/CreateSponsorProfile'
 import { PostListing } from './components/PostListing'
 import OnboardingSteps from './pages/Sponsor'
-
+import SponsorDashboard from './pages/SponsorDashboard'
 
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
@@ -49,7 +47,7 @@ export default function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/sponsor" element={<OnboardingSteps />} />
-              {/* <Route path="/sponsor" element={<CreateSponsorProfile />} /> */}
+              <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               <Route path="/bounties" element={<Bounties />} />
               {/* <Route path="/bounties/publisher" element={<BountyPublischer />} /> */}
               <Route path="/PostListing" element={<PostListing />} />

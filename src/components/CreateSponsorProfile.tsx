@@ -105,7 +105,7 @@ export function CreateSponsorProfile() {
       if (error) throw error
 
       toast({ description: "Sponsor profile created successfully" })
-      navigate(`/sponsors/${sponsor.id}`)
+      navigate('/sponsor/dashboard')
     } catch (error) {
       console.error('Error creating sponsor:', error)
       toast({

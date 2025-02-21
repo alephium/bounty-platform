@@ -15,7 +15,7 @@ import { supabase } from "@/lib/supabase"
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
-import { SubmissionDialog } from '../components/ui/submission-dialog'
+import { SubmissionDialog } from '../components/SubmissionDialog'
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -57,9 +57,22 @@ export default function BountyDetails() {
     fetchBounty()
   }, [id])
 
+  // const handleSubmitOpen = () => {
+  //   if (!user) {
+  //     toast.error("Please sign in to submit")
+  //     return
+  //   }
+  //   setSubmissionForm({
+  //     title: `${user.full_name}'s submission for ${bounty?.title}`,
+  //     description: '',
+  //     submissionUrl: ''
+  //   })
+  //   setIsSubmitDialogOpen(true)
+  // }
   const handleSubmitOpen = () => {
     if (!user) {
       toast.error("Please sign in to submit")
+      navigate('/auth')
       return
     }
     setSubmissionForm({
@@ -173,10 +186,24 @@ export default function BountyDetails() {
                     </div>
                   </div>
                 </div>
-                <Button 
+                {/* <Button 
                   variant="outline" 
                   className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
                   onClick={handleSubmitOpen}
+                >
+                  Submit
+                </Button> */}
+                <Button 
+                  variant="outline" 
+                  className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
+                  onClick={() => {
+                    if (!user) {
+                      toast.error("Please sign in to submit")
+                      navigate('/auth')
+                      return
+                    }
+                    handleSubmitOpen()
+                  }}
                 >
                   Submit
                 </Button>
@@ -353,6 +380,13 @@ export default function BountyDetails() {
           fetchBounty()
         }}
       />
+      {/* <SubmissionDialog
+        bounty={bounty}
+        userId={user?.id || ''}
+        isOpen={isSubmitDialogOpen}
+        onClose={() => setIsSubmitDialogOpen(false)}
+        onSubmissionComplete={handleSubmissionComplete}
+      /> */}
     </div>
   )
 }

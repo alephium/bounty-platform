@@ -15,12 +15,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Calendar, MoreVertical, ExternalLink, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, MoreVertical, ExternalLink, CheckCircle, XCircle, MessageSquare } from 'lucide-react'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
 import { useTheme } from '@/contexts/ThemeContext'
+import { FeedbackDialog } from "./FeedbackDialog"
 
 type RealtimeSubscription = ReturnType<ReturnType<typeof supabase.channel>['subscribe']>
 
@@ -72,6 +73,13 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
       ? "bg-red-500/20 text-red-400" 
       : "bg-red-100 text-red-600"
   }
+
+  const [feedbackDialogState, setFeedbackDialogState] = useState<{
+    isOpen: boolean;
+    type?: 'review' | 'reject';
+    submissionId?: string;
+    submissionType?: 'bounty' | 'project';
+  }>({ isOpen: false });
 
   const fetchSubmissions = async () => {
     try {
@@ -167,24 +175,86 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     }
   }, [bountyId, projectId])
 
-  const handleStatusUpdate = async (submissionId: string, newStatus: string, type: 'bounty' | 'project') => {
+  const handleStatusUpdate = async (
+    submissionId: string, 
+    newStatus: 'accepted' | 'rejected' | 'in_review',
+    type: 'bounty' | 'project',
+    feedback?: string
+  ) => {
     try {
       const table = type === 'bounty' ? 'bounty_submissions' : 'project_submissions'
-      const { error } = await supabase
+      
+      // Get submission and user details
+      const { data: submission } = await supabase
         .from(table)
-        .update({ 
+        .select(`
+          *,
+          user:users(
+            email,
+            wallet_address,
+            full_name
+          )
+        `)
+        .eq('id', submissionId)
+        .single()
+  
+      if (!submission?.user) {
+        throw new Error('User not found')
+      }
+  
+      // Update submission status
+      const { error: updateError } = await supabase
+        .from(table)
+        .update({
           status: newStatus,
-          review_started_at: new Date().toISOString()
+          feedback: feedback || null,
+          review_started_at: new Date().toISOString(),
+          completed_at: newStatus === 'accepted' ? new Date().toISOString() : null
         })
         .eq('id', submissionId)
   
-      if (error) throw error
+      if (updateError) throw updateError
+  
+      // Create notification
+      const notificationData = {
+        sponsor_id: type === 'bounty' ? submission.bounty_id : submission.project_id,
+        user_id: submission.user_id,
+        submission_id: submissionId,
+        submission_type: type,
+        status: 'unread',
+        title: `Submission ${newStatus}`,
+        message: feedback || `Your submission has been ${newStatus}`
+      }
+  
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([notificationData])
+  
+      if (notificationError) throw notificationError
+  
+      // Send email notification based on status
+      const emailContent = {
+        to: submission.user.email,
+        subject: `Submission ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+        text: getEmailContent(newStatus, submission, feedback)
+      }
+  
+      // Here you would typically call your email service
+      // For example: await sendEmail(emailContent)
+      console.log('Sending email:', emailContent)
+  
+      // If accepted, process payment
+      if (newStatus === 'accepted' && submission.user.wallet_address) {
+        // Here you would typically call your payment processing service
+        // For example: await processPayment(submission.user.wallet_address, bountyAmount)
+        console.log('Processing payment to:', submission.user.wallet_address)
+      }
   
       toast({
         description: `Submission ${newStatus} successfully`
       })
   
-      // Refresh the data instead of manually updating state
+      // Refresh submissions
       await fetchSubmissions()
   
     } catch (error) {
@@ -194,6 +264,29 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
         description: "Failed to update submission status",
         variant: "destructive"
       })
+    }
+  }
+  
+  // Helper function to generate email content
+  const getEmailContent = (
+    status: string, 
+    submission: any, 
+    feedback?: string
+  ) => {
+    const baseContent = `Dear ${submission.user.full_name},\n\n`
+    
+    switch (status) {
+      case 'accepted':
+        return `${baseContent}Congratulations! Your submission has been approved. The reward will be sent to your registered wallet address.\n\n${feedback || ''}`
+      
+      case 'in_review':
+        return `${baseContent}Your submission requires some improvements:\n\n${feedback}\n\nPlease update your submission with the requested changes.`
+      
+      case 'rejected':
+        return `${baseContent}Unfortunately, your submission has been rejected.\n\n${feedback ? `Reason: ${feedback}` : ''}`
+      
+      default:
+        return `${baseContent}Your submission status has been updated to ${status}.${feedback ? `\n\nFeedback: ${feedback}` : ''}`
     }
   }
   
@@ -284,7 +377,7 @@ return (
                   <ExternalLink className="w-4 h-4" />
                 </Button>
 
-                {submission.status === 'submitted' && (
+                {/* {submission.status === 'submitted' && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
@@ -323,6 +416,78 @@ return (
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                )} */}
+                {submission.status === 'submitted' && (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className={`${textColor} hover:${bgColor} hover:${textColor}`}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" 
+                        className={`${bgColor} border-${borderColor}`}
+                      >
+                        <DropdownMenuItem
+                          onClick={() => {
+                            handleStatusUpdate(
+                              submission.id,
+                              'accepted',
+                              'bounty_id' in submission ? 'bounty' : 'project'
+                            )
+                          }}
+                          className={theme === 'dark' ? "text-green-400" : "text-green-600"}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Accept Submission
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setFeedbackDialogState({
+                            isOpen: true,
+                            type: 'review',
+                            submissionId: submission.id,
+                            submissionType: 'bounty_id' in submission ? 'bounty' : 'project'
+                          })}
+                          className={theme === 'dark' ? "text-yellow-400" : "text-yellow-600"}
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Request Changes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setFeedbackDialogState({
+                            isOpen: true,
+                            type: 'reject',
+                            submissionId: submission.id,
+                            submissionType: 'bounty_id' in submission ? 'bounty' : 'project'
+                          })}
+                          className={theme === 'dark' ? "text-red-400" : "text-red-600"}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject Submission
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <FeedbackDialog
+                      isOpen={feedbackDialogState.isOpen}
+                      onClose={() => setFeedbackDialogState({ isOpen: false })}
+                      onSubmit={(feedback) => {
+                        handleStatusUpdate(
+                          feedbackDialogState.submissionId!,
+                          feedbackDialogState.type === 'review' ? 'in_review' : 'rejected',
+                          feedbackDialogState.submissionType!,
+                          feedback
+                        )
+                      }}
+                      title={feedbackDialogState.type === 'review' ? 'Request Changes' : 'Reject Submission'}
+                      action={feedbackDialogState.type === 'review' ? 'Send Request' : 'Reject'}
+                    />
+                  </>
                 )}
               </div>
             </div>

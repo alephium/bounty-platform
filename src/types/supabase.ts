@@ -58,7 +58,6 @@ export interface Project {
   submission_count: number
   created_at: string
   updated_at: string
-  // Joins
   sponsor?: Sponsor
 }
 
@@ -92,11 +91,11 @@ export interface Bounty {
   sponsor?: Sponsor
 }
 
-// Submission interfaces for both bounties and projects
 export interface BountySubmission {
   id: string
   bounty_id: string
   user_id: string
+  sponsor_id:string
   title: string
   description: string
   submission_url: string
@@ -117,6 +116,7 @@ export interface ProjectSubmission {
   id: string
   project_id: string
   user_id: string
+  sponsor_id: string
   title: string
   description: string
   submission_url: string
