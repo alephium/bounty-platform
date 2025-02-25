@@ -19,7 +19,7 @@ body {
   --popover: #FFFFFF;
   --popover-foreground: #1B2228;
 
-  --primary: #0444f4;
+  --primary: #000000;
   --primary-foreground: #FFFFFF;
 
   --secondary: #F5F7FA;
@@ -52,7 +52,7 @@ body {
   --popover: #1B2228;
   --popover-foreground: #FFFFFF;
 
-  --primary: #3733f3;
+  --primary: #ffffff;
   --primary-foreground: #1B2228;
 
   --secondary: #2D3748;

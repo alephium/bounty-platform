@@ -2,14 +2,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Grants() {
-  const { theme } = useTheme();
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900';
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white';
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200';
-  const hoverBg = theme === 'dark' ? 'hover:bg-[#C1A461]/10' : 'hover:bg-amber-50';
+  const bgColor = 'bg-background'
+  const textColor = 'text-foreground'
+  const borderColor = 'border-border'
+  
 
   const grants = [
     {

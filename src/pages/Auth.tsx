@@ -1,24 +1,11 @@
 import { useState } from 'react'
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
-import { Separator } from "../components/ui/separator"
 import { Link } from "react-router-dom"
 import { UserService } from '../services/user.service'
-import { useTheme } from '../contexts/ThemeContext'
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const { theme } = useTheme()
-
-  // Theme-specific styles
-  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-500'
-  const borderColor = theme === 'dark' ? 'border-amber-500/20' : 'border-amber-200'
-  const buttonClass = theme === 'dark' 
-    ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' 
-    : 'bg-amber-500 hover:bg-amber-600 text-white'
 
   const handleAuthProvider = async (provider: 'google' | 'github') => {
     try {
@@ -39,14 +26,14 @@ export default function AuthPage() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-4`}>
-      <Card className={`w-full max-w-md ${cardBg} ${borderColor}`}>
+    <div className={`min-h-screen bg-background flex flex-col items-center justify-center p-4`}>
+      <Card className={`w-full max-w-md bg-card border-border`}>
         <CardContent className="p-8 space-y-6">
           <div className="text-center space-y-2">
-            <h1 className={`text-2xl font-bold ${textColor}`}>
+            <h1 className={`text-2xl font-bold text-foreground`}>
               Set Sail on Your Journey
             </h1>
-            <p className={mutedTextColor}>
+            <p className="text-muted">
               Your treasure awaits in global $ALPH bounty lands
             </p>
           </div>
@@ -54,7 +41,7 @@ export default function AuthPage() {
           <div className="space-y-4">
             {/* Google Login */}
             <Button 
-              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
+              className={`w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2`}
               size="lg"
               onClick={() => handleAuthProvider('google')}
               disabled={isLoading}
@@ -82,7 +69,7 @@ export default function AuthPage() {
 
             {/* GitHub Login */}
             <Button 
-              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
+              className={`w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2`}
               size="lg"
               onClick={() => handleAuthProvider('github')}
               disabled={isLoading}
@@ -96,13 +83,13 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with GitHub'}
             </Button>
 
-            <p className={`text-center text-sm ${mutedTextColor}`}>
+            <p className={`text-center text-sm text-muted`}>
               By continuing, you agree to our{' '}
-              <Link to="/terms" className={`${textColor} hover:underline`}>
+              <Link to="/terms" className={`text-foreground hover:underline`}>
                 Terms of Service
               </Link>
               {' '}and{' '}
-              <Link to="/privacy" className={`${textColor} hover:underline`}>
+              <Link to="/privacy" className={`text-foreground hover:underline`}>
                 Privacy Policy
               </Link>
             </p>

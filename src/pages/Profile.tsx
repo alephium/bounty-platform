@@ -8,7 +8,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
 import { Input } from "../components/ui/input"
 import PersonalProjectCard from "../components/PersonalProjectCard"
 import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send, Plus} from 'lucide-react'
-import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
 import { Project, User, ProofOfWork, ProofOfWorkInsert, ProjectCategory } from '../types/supabase'
@@ -31,7 +30,6 @@ import {
 export default function Profile() {
   const navigate = useNavigate()
   const { username } = useParams()
-  const { theme } = useTheme()
   const { user: currentUser } = useUser()
   const [profileUser, setProfileUser] = useState<User | null>(null)
   const [projects, setProjects] = useState<ProofOfWork[]>([])
@@ -58,11 +56,11 @@ export default function Profile() {
   const shareUrl = `http://5173${location.pathname}`;
   // console.log('user',currentUser, profileUser)
   // Theme-based styling
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+  const bgColor = 'bg-background'
+  const cardBg = 'bg-card'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const borderColor = 'border-border'
 
   // Share functionality
   const getShareUrl = (platform: string) => {

@@ -4,7 +4,6 @@ import { Search } from 'lucide-react'
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
-import { useTheme } from '../contexts/ThemeContext'
 import { AvatarDropdown } from './ui/AvatarDropdown'
 import { SessionProvider } from "../contexts/SessionContext"
 import { ThemeToggle } from './ThemeToggle'

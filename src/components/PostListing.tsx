@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useTheme } from '../contexts/ThemeContext' // Add theme import
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +13,6 @@ import {
 } from "@/components/ui/select"
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
@@ -46,7 +44,6 @@ const TOKENS = ['ALPH', 'USDC', 'USDT']
 
 export function PostListing() {
   const { user } = useUser()
-  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [listingType, setListingType] = useState<'bounty' | 'project'>('bounty')
   const [formData, setFormData] = useState<FormData>({
@@ -57,10 +54,10 @@ export function PostListing() {
     tags: [],
   })
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const bgColor = 'bg-background'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const borderColor = 'border-border'
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -333,9 +330,7 @@ export function PostListing() {
             )}
 
             <Button 
-              className={theme === 'dark' ? 
-                "w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                "w-full bg-amber-500 hover:bg-amber-600 text-white"}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={handleSubmit}
               disabled={loading}
             >

@@ -28,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useTheme } from '@/contexts/ThemeContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
@@ -37,31 +36,26 @@ const skillOptions = {
     { value: "react", label: "React" },
     { value: "vue", label: "Vue.js" },
     { value: "typescript", label: "TypeScript" },
-    // Add more frontend skills as needed
   ],
   backend: [
     { value: "nodejs", label: "Node.js" },
     { value: "python", label: "Python" },
     { value: "java", label: "Java" },
-    // Add more backend skills as needed
   ],
   blockchain: [
     { value: "solidity", label: "Solidity" },
     { value: "rust", label: "Rust" },
     { value: "web3", label: "Web3.js" },
-    // Add more blockchain skills as needed
   ],
   design: [
     { value: "figma", label: "Figma" },
     { value: "ui", label: "UI Design" },
     { value: "ux", label: "UX Design" },
-    // Add more design skills as needed
   ],
   content: [
     { value: "writing", label: "Content Writing" },
     { value: "editing", label: "Content Editing" },
     { value: "seo", label: "SEO Writing" },
-    // Add more content skills as needed
   ]
 }
 
@@ -80,19 +74,16 @@ interface ProjectCardProps {
   isOwner: boolean
 }
 
-export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwner }: ProjectCardProps) {
-  const { theme } = useTheme()
+const PersonalProjectCard = ({ project, onUpdate, onDelete, isOwner }: ProjectCardProps) => {
   const [isEditMode, setIsEditMode] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [editedProject, setEditedProject] = useState(project)
   const [isLoading, setIsLoading] = useState(false)
-
-  // Theme-specific styles
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const hoverBg = theme === 'dark' ? 'hover:bg-[#C1A461]/10' : 'hover:bg-amber-50'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const cardBg = 'bg-background'
+  const borderColor = 'border-border'
+  const hoverBg = 'hover:bg-secondary'
 
   const handleDelete = async () => {
     try {
@@ -101,9 +92,7 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
         .from('proof_of_work')
         .delete()
         .eq('id', project.id)
-
       if (error) throw error
-
       onDelete(project.id)
       toast.success('Project deleted successfully')
       setIsDeleteDialogOpen(false)
@@ -118,14 +107,10 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
   const handleUpdate = async () => {
     try {
       setIsLoading(true)
-
-      // Basic validation
       if (!editedProject.title || !editedProject.description || !editedProject.category) {
         toast.error('Please fill in all required fields')
         return
       }
-
-      // URL validation if provided
       if (editedProject.project_url) {
         try {
           new URL(editedProject.project_url)
@@ -134,14 +119,11 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
           return
         }
       }
-
       const { error } = await supabase
         .from('proof_of_work')
         .update(editedProject)
         .eq('id', project.id)
-
       if (error) throw error
-
       onUpdate(editedProject)
       toast.success('Project updated successfully')
       setIsEditMode(false)
@@ -153,9 +135,9 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
     }
   }
 
-  if (isEditMode) {
+  if (isEditMode)
     return (
-      <Card className={`${cardBg} border-${borderColor}`}>
+      <Card className={`${cardBg} ${borderColor}`}>
         <CardContent className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <Label className={textColor}>Title</Label>
@@ -168,24 +150,21 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
           <Input
             value={editedProject.title}
-            onChange={(e) => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
+            onChange={e => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
             className={`bg-${cardBg} border-${borderColor} ${textColor}`}
           />
-
           <Label className={textColor}>Description</Label>
           <Textarea
             value={editedProject.description}
-            onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
+            onChange={e => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
             className={`bg-${cardBg} border-${borderColor} ${textColor}`}
           />
-
           <Label className={textColor}>Category</Label>
           <Select
             value={editedProject.category}
-            onValueChange={(value) => setEditedProject(prev => ({ ...prev, category: value }))}
+            onValueChange={value => setEditedProject(prev => ({ ...prev, category: value }))}
           >
             <SelectTrigger className={`bg-${cardBg} border-${borderColor} ${textColor}`}>
               <SelectValue placeholder="Select category" />
@@ -198,15 +177,13 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
               <SelectItem value="content">Content</SelectItem>
             </SelectContent>
           </Select>
-
           <Label className={textColor}>Project URL</Label>
           <Input
             value={editedProject.project_url}
-            onChange={(e) => setEditedProject(prev => ({ ...prev, project_url: e.target.value }))}
+            onChange={e => setEditedProject(prev => ({ ...prev, project_url: e.target.value }))}
             className={`bg-${cardBg} border-${borderColor} ${textColor}`}
             placeholder="https://example.com"
           />
-
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
@@ -218,7 +195,7 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
             </Button>
             <Button
               onClick={handleUpdate}
-              className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={isLoading}
             >
               {isLoading ? 'Saving...' : 'Save Changes'}
@@ -227,38 +204,33 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
         </CardContent>
       </Card>
     )
-  }
 
   return (
     <>
-      <Card className={`${cardBg} border-${borderColor}`}>
+      <Card className={`${cardBg} ${borderColor}`}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h3 className={`font-medium ${textColor}`}>
                 {project.title}
               </h3>
-              
               <p className={`mt-2 ${mutedTextColor}`}>
                 {project.description}
               </p>
-              
               <div className="mt-4 flex flex-wrap gap-2">
-                <Badge className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30">
+                <Badge className="bg-primary/20 text-primary hover:bg-primary/30">
                   {project.category}
                 </Badge>
-                
                 {project.skills?.map((skill, index) => (
                   <Badge 
                     key={`${skill}-${index}`}
                     variant="outline" 
-                    className="border-[#C1A461]/20 text-[#C1A461]"
+                    className="border-primary/20 text-primary"
                   >
                     {skill}
                   </Badge>
                 ))}
               </div>
-
               {project.project_url && (
                 <a 
                   href={project.project_url}
@@ -271,7 +243,6 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
                 </a>
               )}
             </div>
-
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -283,7 +254,7 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
-                  className={`${cardBg} border-${borderColor}`}
+                  className={`${cardBg} ${borderColor}`}
                   align="end"
                 >
                   <DropdownMenuItem 
@@ -307,9 +278,8 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
           </div>
         </CardContent>
       </Card>
-
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className={`${cardBg} border-${borderColor}`}>
+        <DialogContent className={`${cardBg} ${borderColor}`}>
           <DialogHeader>
             <DialogTitle className={textColor}>Delete Project</DialogTitle>
             <DialogDescription className={mutedTextColor}>
@@ -338,3 +308,5 @@ export default function PersonalProjectCard({ project, onUpdate, onDelete, isOwn
     </>
   )
 }
+
+export default PersonalProjectCard
