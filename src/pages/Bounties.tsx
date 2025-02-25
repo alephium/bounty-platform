@@ -117,19 +117,19 @@ export function Bounties() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Compass className={`w-6 h-6 ${textColor}`} />
-                <h2 className={`font-bold ${textColor}`}>Available Bounties</h2>
+                <Compass className={`w-6 h-6 text-primary`} />
+                <h2 className={`font-medium text-primary`}>Available Bounties</h2>
               </div>
               <span className={mutedTextColor}>{filteredBounties.length} bounties</span>
             </div>
 
             <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
-              <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
+              <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-secondary rounded-full">
                 {["open", "in review", "completed"].map((tab) => (
                   <TabsTrigger 
                     key={tab}
                     value={tab as Status}
-                    className="data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900"
+                    className="data-[state=active]:text-primary-foreground data-[state=active]:bg-primary rounded-full"
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </TabsTrigger>
@@ -143,7 +143,7 @@ export function Bounties() {
               ) : (
                 <div className="space-y-4">
                   {filteredBounties.length === 0 ? (
-                    <div className={`text-center py-8 ${mutedTextColor}`}>
+                    <div className={`text-center py-8 text-primary`}>
                       No bounties found
                     </div>
                   ) : (

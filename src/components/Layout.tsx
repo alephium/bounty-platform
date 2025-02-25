@@ -90,7 +90,7 @@ const Layout = () => {
                 ) : (
                   <div className="flex items-center gap-4">
                     <Button 
-                      variant="outline"
+                      variant="secondary"
                       className="border-primary text-primary hover:bg-secondary"
                       onClick={() => navigate('/sponsor')}
                     >
@@ -143,7 +143,7 @@ const Layout = () => {
                 </CardContent>
               </Card>
 
-              <Card className={`bg-background border-border`}>
+              <Card>
                 <CardContent className="p-4">
                   <h2 className="font-bold text-primary mb-4">NAVIGATION GUIDE</h2>
                   <div className="space-y-6">

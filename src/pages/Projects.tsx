@@ -72,7 +72,7 @@ const Project = () => {
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {severityLevels.map(level => (
-                <Card key={level.level} className="bg-background border border-border">
+                <Card key={level.level}>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <level.icon className={`h-6 w-6 ${level.colorClass}`} />

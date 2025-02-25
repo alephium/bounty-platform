@@ -13,7 +13,7 @@ body {
   --background: #FFFFFF;
   --foreground: #1B2228;
 
-  --card: #FFFFFF;
+  --card: #f1f1f1;
   --card-foreground: #1B2228;
 
   --popover: #FFFFFF;
@@ -43,10 +43,10 @@ body {
 
 /* Dark Mode Overrides */
 .dark {
-  --background: #000000;
+  --background: #171717;
   --foreground: #FFFFFF;
 
-  --card: #1B2228;
+  --card: #2e2e2f;
   --card-foreground: #FFFFFF;
 
   --popover: #1B2228;
@@ -55,10 +55,10 @@ body {
   --primary: #ffffff;
   --primary-foreground: #1B2228;
 
-  --secondary: #2D3748;
+  --secondary: #9e9e9e;
   --secondary-foreground: #FFFFFF;
 
-  --muted: #2D3748;
+  --muted: #3f3f3f;
   --muted-foreground: #FFFFFF;
 
   --accent: #63B3ED;
