@@ -17,7 +17,7 @@ interface AvatarDropdownProps {
     avatar_url?: string | null;
     username?: string | null;
   };
-  getInitials: (name: string | null) => string;
+  getInitials: (name?: string) => string;
 }
 
 export function AvatarDropdown({ user, getInitials }: AvatarDropdownProps) {
