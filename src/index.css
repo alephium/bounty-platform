@@ -1,85 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=Pirata+One&display=swap');
+@import url('https://rsms.me/inter/inter.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.font-pirate {
-  font-family: 'Pirata One', cursive;
+body {
+  font-family: 'Inter', sans-serif;
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    
-    --primary: 45 52% 57%;  /* #C1A461 */
-    --primary-foreground: 210 40% 98%;
-    
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+/* Global Theme Variables */
+:root {
+  --background: #FFFFFF;
+  --foreground: #1B2228;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 45 52% 57%;  /* #C1A461 */
+  --card: #f1f1f1;
+  --card-foreground: #1B2228;
 
-    --radius: 0.5rem;
-  }
- 
-  .dark {
-    --background: 222 47% 11%;  /* #1B2228 */
-    --foreground: 45 52% 57%;   /* #C1A461 */
-    
-    --card: 222 47% 11%;        /* #1B2228 */
-    --card-foreground: 45 52% 57%; /* #C1A461 */
-    
-    --popover: 222 47% 11%;     /* #1B2228 */
-    --popover-foreground: 45 52% 57%; /* #C1A461 */
-    
-    --primary: 45 52% 57%;      /* #C1A461 */
-    --primary-foreground: 222 47% 11%; /* #1B2228 */
-    
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 45 52% 57%; /* #C1A461 */
-    
-    --muted: 217 32% 17%;
-    --muted-foreground: 45 52% 57%; /* #C1A461 */
-    
-    --accent: 217 32% 17%;
-    --accent-foreground: 45 52% 57%; /* #C1A461 */
-    
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 45 52% 57%; /* #C1A461 */
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2228;
 
-    --border: 45 52% 57%;       /* #C1A461 */
-    --input: 217 32% 17%;
-    --ring: 45 52% 57%;         /* #C1A461 */
-  }
+  --primary: #000000;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #F5F7FA;
+  --secondary-foreground: #1B2228;
+
+  --muted: #F5F7FA;
+  --muted-foreground: #1B2228;
+
+  --accent: #3182CE;
+  --accent-foreground: #FFFFFF;
+
+  --destructive: #E53E3E;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #2843f2;
+
+  --radius: 0.5rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+/* Dark Mode Overrides */
+.dark {
+  --background: #171717;
+  --foreground: #FFFFFF;
 
-.font-pirate {
-  font-family: 'Pirata One', cursive;
+  --card: #2e2e2f;
+  --card-foreground: #FFFFFF;
+
+  --popover: #1B2228;
+  --popover-foreground: #FFFFFF;
+
+  --primary: #ffffff;
+  --primary-foreground: #1B2228;
+
+  --secondary: #9e9e9e;
+  --secondary-foreground: #FFFFFF;
+
+  --muted: #3f3f3f;
+  --muted-foreground: #FFFFFF;
+
+  --accent: #63B3ED;
+  --accent-foreground: #1B2228;
+
+  --destructive: #E53E3E;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #4A5568;
+  --input: #4A5568;
+  --ring: #3a68ff;
 }

@@ -2,14 +2,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Grants() {
-  const { theme } = useTheme();
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900';
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white';
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200';
-  const hoverBg = theme === 'dark' ? 'hover:bg-[#C1A461]/10' : 'hover:bg-amber-50';
+  const bgColor = 'bg-background'
+  const textColor = 'text-foreground'
+  const borderColor = 'border-border'
+  
 
   const grants = [
     {
@@ -57,7 +55,7 @@ export default function Grants() {
         </p>
         <div className="flex gap-4">
           <Button 
-            className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+            className="bg-primary hover:bg-accent/60 text-primary-foreground"
             onClick={() => window.open('https://github.com/alephium/community/blob/master/Grant%26RewardProgram.md', '_blank')}
           >
             Apply Now
@@ -71,7 +69,7 @@ export default function Grants() {
         <h2 className={`text-2xl font-bold mb-8 ${textColor}`}>Grant Categories</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {grants.map((grant, index) => (
-            <Card key={index} className={`${bgColor} ${borderColor}`}>
+            <Card key={index}>
               <CardHeader>
                 <CardTitle className={textColor}>{grant.title}</CardTitle>
                 <div className={`text-lg font-semibold ${textColor}`}>

@@ -13,12 +13,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme || 'dark'
+    const savedTheme = (localStorage.getItem('theme') as Theme) || 'dark'
     setTheme(savedTheme)
   }, [])
 
+  useEffect(() => {
+    // When the theme changes, add or remove the 'dark' class on the <html> element
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [theme])
+
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    const newTheme: Theme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
   }

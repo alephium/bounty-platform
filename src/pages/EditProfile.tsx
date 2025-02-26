@@ -21,7 +21,6 @@ import { Badge } from '../components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Checkbox } from '../components/ui/checkbox'
 import { useToast } from '../components/ui/use-toast'
-import { useTheme } from '../contexts/ThemeContext'
 import { Web3Interest, WorkExperience } from '../types/supabase'
 import { useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
@@ -161,14 +160,13 @@ const WEB3_INTERESTS = ['DeFi', 'NFTs', 'DAOs', 'GameFi', 'Infrastructure'] as c
 
 export const EditProfile = () => {
   const navigate = useNavigate()
-  const { theme } = useTheme()
   const { toast } = useToast()
   const { user, refreshUser } = useUser()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const bgColor = 'bg-background'
   
   const [selectedSkills, setSelectedSkills] = useState<SelectedSkills>({
     frontend: user?.frontend_skills || [],
