@@ -41,9 +41,14 @@ export default function Home() {
         setLoading(true)
         const { data, error } = await supabase
           .from('bounties')
-          .select('*')
+          .select(`
+            *,
+            sponsor:sponsors(*)
+          `)
           .eq('status', selectedStatus)
+          // .eq('id', id)
           .order('created_at', { ascending: false })
+
 
         if (error) throw error
         setBounties(data || [])
@@ -170,11 +175,16 @@ export default function Home() {
                                 <div className={`flex items-center gap-1 text-sm ${textColor}`}>
                                   {/* If sponsor is available, show the sponsor name */}
                                   {bounty.sponsor?.name || 'Unknown Sponsor'}
-                                  <Badge variant="secondary" className={`${theme === 'dark' ? 
-                                    'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}>
-                                    <Anchor className="w-3 h-3 mr-1" />
-                                    {bounty.is_featured ? 'Featured' : 'Verified'}
-                                  </Badge>
+                                  {bounty.sponsor?.is_verified && (
+                                    <Badge 
+                                      variant="secondary" 
+                                      className={`${theme === 'dark' ? 
+                                        'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                    >
+                                      <Anchor className="w-3 h-3 mr-1" />
+                                      Verified
+                                    </Badge>
+                                  )}
                                 </div>
                                 <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
                                   <div className="flex items-center gap-1">

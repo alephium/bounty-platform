@@ -39,10 +39,13 @@ export default function BountyDetails() {
     const fetchBounty = async () => {
       try {
         const { data, error } = await supabase
-          .from('bounties')
-          .select('*')
-          .eq('id', id)
-          .single()
+        .from('bounties')
+        .select(`
+          *,
+          sponsor:sponsors(*)
+        `)
+        .eq('id', id)
+        .single()
 
         if (error) throw error
         setBounty(data)
@@ -148,6 +151,8 @@ export default function BountyDetails() {
     window.open(url, '_blank')
   }
 
+  console.log("sponsor name:", bounty.sponsor?.name)
+
   return (
     <div className={`min-h-screen ${bgColor}`}>
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -250,6 +255,7 @@ export default function BountyDetails() {
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
                   <span>by {bounty.sponsor?.name}</span>
+
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}
                   </Badge>

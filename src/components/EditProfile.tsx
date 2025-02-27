@@ -1,535 +1,741 @@
-import { useState, useEffect } from 'react'
-import { useTheme } from '../contexts/ThemeContext'
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
+import { ChangeEvent, FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Upload, Github, Twitter, Linkedin, Globe, MessageCircle, Loader2 } from 'lucide-react'
+import { User } from '../types/supabase'
+import { UserService } from '../services/user.service'
+import { useUser } from '../contexts/UserContext'
+import { supabase } from '../lib/supabase'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Textarea } from '../components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Pencil } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useUser } from '@/contexts/UserContext'
-import { toast } from '@/components/ui/use-toast'
-import type { Bounty, BountyInsert, ProjectInsert, Category, Status } from '@/types/supabase'
+} from '../components/ui/select'
+import { Badge } from '../components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
+import { Checkbox } from '../components/ui/checkbox'
+import { useToast } from '../components/ui/use-toast'
+import { useTheme } from '../contexts/ThemeContext'
+import { Web3Interest, WorkExperience } from '../types/supabase'
+import { useCallback } from 'react'
+import { useDropzone } from 'react-dropzone'
+import { getAllCountries } from '../constants/countries'
+import { 
+  SKILLS_BY_CATEGORY, 
+  type SkillCategory, 
+  type SkillOption 
+} from '../constants/skills'
+
 
 interface FormData {
-  title: string
-  description: string
-  category: Category
-  requirements: string
-  tags: string[]
-  reward?: {
-    amount: number
-    token: string
-    usd_equivalent: number
-  }
-  start_date?: string
-  end_date?: string
-  difficulty_level?: 'beginner' | 'intermediate' | 'advanced'
-  estimated_hours?: number
+  username: string
+  firstName: string
+  lastName: string
+  bio: string
+  walletAddress: string
+  githubUrl: string
+  twitterUrl: string
+  linkedinUrl: string
+  telegramUrl: string
+  websiteUrl: string
+  currentEmployer: string
+  web3Interests: Web3Interest[]
+  workExperience: WorkExperience
+  location: string
 }
 
-const CATEGORIES: Category[] = ['content', 'design', 'development', 'other']
-const TOKENS = ['ALPH', 'USDC']
+interface FormErrors {
+  [key: string]: string
+}
 
-export function PostListing() {
+interface SelectedSkills extends Record<SkillCategory, string[]> {}
+
+const COUNTRIES = [
+  // Europe
+  { value: 'albania', label: 'Albania' },
+  { value: 'andorra', label: 'Andorra' },
+  { value: 'austria', label: 'Austria' },
+  { value: 'belgium', label: 'Belgium' },
+  { value: 'bulgaria', label: 'Bulgaria' },
+  { value: 'croatia', label: 'Croatia' },
+  { value: 'cyprus', label: 'Cyprus' },
+  { value: 'czech-republic', label: 'Czech Republic' },
+  { value: 'denmark', label: 'Denmark' },
+  { value: 'estonia', label: 'Estonia' },
+  { value: 'finland', label: 'Finland' },
+  { value: 'france', label: 'France' },
+  { value: 'germany', label: 'Germany' },
+  { value: 'greece', label: 'Greece' },
+  { value: 'hungary', label: 'Hungary' },
+  { value: 'iceland', label: 'Iceland' },
+  { value: 'ireland', label: 'Ireland' },
+  { value: 'italy', label: 'Italy' },
+  { value: 'latvia', label: 'Latvia' },
+  { value: 'liechtenstein', label: 'Liechtenstein' },
+  { value: 'lithuania', label: 'Lithuania' },
+  { value: 'luxembourg', label: 'Luxembourg' },
+  { value: 'malta', label: 'Malta' },
+  { value: 'monaco', label: 'Monaco' },
+  { value: 'netherlands', label: 'Netherlands' },
+  { value: 'norway', label: 'Norway' },
+  { value: 'poland', label: 'Poland' },
+  { value: 'portugal', label: 'Portugal' },
+  { value: 'romania', label: 'Romania' },
+  { value: 'slovakia', label: 'Slovakia' },
+  { value: 'slovenia', label: 'Slovenia' },
+  { value: 'spain', label: 'Spain' },
+  { value: 'sweden', label: 'Sweden' },
+  { value: 'switzerland', label: 'Switzerland' },
+  { value: 'united-kingdom', label: 'United Kingdom' },
+
+  // Asia
+  { value: 'afghanistan', label: 'Afghanistan' },
+  { value: 'bangladesh', label: 'Bangladesh' },
+  { value: 'bhutan', label: 'Bhutan' },
+  { value: 'brunei', label: 'Brunei' },
+  { value: 'cambodia', label: 'Cambodia' },
+  { value: 'china', label: 'China' },
+  { value: 'india', label: 'India' },
+  { value: 'indonesia', label: 'Indonesia' },
+  { value: 'japan', label: 'Japan' },
+  { value: 'kazakhstan', label: 'Kazakhstan' },
+  { value: 'korea-north', label: 'Korea, North' },
+  { value: 'korea-south', label: 'Korea, South' },
+  { value: 'kyrgyzstan', label: 'Kyrgyzstan' },
+  { value: 'laos', label: 'Laos' },
+  { value: 'malaysia', label: 'Malaysia' },
+  { value: 'maldives', label: 'Maldives' },
+  { value: 'mongolia', label: 'Mongolia' },
+  { value: 'myanmar', label: 'Myanmar' },
+  { value: 'nepal', label: 'Nepal' },
+  { value: 'pakistan', label: 'Pakistan' },
+  { value: 'philippines', label: 'Philippines' },
+  { value: 'singapore', label: 'Singapore' },
+  { value: 'sri-lanka', label: 'Sri Lanka' },
+  { value: 'taiwan', label: 'Taiwan' },
+  { value: 'tajikistan', label: 'Tajikistan' },
+  { value: 'thailand', label: 'Thailand' },
+  { value: 'timor-leste', label: 'Timor-Leste' },
+  { value: 'turkmenistan', label: 'Turkmenistan' },
+  { value: 'uzbekistan', label: 'Uzbekistan' },
+  { value: 'vietnam', label: 'Vietnam' },
+
+  // North America
+  { value: 'canada', label: 'Canada' },
+  { value: 'mexico', label: 'Mexico' },
+  { value: 'united-states', label: 'United States' },
+  { value: 'costa-rica', label: 'Costa Rica' },
+  { value: 'cuba', label: 'Cuba' },
+  { value: 'dominican-republic', label: 'Dominican Republic' },
+  { value: 'el-salvador', label: 'El Salvador' },
+  { value: 'guatemala', label: 'Guatemala' },
+  { value: 'haiti', label: 'Haiti' },
+  { value: 'honduras', label: 'Honduras' },
+  { value: 'jamaica', label: 'Jamaica' },
+  { value: 'nicaragua', label: 'Nicaragua' },
+  { value: 'panama', label: 'Panama' },
+  { value: 'trinidad-and-tobago', label: 'Trinidad and Tobago' },
+
+  // South America
+  { value: 'argentina', label: 'Argentina' },
+  { value: 'bolivia', label: 'Bolivia' },
+  { value: 'brazil', label: 'Brazil' },
+  { value: 'chile', label: 'Chile' },
+  { value: 'colombia', label: 'Colombia' },
+  { value: 'ecuador', label: 'Ecuador' },
+  { value: 'guyana', label: 'Guyana' },
+  { value: 'paraguay', label: 'Paraguay' },
+  { value: 'peru', label: 'Peru' },
+  { value: 'suriname', label: 'Suriname' },
+  { value: 'uruguay', label: 'Uruguay' },
+  { value: 'venezuela', label: 'Venezuela' }
+];
+
+const WEB3_INTERESTS = ['DeFi', 'NFTs', 'DAOs', 'GameFi', 'Infrastructure'] as const
+
+export const EditProfile = () => {
   const navigate = useNavigate()
-  const { user } = useUser()
   const { theme } = useTheme()
-  const [loading, setLoading] = useState(false)
-  const [listingType, setListingType] = useState<'bounty' | 'project'>('bounty')
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
-    category: 'development',
-    requirements: '',
-    tags: [],
-  })
-  
-  // New state for storing sponsor bounties
-  const [sponsorId, setSponsorId] = useState<string | null>(null)
-  const [sponsorBounties, setSponsorBounties] = useState<Bounty[]>([])
-  const [loadingBounties, setLoadingBounties] = useState(false)
-
+  const { toast } = useToast()
+  const { user, refreshUser } = useUser()
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  
+  const [selectedSkills, setSelectedSkills] = useState<SelectedSkills>({
+    frontend: user?.frontend_skills || [],
+    backend: user?.backend_skills || [],
+    blockchain: user?.blockchain_skills || [],
+    design: user?.design_skills || [],
+    content: user?.content_skills || []
+  })
 
-  // Fetch sponsor profile and bounties when component loads
-  useEffect(() => {
-    const getSponsorAndBounties = async () => {
-      if (!user?.id) return
-      
-      try {
-        // Get sponsor profile
-        const { data: sponsor, error: sponsorError } = await supabase
-          .from('sponsors')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-          
-        if (sponsorError) {
-          console.error('Error fetching sponsor:', sponsorError)
-          return
+  const [formData, setFormData] = useState<FormData>({
+    username: user?.username || '',
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    bio: user?.bio || '',
+    walletAddress: user?.wallet_address || '',
+    githubUrl: user?.github_url || '',
+    twitterUrl: user?.twitter_url || '',
+    linkedinUrl: user?.linkedin_url || '',
+    telegramUrl: user?.telegram_url || '',
+    websiteUrl: user?.website_url || '',
+    currentEmployer: user?.current_employer || '',
+    web3Interests: user?.web3_interests || [],
+    workExperience: user?.work_experience || '0-2',
+    location: user?.location || '',
+  })
+
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'username':
+        if (!value) return 'Username is required'
+        if (!/^[a-zA-Z0-9_]{1,20}$/.test(value)) {
+          return 'Username must be 1-20 characters and can only contain letters, numbers, and underscores'
         }
-        
-        if (sponsor?.id) {
-          setSponsorId(sponsor.id)
-          
-          // Fetch bounties
-          setLoadingBounties(true)
-          const { data: bounties, error: bountiesError } = await supabase
-            .from('bounties')
-            .select('*')
-            .eq('sponsor_id', sponsor.id)
-            .order('created_at', { ascending: false })
-            
-          if (bountiesError) {
-            console.error('Error fetching bounties:', bountiesError)
-          } else {
-            setSponsorBounties(bounties || [])
-          }
-        }
-      } catch (error) {
-        console.error('Error loading sponsor data:', error)
-      } finally {
-        setLoadingBounties(false)
-      }
+        break
     }
-    
-    getSponsorAndBounties()
-  }, [user])
+    return ''
+  }
 
-  const handleInputChange = (field: keyof FormData, value: any) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
+    }))
+    const error = validateField(name, value)
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
     }))
   }
 
-  const handleSubmit = async () => {
-    try {
-      setLoading(true)
-
-      if (!user?.id) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to post a listing",
-          variant: "destructive"
-        })
-        return
-      }
-
-      // Check if the logged-in user has a sponsor profile
-      const { data: sponsorData, error: sponsorError } = await supabase
-        .from('sponsors')
-        .select('id, total_bounties_count, total_projects_count, total_reward_amount')
-        .eq('user_id', user.id)
-        .single()
-
-      // If no sponsor profile exists
-      if (sponsorError || !sponsorData) {
-        toast({
-          title: "Sponsor Profile Required",
-          description: "You need to create a sponsor profile before posting a listing",
-          variant: "destructive"
-        })
-        navigate('/sponsor')
-        return
-      }
-
-      // Prepare base data
-      const baseData = {
-        sponsor_id: sponsorData.id,
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        status: 'open' as Status,
-        requirements: formData.requirements,
-        tags: formData.tags,
-        is_featured: false,
-      }
-
-      let newListingId: string | null = null
-      let usdEquivalent = 0
-
-      if (listingType === 'bounty') {
-        // Calculate USD equivalent for reward
-        usdEquivalent = formData.reward?.amount || 0
-
-        const bountyData: BountyInsert = {
-          ...baseData,
-          reward: {
-            amount: formData.reward?.amount || 0,
-            token: formData.reward?.token || 'ALPH',
-            usd_equivalent: usdEquivalent
-          },
-          start_date: formData.start_date || new Date().toISOString(),
-          end_date: formData.end_date || new Date().toISOString(),
-          review_timeframe: 7,
-          difficulty_level: formData.difficulty_level || 'beginner',
-          estimated_hours: formData.estimated_hours || 0,
-          submission_guidelines: '',
-          max_submissions: 10,
-          current_submissions: 0,
-          status: 'open'
-        }
-
-        const { data, error } = await supabase
-          .from('bounties')
-          .insert([bountyData])
-          .select('id')
-          .single()
-
-        if (error) {
-          console.error('Supabase bounty error:', error)
-          throw new Error(`Failed to insert bounty: ${error.message}`)
-        }
-
-        newListingId = data.id
-
-        // Update sponsor's bounty statistics
-        await supabase
-          .from('sponsors')
-          .update({
-            total_bounties_count: sponsorData.total_bounties_count + 1,
-            total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sponsorData.id)
-
-      } else {
-        const projectData: ProjectInsert = {
-          ...baseData,
-          repository_url: null,
-          documentation_url: null,
-          submission_count: 0,
-          status: 'open'
-        }
-
-        const { data, error } = await supabase
-          .from('projects')
-          .insert([projectData])
-          .select('id')
-          .single()
-
-        if (error) {
-          console.error('Supabase project error:', error)
-          throw new Error(`Failed to insert project: ${error.message}`)
-        }
-
-        newListingId = data.id
-
-        // Update sponsor's project statistics
-        await supabase
-          .from('sponsors')
-          .update({
-            total_projects_count: sponsorData.total_projects_count + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sponsorData.id)
-      }
-
-      toast({
-        title: "Success",
-        description: `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`
-      })
-
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        category: 'development',
-        requirements: '',
-        tags: [],
-      })
-
-      // Refresh the list of bounties
-      if (sponsorData.id && listingType === 'bounty') {
-        const { data: refreshedBounties } = await supabase
-          .from('bounties')
-          .select('*')
-          .eq('sponsor_id', sponsorData.id)
-          .order('created_at', { ascending: false })
-          
-        if (refreshedBounties) {
-          setSponsorBounties(refreshedBounties)
-        }
-      }
-    } catch (error) {
-      console.error('Error posting listing:', error)
-      toast({
-        title: "Error",
-        description: "Failed to post listing. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
+  const handleSelectChange = (name: string, value: string) => {
+    if (name === 'web3Interests') {
+      const values = value.split(',').filter(Boolean) as Web3Interest[]
+      setFormData(prev => ({
+        ...prev,
+        [name]: values
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
     }
   }
 
-  // Function to handle editing a bounty
-  const handleEditBounty = (bountyId: string) => {
-    navigate(`/editbounty?id=${bountyId}`)
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 5MB",
+          variant: "destructive"
+        })
+        return
+      }
+      setAvatarFile(file)
+      setAvatarPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!user?.id) return
+  
+    setIsLoading(true)
+  
+    try {
+      // Check username availability if it changed
+      if (formData.username !== user.username) {
+        const isAvailable = await UserService.isUsernameAvailable(formData.username)
+        if (!isAvailable) {
+          toast({
+            title: "Error",
+            description: "Username is already taken",
+            variant: "destructive"
+          })
+          setIsLoading(false) // Important: Reset loading state
+          return
+        }
+      }
+
+      if (formData.walletAddress !== user.wallet_address) {
+        const isAvailable = await UserService.isWalletAddressAvailable(formData.walletAddress, user.id)
+        if (!isAvailable) {
+          toast({
+            title: "Error",
+            description: "Wallet address is already registered",
+            variant: "destructive"
+          })
+          setIsLoading(false)
+          return
+        }
+      }  
+  
+      let avatarUrl = user.avatar_url
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar()
+        // Add error check for avatar upload
+        if (!avatarUrl) {
+          setIsLoading(false)
+          return
+        }
+      }
+  
+      // Validate required fields before update
+      if (!formData.username || !formData.firstName || !formData.lastName || !formData.walletAddress) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        })
+        setIsLoading(false)
+        return
+      }
+  
+      const updates: Partial<User> = {
+        username: formData.username,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        bio: formData.bio,
+        wallet_address: formData.walletAddress,
+        github_url: formData.githubUrl,
+        twitter_url: formData.twitterUrl,
+        linkedin_url: formData.linkedinUrl,
+        telegram_url: formData.telegramUrl,
+        website_url: formData.websiteUrl,
+        current_employer: formData.currentEmployer,
+        web3_interests: formData.web3Interests,
+        work_experience: formData.workExperience,
+        location: formData.location,
+        frontend_skills: selectedSkills.frontend,
+        backend_skills: selectedSkills.backend,
+        blockchain_skills: selectedSkills.blockchain,
+        design_skills: selectedSkills.design,
+        content_skills: selectedSkills.content,
+        avatar_url: avatarUrl || undefined,
+        updated_at: new Date().toISOString()
+      }
+  
+      console.log('Updating profile with:', updates) // Add logging
+  
+      const updatedUser = await UserService.updateProfile(user.id, updates)
+      if (!updatedUser) {
+        throw new Error('Failed to update profile: No response from server')
+      }
+  
+      await refreshUser()
+      
+      toast({
+        title: "Success",
+        description: "Profile updated successfully"
+      })
+  
+      // Optional: Navigate away after successful update
+      navigate(`/profile/${updatedUser.username}`)
+  
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (!file) return
+  
+    // Validate file type explicitly
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif']
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Please upload a valid image file (JPG, PNG, or GIF)",
+        variant: "destructive"
+      })
+      return
+    }
+  
+    // Size check (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 5MB",
+        variant: "destructive"
+      })
+      return
+    }
+  
+    try {
+      // Create a preview
+      const preview = URL.createObjectURL(file)
+      setAvatarPreview(preview)
+      setAvatarFile(file)
+    } catch (error) {
+      console.error('Error handling file:', error)
+      toast({
+        title: "Error",
+        description: "Failed to process image. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }, [toast])
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif']
+    },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB in bytes
+  })
+
+  const uploadAvatar = async (): Promise<string | null> => {
+    if (!avatarFile || !user) return null
+    
+    try {
+      const fileExt = avatarFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const fileName = `${Date.now()}.${fileExt}`
+      
+      const { data, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, avatarFile, {
+          contentType: avatarFile.type,
+          upsert: true
+        })
+        
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw uploadError
+      }
+  
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+      
+      return publicUrl
+      
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive"
+      })
+      return null
+    }
   }
 
   return (
-    <div className={`max-w-4xl mx-auto p-4 ${bgColor}`}>
-      <Tabs value={listingType} onValueChange={(v) => setListingType(v as 'bounty' | 'project')}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger
-            value="bounty"
-            className={`${textColor} data-[state=active]:${textColor}`}
-          >
-            Bounty
-          </TabsTrigger>
-          <TabsTrigger
-            value="project"
-            className={`${textColor} data-[state=active]:${textColor}`}
-          >
-            Project
-          </TabsTrigger>
-        </TabsList>
-
-        <Card className={`${bgColor} border-${borderColor}`}>
+    <form onSubmit={handleSubmit} className={`min-h-screen ${bgColor} w-full px-4`}>
+      <div className="max-w-3xl mx-auto">
+        <Card className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
           <CardHeader>
-            <CardTitle className={textColor}>
-              Post a New {listingType === 'bounty' ? 'Bounty' : 'Project'}
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold text-[#C1A461]">Edit Profile</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label className={textColor}>Title</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter a descriptive title"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className={textColor}>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe the and expectations"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className={textColor}>Requirements</Label>
-              <Textarea
-                value={formData.requirements}
-                onChange={(e) => handleInputChange('requirements', e.target.value)}
-                placeholder="Add requirements"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className={textColor}>Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleInputChange('category', value)}
-              >
-                <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent className={`${bgColor} border-${borderColor}`}>
-                  {CATEGORIES.map((category) => (
-                    <SelectItem 
-                      key={category} 
-                      value={category}
-                      className={textColor}
+          <CardContent className="space-y-8">
+            {/* Personal Info */}
+            <section className="space-y-6">
+              <h2 className="text-lg font-semibold text-[#C1A461]">PERSONAL INFO</h2>
+              
+              <div className="space-y-4">
+                <Label>Profile Picture</Label>
+                <div className="mt-2 flex items-center gap-4">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={avatarPreview || user?.avatar_url || "/placeholder.svg"} />
+                    <AvatarFallback>{formData.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div 
+                    {...getRootProps()} 
+                    className={`flex-1 border-2 border-dashed rounded-lg p-4 text-center transition-colors
+                      ${isDragActive 
+                        ? 'border-[#C1A461] bg-[#C1A461]/10' 
+                        : 'border-[#C1A461]/20'} 
+                      hover:border-[#C1A461]/40 cursor-pointer`}
+                  >
+                    <input {...getInputProps()} />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20"
+                      onClick={(e) => e.preventDefault()}
                     >
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {listingType === 'bounty' && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className={textColor}>Reward Amount ($USD)</Label>
-                    <Input
-                      type="number"
-                      value={formData.reward?.amount || ''}
-                      onChange={(e) => handleInputChange('reward', {
-                        amount: parseFloat(e.target.value),
-                        token: formData.reward?.token || TOKENS[0],
-                        usd_equivalent: parseFloat(e.target.value)
-                      })}
-                      placeholder="1000"
-                      className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-                    />
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isDragActive 
+                        ? 'Drop the image here'
+                        : 'Choose or drag and drop image'
+                      }
+                    </Button>
+                    <p className="text-sm text-[#C1A461]/60 mt-2">
+                      Maximum size 5 MB - PNG, JPG, GIF
+                    </p>
+                    {avatarFile && (
+                      <p className="text-sm text-[#C1A461] mt-2">
+                        Selected: {avatarFile.name}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>Token</Label>
-                    <Select
-                      value={formData.reward?.token || TOKENS[0]}
-                      onValueChange={(value) => handleInputChange('reward', {
-                        ...formData.reward,
-                        token: value
-                      })}
-                    >
-                      <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
-                        <SelectValue placeholder="Select token" />
-                      </SelectTrigger>
-                      <SelectContent className={`${bgColor} border-${borderColor}`}>
-                        {TOKENS.map((token) => (
-                          <SelectItem 
-                            key={token} 
-                            value={token}
-                            className={textColor}
-                          >
-                            {token}
-                          </SelectItem>
+                </div>
+
+                {/* Username */}
+                <div className="space-y-1">
+                  <Label htmlFor="username">Username *</Label>
+                  <Input 
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461] ${errors.username ? 'border-red-500' : ''}`}
+                    required
+                  />
+                  {errors.username && (
+                    <p className="text-red-500 text-sm">{errors.username}</p>
+                  )}
+                </div>
+
+                {/* First and Last Name */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input 
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                        text-gray-900 dark:text-[#C1A461] ${errors.firstName ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.firstName && (
+                      <p className="text-red-500 text-sm">{errors.firstName}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                        text-gray-900 dark:text-[#C1A461] ${errors.lastName ? 'border-red-500' : ''}`}
+                      required
+                    />
+                    {errors.lastName && (
+                      <p className="text-red-500 text-sm">{errors.lastName}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div className="space-y-1">
+                  <Label htmlFor="bio">Your One-Line Bio</Label>
+                  <Textarea 
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461]"
+                  />
+                </div>
+
+                {/* Wallet Address */}
+                <div className="space-y-1">
+                  <Label htmlFor="walletAddress">Your Alephium Wallet Address</Label>
+                  <Input 
+                    id="walletAddress"
+                    name="walletAddress"
+                    value={formData.walletAddress}
+                    onChange={handleInputChange}
+                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                      text-gray-900 dark:text-[#C1A461] ${errors.walletAddress ? 'border-red-500' : ''}`}
+                    required
+                  />
+                  {errors.walletAddress && (
+                    <p className="text-red-500 text-sm">{errors.walletAddress}</p>
+                  )}
+                </div>
+
+                {/* Social Links */}
+                <section className="space-y-6">
+                  <h2 className="text-lg font-semibold text-[#C1A461]">SOCIALS</h2>
+                  <div className="space-y-4">
+                    {[
+                      { icon: Github, name: "githubUrl", placeholder: "github.com/", value: formData.githubUrl },
+                      { icon: Twitter, name: "twitterUrl", placeholder: "x.com/", value: formData.twitterUrl },
+                      { icon: Linkedin, name: "linkedinUrl", placeholder: "linkedin.com/in/", value: formData.linkedinUrl },
+                      { icon: MessageCircle, name: "telegramUrl", placeholder: "t.me/", value: formData.telegramUrl },
+                      { icon: Globe, name: "websiteUrl", placeholder: "https://", value: formData.websiteUrl },
+                    ].map((social) => (
+                      <div key={social.name} className="space-y-1">
+                        <div className="relative">
+                          <social.icon className="w-5 h-5 absolute left-3 top-2.5 text-[#C1A461]/60" />
+                          <Input 
+                            name={social.name}
+                            value={social.value}
+                            onChange={handleInputChange}
+                            className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
+                              text-gray-900 dark:text-[#C1A461] pl-10 ${errors[social.name] ? 'border-red-500' : ''}`}
+                            placeholder={social.placeholder}
+                          />
+                        </div>
+                        {errors[social.name] && (
+                          <p className="text-red-500 text-sm">{errors[social.name]}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Work Section */}
+                <section className="space-y-6">
+                  <h2 className="text-lg font-semibold text-[#C1A461]">WORK</h2>
+                  <div className="space-y-4">
+                    {/* Web3 Interests */}
+                    <div>
+                      <Label>What areas of Web3 are you most interested in?</Label>
+                      <Select value={formData.web3Interests.join(',')} onValueChange={(value) => handleSelectChange('web3Interests', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select areas" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                          {WEB3_INTERESTS.map((interest) => (
+                            <SelectItem key={interest} value={interest}>{interest}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Work Experience */}
+                    <div>
+                      <Label>Work Experience</Label>
+                      <Select value={formData.workExperience} onValueChange={(value) => handleSelectChange('workExperience', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select experience" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                          <SelectItem value="0-1">0 to 1 Year</SelectItem>
+                          <SelectItem value="2-5">2 to 5 Years</SelectItem>
+                          <SelectItem value="5+">more than 5 Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <Label>Location</Label>
+                      <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
+                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                          <SelectValue placeholder="Select location" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 h-48 overflow-y-auto">
+                          {getAllCountries().map((country) => (
+                            <SelectItem key={country.value} value={country.value}>
+                              {country.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Current Employer */}
+                    <div>
+                      <Label>Current Employer</Label>
+                      <Input 
+                        name="currentEmployer"
+                        value={formData.currentEmployer}
+                        onChange={handleInputChange}
+                        className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]"
+                      />
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        Skills
+                        <span className="text-[#C1A461]/60 text-sm">
+                          Select your skills to receive relevant opportunities
+                        </span>
+                      </Label>
+                      <div className="space-y-4 mt-4">
+                        {(Object.entries(SKILLS_BY_CATEGORY) as [SkillCategory, SkillOption[]][]).map(([category, options]) => (
+                          <div key={category}>
+                            <h3 className="text-sm font-medium text-[#C1A461] mb-2">
+                              {category.charAt(0).toUpperCase() + category.slice(1)}
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                              {options.map((skill) => {
+                                const isSelected = selectedSkills[category].includes(skill.value);
+                                return (
+                                  <Badge
+                                    key={skill.value}
+                                    variant="outline"
+                                    className={`cursor-pointer border-[#C1A461]/20 hover:border-[#C1A461]/40
+                                      ${isSelected ? 'bg-[#C1A461]/20' : ''}`}
+                                    onClick={() => {
+                                      setSelectedSkills(prev => ({
+                                        ...prev,
+                                        [category]: isSelected
+                                          ? prev[category].filter(s => s !== skill.value)
+                                          : [...prev[category], skill.value]
+                                      }))
+                                    }}
+                                  >
+                                    {skill.label}
+                                  </Badge>
+                                )
+                              })}
+                            </div>
+                          </div>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className={textColor}>Start Date</Label>
-                    <div className="relative">
-                      <Input
-                        type="date"
-                        value={formData.start_date || ''}
-                        onChange={(e) => handleInputChange('start_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
-                                  [&::-webkit-calendar-picker-indicator]:absolute 
-                                  [&::-webkit-calendar-picker-indicator]:right-3
-                                  [&::-webkit-calendar-picker-indicator]:left-auto
-                                  `}
-                        id="start-date"
-                      />
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>End Date</Label>
-                    <div className="relative">
-                      <Input
-                        type="date"
-                        value={formData.end_date || ''}
-                        onChange={(e) => handleInputChange('end_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
-                                  [&::-webkit-calendar-picker-indicator]:absolute 
-                                  [&::-webkit-calendar-picker-indicator]:right-3
-                                  [&::-webkit-calendar-picker-indicator]:left-auto
-                                  `}
-                        id="end-date"
-                      />
-                    </div>
-                  </div>
-                </div>
+                </section>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className={textColor}>Difficulty Level</Label>
-                    <Select
-                      value={formData.difficulty_level}
-                      onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') => 
-                        handleInputChange('difficulty_level', value)}
-                    >
-                      <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
-                        <SelectValue placeholder="Select difficulty" />
-                      </SelectTrigger>
-                      <SelectContent className={`${bgColor} border-${borderColor}`}>
-                        <SelectItem value="beginner" className={textColor}>Beginner</SelectItem>
-                        <SelectItem value="intermediate" className={textColor}>Intermediate</SelectItem>
-                        <SelectItem value="advanced" className={textColor}>Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>Estimated Hours</Label>
-                    <Input
-                      type="number"
-                      value={formData.estimated_hours || ''}
-                      onChange={(e) => handleInputChange('estimated_hours', parseInt(e.target.value))}
-                      placeholder="40"
-                      className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            <Button 
-              className={theme === 'dark' ? 
-                "w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                "w-full bg-amber-500 hover:bg-amber-600 text-white"}
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Posting...' : `Post ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
-            </Button>
+                {/* Submit Button */}
+                <Button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating Profile
+                    </>
+                  ) : (
+                    "Update Profile"
+                  )}
+                </Button>
+              </div>
+            </section>
           </CardContent>
         </Card>
-      </Tabs>
-
-      {/* List of sponsor's bounties with edit buttons */}
-      {listingType === 'bounty' && (
-        <div className="mt-10">
-          <h2 className={`text-xl font-semibold ${textColor} mb-4`}>Your Bounties</h2>
-          
-          {loadingBounties ? (
-            <p className={textColor}>Loading your bounties...</p>
-          ) : sponsorBounties.length === 0 ? (
-            <p className={`${textColor} opacity-70`}>You haven't posted any bounties yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {sponsorBounties.map((bounty) => (
-                <div 
-                  key={bounty.id} 
-                  className={`p-4 border ${borderColor} rounded-lg flex justify-between items-center`}
-                >
-                  <div>
-                    <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                    <div className="flex gap-2 mt-1">
-                      <span className={`text-sm ${mutedTextColor}`}>
-                        {bounty.reward.amount} {bounty.reward.token}
-                      </span>
-                      <span className={`text-sm ${mutedTextColor}`}>
-                        Status: {bounty.status}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className={`border-${borderColor} ${textColor}`}
-                    onClick={() => handleEditBounty(bounty.id)}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      </div>
+    </form>
   )
 }
