@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import { ImagePlus, X } from "lucide-react"
+import { ImagePlus, X, ArrowRight } from "lucide-react"
 import { useUser } from "@/contexts/UserContext"
 
 interface FormData {
@@ -21,6 +21,7 @@ export function CreateSponsorProfile() {
   const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [checkingExistingSponsor, setCheckingExistingSponsor] = useState(true)
+  const [existingSponsor, setExistingSponsor] = useState<{ id: string } | null>(null)
   const [formData, setFormData] = useState<FormData>({
     name: "",
     website_url: "",
@@ -51,8 +52,8 @@ export function CreateSponsorProfile() {
         }
 
         if (data) {
-          // User already has a sponsor profile, redirect to dashboard
-          navigate('/sponsor/dashboard')
+          // User already has a sponsor profile, store the data
+          setExistingSponsor(data)
         }
       } catch (error) {
         console.error('Error checking sponsor status:', error)
@@ -177,6 +178,29 @@ export function CreateSponsorProfile() {
       <Card className="bg-[#1B2228] border-[#C1A461]/20">
         <CardContent className="p-6 flex justify-center items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461] border-t-transparent" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // If user already has a sponsor profile, show the go to dashboard button
+  if (existingSponsor) {
+    return (
+      <Card className="bg-[#1B2228] border-[#C1A461]/20">
+        <CardHeader>
+          <CardTitle className="text-[#C1A461]">Sponsor Profile Exists</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="text-[#C1A461]">
+            You already have a sponsor profile. You can go to your sponsor dashboard to manage your listings.
+          </p>
+          <Button 
+            className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center justify-center"
+            onClick={() => navigate('/sponsor/dashboard')}
+          >
+            Go to Sponsor Dashboard
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </CardContent>
       </Card>
     )

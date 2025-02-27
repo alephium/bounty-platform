@@ -22,44 +22,26 @@ const Layout = () => {
 
   const isAlephiumTeam = user?.email?.endsWith('@alephium.org')
 
+  // useEffect(() => {
+  //   if (!user && !location.pathname.includes('/auth')) {
+  //     const timer = setTimeout(() => {
+  //       setShowAuthPrompt(true)
+  //     }, 15000)
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [user, location.pathname])
+
   useEffect(() => {
     if (user && location.pathname.includes('/auth')) {
       navigate('/')
     }
   }, [user, location.pathname, navigate])
-  
+
   useEffect(() => {
     if (showAuthPrompt) {
       setIsModalOpen(true)
     }
   }, [showAuthPrompt])
-
-  // MVP implementation of sponsor button handler
-  const handleSponsorClick = async () => {
-    if (!user) {
-      // If no user is logged in, redirect to auth page
-      navigate('/auth');
-      return;
-    }
-    
-    try {
-      // For MVP: Simple check if the user has a sponsor ID
-      // In a full implementation, this would use SponsorService.getCurrentUserSponsor()
-      const isSponsor = localStorage.getItem('isSponsor') === 'true';
-      
-      if (isSponsor) {
-        // User is a sponsor, redirect to dashboard
-        navigate('/sponsor/dashboard');
-      } else {
-        // User is not a sponsor, redirect to onboarding
-        navigate('/sponsor');
-      }
-    } catch (error) {
-      console.error('Error checking sponsor status:', error);
-      // On error, default to the onboarding page
-      navigate('/sponsor');
-    }
-  };
 
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
@@ -106,14 +88,24 @@ const Layout = () => {
             
             {user ? (
               <div className="flex items-center gap-4">
-                <Button 
+                {isAlephiumTeam && (
+                  <Button 
+                    className={theme === 'dark' ? 
+                      "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                      "bg-amber-500 hover:bg-amber-600 text-white"}
+                    onClick={() => navigate('/sponsor')}
+                  >
+                    Sponsor
+                  </Button>
+                )}
+                {/* <Button 
                   className={theme === 'dark' ? 
                     "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                     "bg-amber-500 hover:bg-amber-600 text-white"}
-                  onClick={handleSponsorClick}
+                  onClick={() => navigate('/sponsor')}
                 >
-                  Sponsor
-                </Button>
+                  Become a Sponsor
+                </Button> */}
                 {renderAvatar()}
               </div>
             ) : (
@@ -125,7 +117,7 @@ const Layout = () => {
                     "border-amber-500 text-amber-500 hover:bg-amber-50"}
                   onClick={() => navigate('/sponsor')}
                 >
-                  Become a Sponsor
+                  Sponsor
                 </Button>
                 <Button 
                   className={theme === 'dark' ? 

@@ -7,7 +7,7 @@ interface BountyCardProps {
 export const BountyCard = ({ bounty }: BountyCardProps) => {
     return (
       <div className="flex items-center p-4 border-b hover:bg-gray-50">
-        <img src={bounty.company.logo} alt={bounty.company.name} className="w-12 h-12 rounded" />
+        {/* <img src={bounty.sponsor?.logo_url} alt={bounty.sponsor?.name} className="w-12 h-12 rounded" /> */}
         <div className="ml-4 flex-1">
           <h3 className="font-medium">{bounty.title}</h3>
           {/* <div className="flex items-center text-sm text-gray-500">
