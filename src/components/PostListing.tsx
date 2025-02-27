@@ -28,7 +28,7 @@ interface FormData {
   title: string
   description: string
   category: Category
-  requirements: string[]
+  requirements: string
   tags: string[]
   reward?: {
     amount: number
@@ -42,7 +42,7 @@ interface FormData {
 }
 
 const CATEGORIES: Category[] = ['content', 'design', 'development', 'other']
-const TOKENS = ['ALPH', 'USDC', 'USDT']
+const TOKENS = ['ALPH', 'USDC']
 
 export function PostListing() {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export function PostListing() {
     title: '',
     description: '',
     category: 'development',
-    requirements: [],
+    requirements: '',
     tags: [],
   })
 
@@ -203,7 +203,7 @@ export function PostListing() {
         title: '',
         description: '',
         category: 'development',
-        requirements: [],
+        requirements: '',
         tags: [],
       })
 
@@ -275,18 +275,6 @@ export function PostListing() {
                 className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
               />
             </div>
-
-            {/* <div className="space-y-2">
-              <Label className={textColor}>Requirements</Label>
-              <div className="flex gap-2 mb-2">
-                <Input
-                  value={formData.requirements}
-                  onChange={(e) => handleInputChange('requirements',e.target.value)}
-                  placeholder="Add requirements"
-                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-                />
-              </div>
-            </div> */}
 
             <div className="space-y-2">
               <Label className={textColor}>Category</Label>

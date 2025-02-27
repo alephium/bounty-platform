@@ -51,7 +51,7 @@ export interface Project {
   description: string | null
   category: Category
   status: Status
-  requirements: string[] | null
+  requirements: string | null
   repository_url: string | null
   documentation_url: string | null
   tags: string[]
