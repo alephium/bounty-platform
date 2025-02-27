@@ -17,7 +17,7 @@ import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
-import { PostListing } from './components/PostListing'
+import { PostListing } from './pages/PostListing'
 import OnboardingSteps from './pages/Sponsor'
 import SponsorDashboard from './pages/SponsorDashboard'
 import { useUser } from './contexts/UserContext'
@@ -87,13 +87,14 @@ export default function App() {
               <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               <Route path="/bounties" element={<Bounties />} />
               {/* <Route path="/bounties/publisher" element={<BountyPublischer />} /> */}
-              <Route path="/PostListing" element={<PostListing />} />
+              <Route path="/postListing" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
-              <Route path="/editbounty" element={<EditBounty />} />
+              <Route path="/editbounty/:id" element={<PostListing />} />
+              <Route path="/editproject/:id" element={<PostListing />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

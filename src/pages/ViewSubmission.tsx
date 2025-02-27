@@ -21,7 +21,7 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from "@/components/ui/use-toast"
 import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
 import { useTheme } from '@/contexts/ThemeContext'
-import { FeedbackDialog } from "./FeedbackDialog"
+import { FeedbackDialog } from "../components/FeedbackDialog"
 
 type RealtimeSubscription = ReturnType<ReturnType<typeof supabase.channel>['subscribe']>
 

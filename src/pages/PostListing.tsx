@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { useTheme } from '../contexts/ThemeContext' // Add theme import
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useTheme } from '../contexts/ThemeContext'
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/tabs"
 import { supabase } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
-import { toast } from '@/components/ui/use-toast'
-import type { BountyInsert, ProjectInsert, Category, Status } from '@/types/supabase'
+import { toast } from 'sonner'
+import type { BountyInsert, ProjectInsert, Category, Status, Bounty, Project } from '@/types/supabase'
 
 interface FormData {
   title: string
@@ -45,11 +45,13 @@ const CATEGORIES: Category[] = ['content', 'design', 'development', 'other']
 const TOKENS = ['ALPH', 'USDC']
 
 export function PostListing() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const { id } = useParams() // For edit functionality
   const { user } = useUser()
   const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [listingType, setListingType] = useState<'bounty' | 'project'>('bounty')
+  const [isEditMode, setIsEditMode] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -57,6 +59,72 @@ export function PostListing() {
     requirements: '',
     tags: [],
   })
+
+  // Fetch existing listing for editing
+  useEffect(() => {
+    const fetchListing = async () => {
+      if (!id) return
+
+      try {
+        setLoading(true)
+        
+        // Try fetching bounty first
+        const { data: bountyData, error: bountyError } = await supabase
+          .from('bounties')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        if (bountyData) {
+          setListingType('bounty')
+          setFormData({
+            title: bountyData.title,
+            description: bountyData.description || '',
+            category: bountyData.category,
+            requirements: bountyData.requirements || '',
+            tags: bountyData.tags || [],
+            reward: {
+              amount: bountyData.reward.amount,
+              token: bountyData.reward.token,
+              usd_equivalent: bountyData.reward.usd_equivalent
+            },
+            start_date: bountyData.start_date.split('T')[0],
+            end_date: bountyData.end_date.split('T')[0],
+            difficulty_level: bountyData.difficulty_level,
+            estimated_hours: bountyData.estimated_hours || undefined
+          })
+          setIsEditMode(true)
+          return
+        }
+
+        // If no bounty, try fetching project
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        if (projectData) {
+          setListingType('project')
+          setFormData({
+            title: projectData.title,
+            description: projectData.description || '',
+            category: projectData.category,
+            requirements: projectData.requirements?.[0] || '',
+            tags: projectData.tags || []
+          })
+          setIsEditMode(true)
+        }
+      } catch (error) {
+        console.error('Error fetching listing:', error)
+        toast.error('Failed to load listing details')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchListing()
+  }, [id])
 
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
@@ -75,11 +143,17 @@ export function PostListing() {
       setLoading(true)
 
       if (!user?.id) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to post a listing",
-          variant: "destructive"
-        })
+        toast.error("You must be logged in to post a listing")
+        return
+      }
+
+      // Validate required fields
+      if (!formData.title.trim()) {
+        toast.error("Title is required")
+        return
+      }
+      if (!formData.description.trim()) {
+        toast.error("Description is required")
         return
       }
 
@@ -92,11 +166,7 @@ export function PostListing() {
 
       // If no sponsor profile exists
       if (sponsorError || !sponsorData) {
-        toast({
-          title: "Sponsor Profile Required",
-          description: "You need to create a sponsor profile before posting a listing",
-          variant: "destructive"
-        })
+        toast.error("You need to create a sponsor profile before posting a listing")
         navigate('/sponsor')
         return
       }
@@ -108,16 +178,21 @@ export function PostListing() {
         description: formData.description,
         category: formData.category,
         status: 'open' as Status,
-        requirements: formData.requirements,
+        requirements: formData.requirements, // Convert to array
         tags: formData.tags,
         is_featured: false,
       }
 
-      let newListingId: string | null = null
-      let usdEquivalent = 0
+      let result;
+      let usdEquivalent = 0;
 
       if (listingType === 'bounty') {
-        // Calculate USD equivalent for reward
+        // Validate reward for bounties
+        if (!formData.reward?.amount) {
+          toast.error("Reward amount is required for bounties")
+          return
+        }
+
         usdEquivalent = formData.reward?.amount || 0
 
         const bountyData: BountyInsert = {
@@ -127,8 +202,8 @@ export function PostListing() {
             token: formData.reward?.token || 'ALPH',
             usd_equivalent: usdEquivalent
           },
-          start_date: formData.start_date || new Date().toISOString(),
-          end_date: formData.end_date || new Date().toISOString(),
+          start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
+          end_date: formData.end_date ? new Date(formData.end_date).toISOString() : new Date().toISOString(),
           review_timeframe: 7,
           difficulty_level: formData.difficulty_level || 'beginner',
           estimated_hours: formData.estimated_hours || 0,
@@ -138,29 +213,32 @@ export function PostListing() {
           status: 'open'
         }
 
-        const { data, error } = await supabase
-          .from('bounties')
-          .insert([bountyData])
-          .select('id')
-          .single()
+        if (isEditMode && id) {
+          // Update existing bounty
+          result = await supabase
+            .from('bounties')
+            .update(bountyData)
+            .eq('id', id)
+            .select()
+            .single()
+        } else {
+          // Create new bounty
+          result = await supabase
+            .from('bounties')
+            .insert([bountyData])
+            .select()
+            .single()
 
-        if (error) {
-          console.error('Supabase bounty error:', error)
-          throw new Error(`Failed to insert bounty: ${error.message}`)
+          // Update sponsor's bounty statistics
+          await supabase
+            .from('sponsors')
+            .update({
+              total_bounties_count: sponsorData.total_bounties_count + 1,
+              total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sponsorData.id)
         }
-
-        newListingId = data.id
-
-        // Update sponsor's bounty statistics
-        await supabase
-          .from('sponsors')
-          .update({
-            total_bounties_count: sponsorData.total_bounties_count + 1,
-            total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sponsorData.id)
-
       } else {
         const projectData: ProjectInsert = {
           ...baseData,
@@ -170,52 +248,48 @@ export function PostListing() {
           status: 'open'
         }
 
-        const { data, error } = await supabase
-          .from('projects')
-          .insert([projectData])
-          .select('id')
-          .single()
+        if (isEditMode && id) {
+          // Update existing project
+          result = await supabase
+            .from('projects')
+            .update(projectData)
+            .eq('id', id)
+            .select()
+            .single()
+        } else {
+          // Create new project
+          result = await supabase
+            .from('projects')
+            .insert([projectData])
+            .select()
+            .single()
 
-        if (error) {
-          console.error('Supabase project error:', error)
-          throw new Error(`Failed to insert project: ${error.message}`)
+          // Update sponsor's project statistics
+          await supabase
+            .from('sponsors')
+            .update({
+              total_projects_count: sponsorData.total_projects_count + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sponsorData.id)
         }
-
-        newListingId = data.id
-
-        // Update sponsor's project statistics
-        await supabase
-          .from('sponsors')
-          .update({
-            total_projects_count: sponsorData.total_projects_count + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', sponsorData.id)
       }
 
-      toast({
-        title: "Success",
-        description: `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`
-      })
+      if (result.error) {
+        throw result.error
+      }
 
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        category: 'development',
-        requirements: '',
-        tags: [],
-      })
+      toast.success(
+        isEditMode 
+          ? `${listingType === 'bounty' ? 'Bounty' : 'Project'} updated successfully!`
+          : `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`
+      )
 
-      // Redirect to the newly created listing or dashboard
-      navigate(`/${listingType === 'bounty' ? 'bounty' : 'project'}/${newListingId}`)
+      // Navigate to the listing details page
+      navigate(`/${listingType}/${result.data.id}`)
     } catch (error) {
-      console.error('Error posting listing:', error)
-      toast({
-        title: "Error",
-        description: "Failed to post listing. Please try again.",
-        variant: "destructive"
-      })
+      console.error('Error posting/updating listing:', error)
+      toast.error("Failed to post/update listing. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -223,7 +297,10 @@ export function PostListing() {
 
   return (
     <div className={`max-w-4xl mx-auto p-4 ${bgColor}`}>
-      <Tabs value={listingType} onValueChange={(v) => setListingType(v as 'bounty' | 'project')}>
+      <Tabs 
+        value={listingType} 
+        onValueChange={(v) => !isEditMode && setListingType(v as 'bounty' | 'project')}
+      >
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger
             value="bounty"
@@ -242,7 +319,9 @@ export function PostListing() {
         <Card className={`${bgColor} border-${borderColor}`}>
           <CardHeader>
             <CardTitle className={textColor}>
-              Post a New {listingType === 'bounty' ? 'Bounty' : 'Project'}
+              {isEditMode 
+                ? `Edit ${listingType === 'bounty' ? 'Bounty' : 'Project'}` 
+                : `Post a New ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -261,7 +340,7 @@ export function PostListing() {
               <Textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe the and expectations"
+                placeholder="Describe the requirements and expectations"
                 className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
               />
             </div>
@@ -351,12 +430,7 @@ export function PostListing() {
                         type="date"
                         value={formData.start_date || ''}
                         onChange={(e) => handleInputChange('start_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
-                                  [&::-webkit-calendar-picker-indicator]:absolute 
-                                  [&::-webkit-calendar-picker-indicator]:right-3
-                                  [&::-webkit-calendar-picker-indicator]:left-auto
-                                  `}
-                        id="start-date"
+                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
                       />
                     </div>
                   </div>
@@ -367,12 +441,7 @@ export function PostListing() {
                         type="date"
                         value={formData.end_date || ''}
                         onChange={(e) => handleInputChange('end_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
-                                  [&::-webkit-calendar-picker-indicator]:absolute 
-                                  [&::-webkit-calendar-picker-indicator]:right-3
-                                  [&::-webkit-calendar-picker-indicator]:left-auto
-                                  `}
-                        id="end-date"
+                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
                       />
                     </div>
                   </div>
@@ -417,11 +486,11 @@ export function PostListing() {
               onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? 'Posting...' : `Post ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
+              {loading ? 'Posting...' : `${isEditMode ? 'Update' : 'Post'} ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
             </Button>
           </CardContent>
         </Card>
       </Tabs>
     </div>
   )
-} 
+}

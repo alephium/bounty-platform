@@ -1,15 +1,13 @@
-// src/pages/SponsorDashboard.tsx
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { CircleDollarSign, Plus, BarChart3 } from 'lucide-react'
+import { CircleDollarSign, Plus, BarChart3, Edit, ExternalLink } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
-import { ViewSubmissions } from '@/components/ViewSubmission'
+import { ViewSubmissions } from '@/pages/ViewSubmission'
 import { toast } from 'sonner'
 import type { Bounty, Sponsor } from '@/types/supabase'
 
@@ -64,6 +62,19 @@ export default function SponsorDashboard() {
 
     fetchSponsorData()
   }, [user])
+
+  // Function to handle editing a bounty
+  const handleEditBounty = (bountyId: string, event: React.MouseEvent) => {
+    // Stop propagation to prevent the card click event
+    event.stopPropagation()
+    // Navigate to edit route with the bounty ID
+    navigate(`/editbounty/${bountyId}`)
+  }
+
+  // Function to handle viewing a bounty
+  const handleViewBounty = (bountyId: string) => {
+    navigate(`/bounty/${bountyId}`)
+  }
 
   if (loading) {
     return (
@@ -194,13 +205,38 @@ export default function SponsorDashboard() {
                     {bounties.slice(0, 5).map((bounty) => (
                       <div
                         key={bounty.id}
-                        className={`p-4 border ${borderColor} rounded-lg cursor-pointer hover:border-[#C1A461]/40`}
-                        onClick={() => navigate(`/bounty/${bounty.id}`)}
+                        className={`p-4 border ${borderColor} rounded-lg cursor-pointer hover:border-[#C1A461]/40 relative`}
+                        onClick={() => handleViewBounty(bounty.id)}
                       >
-                        <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                        <p className={`mt-1 text-sm ${mutedTextColor}`}>
-                          {new Date(bounty.created_at).toLocaleDateString()}
-                        </p>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                            <p className={`mt-1 text-sm ${mutedTextColor}`}>
+                              {new Date(bounty.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className={`${textColor} hover:bg-[#C1A461]/10`}
+                              onClick={(e) => handleEditBounty(bounty.id, e)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className={`${textColor} hover:bg-[#C1A461]/10`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/bounty/${bounty.id}`);
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -214,18 +250,44 @@ export default function SponsorDashboard() {
               {bounties.map((bounty) => (
                 <Card
                   key={bounty.id}
-                  className={`${bgColor} ${borderColor} cursor-pointer hover:border-[#C1A461]/40`}
-                  onClick={() => setSelectedBountyId(bounty.id)}
+                  className={`${bgColor} ${borderColor} hover:border-[#C1A461]/40 cursor-pointer relative`}
                 >
                   <CardContent className="p-4">
-                    <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                    <div className="flex justify-between items-center mt-2">
-                      <p className={`text-sm ${mutedTextColor}`}>
-                        {bounty.current_submissions} submissions
-                      </p>
-                      <p className={`text-sm ${mutedTextColor}`}>
-                        {bounty.reward.amount} {bounty.reward.token}
-                      </p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1" onClick={() => setSelectedBountyId(bounty.id)}>
+                        <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                        <div className="flex justify-between items-center mt-2">
+                          <p className={`text-sm ${mutedTextColor}`}>
+                            {bounty.current_submissions} submissions
+                          </p>
+                          <p className={`text-sm ${mutedTextColor}`}>
+                            {bounty.reward.amount} {bounty.reward.token}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className={`${textColor} border-${borderColor} hover:bg-[#C1A461]/10`}
+                          onClick={(e) => handleEditBounty(bounty.id, e)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className={`${textColor} border-${borderColor} hover:bg-[#C1A461]/10`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/bounty/${bounty.id}`);
+                          }}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          View
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
