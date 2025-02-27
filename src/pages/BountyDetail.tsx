@@ -300,7 +300,7 @@ export default function BountyDetails() {
                   </p>
                 </section>
 
-                <section>
+                {/* <section>
                   <h2 className={`text-lg font-bold ${textColor} mb-4`}>Requirements</h2>
                   <ul className={`space-y-2 ${textColor}/80`}>
                     {Array.isArray(bounty.requirements) ? (
@@ -311,6 +311,12 @@ export default function BountyDetails() {
                       <li>No requirements specified</li>
                     )}
                   </ul>
+                </section> */}
+                <section>
+                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>Requirements</h2>
+                  <p className={`${textColor}/80`}>
+                    {bounty.requirements}
+                  </p>
                 </section>
 
                 <section>

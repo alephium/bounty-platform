@@ -168,11 +168,12 @@ export default function Home() {
                               <div>
                                 <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
                                 <div className={`flex items-center gap-1 text-sm ${textColor}`}>
-                                  {bounty.company.name}
+                                  {/* If sponsor is available, show the sponsor name */}
+                                  {bounty.sponsor?.name || 'Unknown Sponsor'}
                                   <Badge variant="secondary" className={`${theme === 'dark' ? 
                                     'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}>
                                     <Anchor className="w-3 h-3 mr-1" />
-                                    Verified
+                                    {bounty.is_featured ? 'Featured' : 'Verified'}
                                   </Badge>
                                 </div>
                                 <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
@@ -180,11 +181,11 @@ export default function Home() {
                                     <MapPin className="w-4 h-4" />
                                     <span>{bounty.category}</span>
                                   </div>
-                                  <span>Due in {getTimeRemaining(bounty.due_date)}</span>
-                                  {bounty.submissions_count > 0 && (
+                                  <span>Due in {getTimeRemaining(bounty.end_date)}</span>
+                                  {bounty.current_submissions > 0 && (
                                     <div className="flex items-center gap-1">
                                       <MessageSquare className="w-4 h-4" />
-                                      <span>{bounty.submissions_count}</span>
+                                      <span>{bounty.current_submissions}</span>
                                     </div>
                                   )}
                                 </div>

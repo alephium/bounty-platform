@@ -70,7 +70,7 @@ export interface Bounty {
   description: string | null
   category: Category
   status: Status
-  requirements: string[] | null
+  requirements: string | null
   reward: {
     amount: number
     token: string

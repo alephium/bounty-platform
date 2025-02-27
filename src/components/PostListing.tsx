@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import { useNavigate } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -18,7 +19,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Calendar } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
 import { toast } from '@/components/ui/use-toast'
@@ -45,6 +45,7 @@ const CATEGORIES: Category[] = ['content', 'design', 'development', 'other']
 const TOKENS = ['ALPH', 'USDC', 'USDT']
 
 export function PostListing() {
+  const navigate = useNavigate();
   const { user } = useUser()
   const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
@@ -82,24 +83,49 @@ export function PostListing() {
         return
       }
 
+      // Check if the logged-in user has a sponsor profile
+      const { data: sponsorData, error: sponsorError } = await supabase
+        .from('sponsors')
+        .select('id, total_bounties_count, total_projects_count, total_reward_amount')
+        .eq('user_id', user.id)
+        .single()
+
+      // If no sponsor profile exists
+      if (sponsorError || !sponsorData) {
+        toast({
+          title: "Sponsor Profile Required",
+          description: "You need to create a sponsor profile before posting a listing",
+          variant: "destructive"
+        })
+        navigate('/sponsor')
+        return
+      }
+
+      // Prepare base data
       const baseData = {
-        sponsor_id: user.id,
+        sponsor_id: sponsorData.id,
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        status: 'open',
+        status: 'open' as Status,
         requirements: formData.requirements,
         tags: formData.tags,
         is_featured: false,
       }
 
+      let newListingId: string | null = null
+      let usdEquivalent = 0
+
       if (listingType === 'bounty') {
+        // Calculate USD equivalent for reward
+        usdEquivalent = formData.reward?.amount || 0
+
         const bountyData: BountyInsert = {
           ...baseData,
           reward: {
             amount: formData.reward?.amount || 0,
             token: formData.reward?.token || 'ALPH',
-            usd_equivalent: formData.reward?.usd_equivalent || 0
+            usd_equivalent: usdEquivalent
           },
           start_date: formData.start_date || new Date().toISOString(),
           end_date: formData.end_date || new Date().toISOString(),
@@ -109,31 +135,62 @@ export function PostListing() {
           submission_guidelines: '',
           max_submissions: 10,
           current_submissions: 0,
-          status: 'open' as Status
+          status: 'open'
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('bounties')
           .insert([bountyData])
+          .select('id')
+          .single()
 
         if (error) {
-        console.error('Supabase error details:', error)
-        throw new Error(`Failed to insert bounty: ${error.message}`)
-      }
+          console.error('Supabase bounty error:', error)
+          throw new Error(`Failed to insert bounty: ${error.message}`)
+        }
+
+        newListingId = data.id
+
+        // Update sponsor's bounty statistics
+        await supabase
+          .from('sponsors')
+          .update({
+            total_bounties_count: sponsorData.total_bounties_count + 1,
+            total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sponsorData.id)
+
       } else {
         const projectData: ProjectInsert = {
           ...baseData,
           repository_url: null,
           documentation_url: null,
           submission_count: 0,
-          status: 'open' as Status
+          status: 'open'
         }
 
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('projects')
           .insert([projectData])
+          .select('id')
+          .single()
 
-        if (error) throw error
+        if (error) {
+          console.error('Supabase project error:', error)
+          throw new Error(`Failed to insert project: ${error.message}`)
+        }
+
+        newListingId = data.id
+
+        // Update sponsor's project statistics
+        await supabase
+          .from('sponsors')
+          .update({
+            total_projects_count: sponsorData.total_projects_count + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sponsorData.id)
       }
 
       toast({
@@ -149,6 +206,9 @@ export function PostListing() {
         requirements: [],
         tags: [],
       })
+
+      // Redirect to the newly created listing or dashboard
+      navigate(`/${listingType === 'bounty' ? 'bounty' : 'project'}/${newListingId}`)
     } catch (error) {
       console.error('Error posting listing:', error)
       toast({
@@ -201,10 +261,32 @@ export function PostListing() {
               <Textarea
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe the requirements and expectations"
+                placeholder="Describe the and expectations"
                 className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label className={textColor}>Requirements</Label>
+              <Textarea
+                value={formData.requirements}
+                onChange={(e) => handleInputChange('requirements', e.target.value)}
+                placeholder="Add requirements"
+                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
+              />
+            </div>
+
+            {/* <div className="space-y-2">
+              <Label className={textColor}>Requirements</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  value={formData.requirements}
+                  onChange={(e) => handleInputChange('requirements',e.target.value)}
+                  placeholder="Add requirements"
+                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
+                />
+              </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label className={textColor}>Category</Label>
