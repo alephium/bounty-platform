@@ -57,18 +57,6 @@ export default function BountyDetails() {
     fetchBounty()
   }, [id])
 
-  // const handleSubmitOpen = () => {
-  //   if (!user) {
-  //     toast.error("Please sign in to submit")
-  //     return
-  //   }
-  //   setSubmissionForm({
-  //     title: `${user.full_name}'s submission for ${bounty?.title}`,
-  //     description: '',
-  //     submissionUrl: ''
-  //   })
-  //   setIsSubmitDialogOpen(true)
-  // }
   const handleSubmitOpen = () => {
     if (!user) {
       toast.error("Please sign in to submit")
@@ -152,6 +140,12 @@ export default function BountyDetails() {
         Bounty not found
       </div>
     )
+  }
+
+  const handleContactClick = () => {
+    const twitterHandle = bounty?.sponsor?.twitter_handle
+    const url = twitterHandle ? `https://x.com/${twitterHandle}` : 'https://x.com/'
+    window.open(url, '_blank')
   }
 
   return (
@@ -238,10 +232,10 @@ export default function BountyDetails() {
                 <h3 className={`font-bold ${textColor} mb-3`}>CONTACT</h3>
                 <Button 
                   className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-                  onClick={() => window.open('https://x.com/Blockflow_DAO', '_blank')}
+                  onClick={handleContactClick}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  Contact Publisher
+                  Contact Sponsor
                 </Button>
               </CardContent>
             </Card>
