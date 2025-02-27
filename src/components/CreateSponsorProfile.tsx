@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
 import { ImagePlus, X } from "lucide-react"
+import { useUser } from "@/contexts/UserContext"
 
 interface FormData {
   name: string
@@ -17,7 +18,9 @@ interface FormData {
 
 export function CreateSponsorProfile() {
   const navigate = useNavigate()
+  const { user } = useUser()
   const [loading, setLoading] = useState(false)
+  const [checkingExistingSponsor, setCheckingExistingSponsor] = useState(true)
   const [formData, setFormData] = useState<FormData>({
     name: "",
     website_url: "",
@@ -25,6 +28,45 @@ export function CreateSponsorProfile() {
     logo: null
   })
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  // Check if user already has a sponsor profile
+  useEffect(() => {
+    const checkExistingSponsor = async () => {
+      if (!user?.id) {
+        setCheckingExistingSponsor(false)  // Make sure to set this to false if no user
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('sponsors')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          if (error.code !== 'PGRST116') { // no rows returned
+            throw error
+          }
+        }
+
+        if (data) {
+          // User already has a sponsor profile, redirect to dashboard
+          navigate('/sponsor/dashboard')
+        }
+      } catch (error) {
+        console.error('Error checking sponsor status:', error)
+        toast({
+          description: "Error checking sponsor status",
+          variant: "destructive"
+        })
+      } finally {
+        setCheckingExistingSponsor(false)
+      }
+    }
+
+    checkExistingSponsor()
+  }, [user, navigate])
 
   const handleLogoChange = (file: File | null) => {
     if (!file) return
@@ -75,6 +117,14 @@ export function CreateSponsorProfile() {
   }
 
   const handleSubmit = async () => {
+    if (!user?.id) {
+      toast({
+        description: "You must be logged in to create a sponsor profile",
+        variant: "destructive"
+      })
+      return
+    }
+
     try {
       setLoading(true)
 
@@ -94,10 +144,15 @@ export function CreateSponsorProfile() {
       const { data: sponsor, error } = await supabase
         .from('sponsors')
         .insert([{
+          user_id: user.id,
           name: formData.name,
           website_url: formData.website_url || null,
           twitter_handle: formData.twitter_handle || null,
-          logo_url
+          logo_url,
+          total_bounties_count: 0,
+          total_projects_count: 0,
+          total_reward_amount: 0,
+          is_verified: false
         }])
         .select()
         .single()
@@ -115,6 +170,16 @@ export function CreateSponsorProfile() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingExistingSponsor) {
+    return (
+      <Card className="bg-[#1B2228] border-[#C1A461]/20">
+        <CardContent className="p-6 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461] border-t-transparent" />
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

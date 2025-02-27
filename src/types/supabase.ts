@@ -15,6 +15,7 @@ export type ProofOfWorkInsert = Omit<ProofOfWork, 'id' | 'created_at' | 'updated
 
 export interface Sponsor {
   id: string
+  user_id: string
   name: string
   description: string | null
   logo_url: string | null

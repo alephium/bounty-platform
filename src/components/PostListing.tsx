@@ -281,9 +281,13 @@ export function PostListing() {
                         type="date"
                         value={formData.start_date || ''}
                         onChange={(e) => handleInputChange('start_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
+                                  [&::-webkit-calendar-picker-indicator]:absolute 
+                                  [&::-webkit-calendar-picker-indicator]:right-3
+                                  [&::-webkit-calendar-picker-indicator]:left-auto
+                                  `}
+                        id="start-date"
                       />
-                      <Calendar className={`absolute right-3 top-2.5 h-4 w-4 ${mutedTextColor}`} />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -293,9 +297,13 @@ export function PostListing() {
                         type="date"
                         value={formData.end_date || ''}
                         onChange={(e) => handleInputChange('end_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]
+                                  [&::-webkit-calendar-picker-indicator]:absolute 
+                                  [&::-webkit-calendar-picker-indicator]:right-3
+                                  [&::-webkit-calendar-picker-indicator]:left-auto
+                                  `}
+                        id="end-date"
                       />
-                      <Calendar className={`absolute right-3 top-2.5 h-4 w-4 ${mutedTextColor}`} />
                     </div>
                   </div>
                 </div>

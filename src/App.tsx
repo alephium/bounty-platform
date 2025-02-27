@@ -20,6 +20,43 @@ import Privacy from './pages/Privacy'
 import { PostListing } from './components/PostListing'
 import OnboardingSteps from './pages/Sponsor'
 import SponsorDashboard from './pages/SponsorDashboard'
+import { useUser } from './contexts/UserContext'
+import { supabase } from './lib/supabase'
+
+
+function SponsorRoute() {
+  const { user } = useUser()
+  const [loading, setLoading] = useState(true)
+  const [hasSponsorProfile, setHasSponsorProfile] = useState(false)
+
+  useEffect(() => {
+    const checkSponsorProfile = async () => {
+      if (!user?.id) return
+
+      try {
+        const { data } = await supabase
+          .from('sponsors')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        setHasSponsorProfile(!!data)
+      } catch (error) {
+        console.error('Error checking sponsor profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkSponsorProfile()
+  }, [user])
+
+  if (loading) {
+    return <LoadingPage />
+  }
+
+  return hasSponsorProfile ? <Navigate to="/sponsor/dashboard" replace /> : <OnboardingSteps />
+}
 
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
