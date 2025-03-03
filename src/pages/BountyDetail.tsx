@@ -5,17 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Clock, Globe, MessageSquare, AlertTriangle, Send } from 'lucide-react'
 import { useTheme } from "@/contexts/ThemeContext"
 import { useUser } from "@/contexts/UserContext"
 import { supabase } from "@/lib/supabase"
-import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
-import { SubmissionDialog } from '../components/SubmissionDialog'
+import { SubmissionDialog } from '../components/SubmissionDialog' // Import the fixed component
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -25,11 +21,6 @@ export default function BountyDetails() {
   const [bounty, setBounty] = useState<Bounty | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false)
-  const [submissionForm, setSubmissionForm] = useState({
-    title: '',
-    description: '',
-    submissionUrl: ''
-  })
 
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -37,15 +28,18 @@ export default function BountyDetails() {
 
   useEffect(() => {
     const fetchBounty = async () => {
+      if (!id) return
+      
       try {
+        setLoading(true)
         const { data, error } = await supabase
-        .from('bounties')
-        .select(`
-          *,
-          sponsor:sponsors(*)
-        `)
-        .eq('id', id)
-        .single()
+          .from('bounties')
+          .select(`
+            *,
+            sponsor:sponsors(*)
+          `)
+          .eq('id', id)
+          .single()
 
         if (error) throw error
         setBounty(data)
@@ -58,7 +52,7 @@ export default function BountyDetails() {
     }
 
     fetchBounty()
-  }, [id])
+  }, [id]) // Only re-run when id changes
 
   const handleSubmitOpen = () => {
     if (!user) {
@@ -66,35 +60,28 @@ export default function BountyDetails() {
       navigate('/auth')
       return
     }
-    setSubmissionForm({
-      title: `${user.full_name}'s submission for ${bounty?.title}`,
-      description: '',
-      submissionUrl: ''
-    })
     setIsSubmitDialogOpen(true)
   }
 
-  const handleSubmit = async () => {
-    if (!user || !bounty) return
+  const handleSubmissionComplete = async () => {
+    if (!id) return
 
-    if (!submissionForm.submissionUrl) {
-      toast.error("Please provide a submission URL")
-      return
-    }
+    try {
+      // Only fetch updated bounty data, don't set loading state to avoid full re-render
+      const { data, error } = await supabase
+        .from('bounties')
+        .select(`
+          *,
+          sponsor:sponsors(*)
+        `)
+        .eq('id', id)
+        .single()
 
-    const result = await handleBountySubmission(
-      bounty,
-      user.id,
-      submissionForm.submissionUrl,
-      submissionForm.title,
-      submissionForm.description
-    )
-
-    if (result.success) {
-      toast.success("Submission successful!")
-      setIsSubmitDialogOpen(false)
-    } else {
-      toast.error("Failed to submit. Please try again.")
+      if (error) throw error
+      setBounty(data)
+      toast.success("Your submission has been received!")
+    } catch (error) {
+      console.error('Error refreshing bounty:', error)
     }
   }
 
@@ -105,15 +92,12 @@ export default function BountyDetails() {
       const now = new Date()
       const deadline = new Date(bounty.end_date)
       
-      // Check if deadline is valid
       if (isNaN(deadline.getTime())) {
-        console.error('Invalid end_date:', bounty.end_date)
         return "Invalid date"
       }
       
       const diff = deadline.getTime() - now.getTime()
       
-      // Check if the bounty has expired
       if (diff < 0) {
         return "Expired"
       }
@@ -127,6 +111,12 @@ export default function BountyDetails() {
       console.error('Error calculating time remaining:', error)
       return "Error"
     }
+  }
+
+  const handleContactClick = () => {
+    const twitterHandle = bounty?.sponsor?.twitter_handle
+    const url = twitterHandle ? `https://x.com/${twitterHandle}` : 'https://x.com/'
+    window.open(url, '_blank')
   }
 
   if (loading) {
@@ -144,14 +134,6 @@ export default function BountyDetails() {
       </div>
     )
   }
-
-  const handleContactClick = () => {
-    const twitterHandle = bounty?.sponsor?.twitter_handle
-    const url = twitterHandle ? `https://x.com/${twitterHandle}` : 'https://x.com/'
-    window.open(url, '_blank')
-  }
-
-  console.log("sponsor name:", bounty.sponsor?.name)
 
   return (
     <div className={`min-h-screen ${bgColor}`}>
@@ -185,27 +167,15 @@ export default function BountyDetails() {
                     </div>
                   </div>
                 </div>
-                {/* <Button 
+                
+                <Button 
                   variant="outline" 
                   className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
                   onClick={handleSubmitOpen}
                 >
                   Submit
-                </Button> */}
-                <Button 
-                  variant="outline" 
-                  className={`w-full border-[#C1A461]/20 bg-amber-500 text-gray-900`}
-                  onClick={() => {
-                    if (!user) {
-                      toast.error("Please sign in to submit")
-                      navigate('/auth')
-                      return
-                    }
-                    handleSubmitOpen()
-                  }}
-                >
-                  Submit
                 </Button>
+                
                 <div className="p-3 bg-[#C1A461]/10 rounded-lg border border-[#C1A461]/20">
                   <div className={`flex gap-2 text-sm ${textColor}`}>
                     <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-1" />
@@ -269,14 +239,6 @@ export default function BountyDetails() {
                   </div>
                 </div>
               </div>
-              {/* <Button 
-                variant="outline" 
-                className={`border-[#C1A461]/20 bg-amber-500 text-gray-900`}
-                // className={'data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900'}
-                onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSc5i7wJ-8g1n5e_A4Cmbbprop_MdOurZtxnxCX1Zs22cEt3Hg/viewform', '_blank')}
-              >
-                Subscribe
-              </Button> */}
             </div>
 
             <Tabs defaultValue="details" className="w-full">
@@ -300,23 +262,20 @@ export default function BountyDetails() {
                   </p>
                 </section>
 
-                {/* <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>Requirements</h2>
-                  <ul className={`space-y-2 ${textColor}/80`}>
-                    {Array.isArray(bounty.requirements) ? (
-                      bounty.requirements.map((req, index) => (
-                        <li key={index}>{req}</li>
-                      ))
-                    ) : (
-                      <li>No requirements specified</li>
-                    )}
-                  </ul>
-                </section> */}
                 <section>
                   <h2 className={`text-lg font-bold ${textColor} mb-4`}>Requirements</h2>
-                  <p className={`${textColor}/80`}>
-                    {bounty.requirements}
-                  </p>
+                  {typeof bounty.requirements === 'string' ? (
+                    <p className={`${textColor}/80`}>{bounty.requirements}</p>
+                  ) : (
+                    <ul className={`space-y-2 ${textColor}/80`}>
+                      {Array.isArray(bounty.requirements) ? 
+                        (bounty.requirements as string[]).map((req, index) => (
+                          <li key={index}>{req}</li>
+                        )) : 
+                        <li>No requirements specified</li>
+                      }
+                    </ul>
+                  )}
                 </section>
 
                 <section>
@@ -361,45 +320,15 @@ export default function BountyDetails() {
       </main>
 
       {/* Submit Dialog */}
-      <SubmissionDialog 
-        bounty={bounty}
-        userId={user?.id || ''}
-        isOpen={isSubmitDialogOpen}
-        onClose={() => setIsSubmitDialogOpen(false)}
-        onSubmissionComplete={() => {
-          // Refresh bounty data after successful submission
-          const fetchBounty = async () => {
-            try {
-              setLoading(true); // Show loading state
-              const { data, error } = await supabase
-                .from('bounties')
-                .select(`
-                  *,
-                  sponsor:sponsors(*)
-                `)
-                .eq('id', id)
-                .single();
-
-              if (error) throw error;
-              setBounty(data);
-              toast.success("Your submission has been received!");
-            } catch (error) {
-              console.error('Error refreshing bounty:', error);
-              toast.error("Failed to refresh bounty details");
-            } finally {
-              setLoading(false);
-            }
-          };
-          fetchBounty();
-        }}
-      />
-      {/* <SubmissionDialog
-        bounty={bounty}
-        userId={user?.id || ''}
-        isOpen={isSubmitDialogOpen}
-        onClose={() => setIsSubmitDialogOpen(false)}
-        onSubmissionComplete={handleSubmissionComplete}
-      /> */}
+      {bounty && user && (
+        <SubmissionDialog 
+          bounty={bounty}
+          userId={user.id}
+          isOpen={isSubmitDialogOpen}
+          onClose={() => setIsSubmitDialogOpen(false)}
+          onSubmissionComplete={handleSubmissionComplete}
+        />
+      )}
     </div>
   )
 }

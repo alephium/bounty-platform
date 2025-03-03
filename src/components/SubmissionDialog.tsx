@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { 
   Dialog, 
   DialogContent, 
@@ -15,7 +15,6 @@ import { toast } from "sonner"
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from '../types/supabase'
 import { Loader2, X } from 'lucide-react'
-import supabase from '../supabase/index'
 
 interface SubmissionDialogProps {
   bounty: Bounty
@@ -35,12 +34,12 @@ export function SubmissionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
+    userId:'',
     description: '',
     submissionUrl: '',
     tweetUrl: '',
-    additionalInfo: ''
   })
-  // console.log("formData in submissiondiaxlog!!!", formData)
+
   const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error("Please enter a title")
@@ -66,72 +65,35 @@ export function SubmissionDialog({
     return true
   }
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!validateForm()) return;
-
-  //   setIsSubmitting(true);
-  //   try {
-  //     const result = await handleBountySubmission(
-  //       bounty,
-  //       userId,
-  //       formData.submissionUrl,
-  //       formData.title,
-  //       formData.description
-  //     );
-
-  //     if (result.success) {
-  //       toast.success("Submission successful!");
-  //       onSubmissionComplete();
-  //       onClose();
-  //     } else {
-  //       throw new Error(result.error);
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Submission process failed:', error);
-  //     toast.error(error.message || "Failed to submit. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-  // Updated handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Add this line to ensure the form isn't submitting normally
-    console.log("Preventing default form submission");
-    
-    // Move the Supabase call to an immediately executed function to isolate it
-    (async function() {
-      try {
-        console.log("Starting isolated supabase call");
-        const { data: existingUser, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-        
-        console.log('existingUser (in isolated call)', existingUser, error);
-      } catch (innerError) {
-        console.error('Inner error:', innerError);
-      }
-      console.log("End of isolated call");
-    })();
-    
-    console.log("End of handleSubmit function");
-  };
+    e.preventDefault()
+    if (!validateForm()) return
 
-  useEffect(()=> {
-    const user = async() => {
-      const { data: existingUser, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single()
-    console.log('existingUser', existingUser)
+    setIsSubmitting(true)
+    try {
+      const result = await handleBountySubmission(
+        bounty,
+        userId,
+        formData.submissionUrl,
+        formData.tweetUrl,
+        formData.title,
+        formData.description
+      )
+
+      if (result.success) {
+        toast.success("Submission successful!")
+        onSubmissionComplete()
+        onClose()
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error: any) {
+      console.error('Submission process failed:', error)
+      toast.error(error.message || "Failed to submit. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-    console.log('user', user())
-  }, [])
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -189,15 +151,13 @@ export function SubmissionDialog({
             <div className="text-sm text-[#C1A461]/60 mb-2">
               Make sure this link is accessible by everyone!
             </div>
-            <div className="flex">
-              <Input
-                value={formData.submissionUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, submissionUrl: e.target.value }))}
-                placeholder="https://github.com/your-repo"
-                className="rounded-l-none bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
-                required
-              />
-            </div>
+            <Input
+              value={formData.submissionUrl}
+              onChange={(e) => setFormData(prev => ({ ...prev, submissionUrl: e.target.value }))}
+              placeholder="https://URL_ADDRESS"
+              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
+              required
+            />
           </div>
 
           <div className="space-y-2">
@@ -205,17 +165,15 @@ export function SubmissionDialog({
             <div className="text-sm text-[#C1A461]/60 mb-2">
               This helps sponsors discover (and maybe repost!) your work on social media!
             </div>
-            <div className="flex">
-              <Input
-                value={formData.tweetUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, tweetUrl: e.target.value }))}
-                placeholder="https://twitter.com/your-x"
-                className="rounded-l-none bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
-              />
-            </div>
+            <Input
+              value={formData.tweetUrl}
+              onChange={(e) => setFormData(prev => ({ ...prev, tweetUrl: e.target.value }))}
+              placeholder="https://twitter.com/your-x"
+              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
+            />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label className="text-[#C1A461]">Additional Information</Label>
             <div className="text-sm text-[#C1A461]/60 mb-2">
               If you have any other links or information you'd like to share, please add them here!
@@ -226,7 +184,7 @@ export function SubmissionDialog({
               placeholder="Add info or link"
               className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
             />
-          </div>
+          </div> */}
 
           <DialogFooter className="pt-4">
             <Button

@@ -100,7 +100,7 @@ export interface BountySubmission {
   title: string
   description: string
   submission_url: string
-  repository_url: string | null
+  tweet_url: string | null
   status: 'submitted' | 'in_review' | 'accepted' | 'rejected'
   feedback: string | null
   review_started_at: string | null
