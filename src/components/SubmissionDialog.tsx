@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   Dialog, 
   DialogContent, 
@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from '../types/supabase'
 import { Loader2, X } from 'lucide-react'
+import supabase from '../supabase/index'
 
 interface SubmissionDialogProps {
   bounty: Bounty
@@ -39,7 +40,7 @@ export function SubmissionDialog({
     tweetUrl: '',
     additionalInfo: ''
   })
-
+  // console.log("formData in submissiondiaxlog!!!", formData)
   const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error("Please enter a title")
@@ -65,34 +66,72 @@ export function SubmissionDialog({
     return true
   }
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) return;
+
+  //   setIsSubmitting(true);
+  //   try {
+  //     const result = await handleBountySubmission(
+  //       bounty,
+  //       userId,
+  //       formData.submissionUrl,
+  //       formData.title,
+  //       formData.description
+  //     );
+
+  //     if (result.success) {
+  //       toast.success("Submission successful!");
+  //       onSubmissionComplete();
+  //       onClose();
+  //     } else {
+  //       throw new Error(result.error);
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Submission process failed:', error);
+  //     toast.error(error.message || "Failed to submit. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+  // Updated handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    try {
-      const result = await handleBountySubmission(
-        bounty,
-        userId,
-        formData.submissionUrl,
-        formData.title,
-        formData.description
-      );
-
-      if (result.success) {
-        toast.success("Submission successful!");
-        onSubmissionComplete();
-        onClose();
-      } else {
-        throw new Error(result.error);
+    
+    // Add this line to ensure the form isn't submitting normally
+    console.log("Preventing default form submission");
+    
+    // Move the Supabase call to an immediately executed function to isolate it
+    (async function() {
+      try {
+        console.log("Starting isolated supabase call");
+        const { data: existingUser, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        console.log('existingUser (in isolated call)', existingUser, error);
+      } catch (innerError) {
+        console.error('Inner error:', innerError);
       }
-    } catch (error: any) {
-      console.error('Submission process failed:', error);
-      toast.error(error.message || "Failed to submit. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      console.log("End of isolated call");
+    })();
+    
+    console.log("End of handleSubmit function");
   };
+
+  useEffect(()=> {
+    const user = async() => {
+      const { data: existingUser, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single()
+    console.log('existingUser', existingUser)
+    }
+    console.log('user', user())
+  }, [])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

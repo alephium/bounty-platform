@@ -19,7 +19,7 @@ export default function Home() {
   // const { session } = useSession();
 
   const { user} = useUser() 
-  console.log(user)
+  // console.log(user)
   const { theme } = useTheme()
   const navigate = useNavigate()
   
@@ -51,15 +51,33 @@ export default function Home() {
 
 
         if (error) throw error
-        setBounties(data || [])
-      } catch (error) {
-        console.error('Error fetching bounties:', error)
-        toast.error('Failed to load bounties')
-      } finally {
-        setLoading(false)
-      }
-    }
 
+        const updatedBounties = await Promise.all(data.map(async (bounty) => {
+          if (bounty.status !== 'completed' && new Date(bounty.end_date) < new Date()) {
+            const { error: updateError } = await supabase
+              .from('bounties')
+              .update({ status: 'completed' })
+              .eq('id', bounty.id)
+
+            if (updateError) {
+              console.error('Error updating bounty status:', updateError)
+              return bounty
+            }
+
+            return { ...bounty, status: 'completed' }
+          }
+
+          return bounty
+        }))
+
+        setBounties(updatedBounties)
+        } catch (error) {
+          console.error('Error fetching bounties:', error)
+          toast.error('Failed to load bounties')
+        } finally {
+          setLoading(false)
+        }
+      }
     fetchBounties()
   }, [selectedStatus])
 

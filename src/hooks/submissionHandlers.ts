@@ -1,5 +1,6 @@
 import { Bounty } from '../types/supabase'
 import supabase from '../supabase/index'
+
 export async function handleBountySubmission(
   bounty: Bounty,
   userId: string,
@@ -9,31 +10,48 @@ export async function handleBountySubmission(
 ) {
   try {
     // Log the bounty data for debugging
-    console.log('Bounty data:', bounty);
+    console.log('Submitting for bounty:', bounty, 'by user:', userId);
 
-    // First, check if user has already submitted
-    const { data: existingSubmission, error: checkError } = await supabase
-      .from('bounty_submissions')
-      .select('id')
-      .eq('bounty_id', bounty.id)
-      .eq('user_id', userId)
-      .single();
-
-    if (checkError && checkError.code !== 'PGRST116') { // Ignore "no rows returned" error
-      console.error('Check submission error:', checkError);
-      throw checkError;
+    // Make sure we have the sponsor_id
+    if (!bounty.sponsor_id) {
+      console.error('Missing sponsor_id in bounty data:', bounty);
+      throw new Error('Bounty data is incomplete (missing sponsor ID)');
     }
 
-    if (existingSubmission) {
-      throw new Error('You have already submitted to this bounty');
-    }
+    console.log('Checking for existing submission...')
 
-    // Then, create the bounty submission
+    const { data: existingUser, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+        console.log(existingUser)
+    // Check if user has already submitted
+    // const { data: existingSubmission, error: checkError } = await supabase
+    //   .from('bounty_submissions')
+    //   .select('id')
+    //   .eq('bounty_id', bounty.id)
+    //   .eq('user_id', userId)
+    //   .single();
+    
+    // console.log('Checking for existing submission...', existingSubmission)
+
+    // if (checkError && checkError.code !== 'PGRST116') { // Ignore "no rows returned" error
+    //   console.error('Check submission error:', checkError);
+    //   throw checkError;
+    // }
+
+    // if (existingSubmission) {
+    //   throw new Error('You have already submitted to this bounty');
+    // }
+
+    // Create the bounty submission with sponsor_id included
     const { data: submissionData, error: submissionError } = await supabase
       .from('bounty_submissions')
       .insert({
         bounty_id: bounty.id,
         user_id: userId,
+        sponsor_id: bounty.sponsor_id, // Include the sponsor_id from the bounty
         title: title,
         description: description,
         submission_url: submissionUrl,
@@ -41,6 +59,8 @@ export async function handleBountySubmission(
       })
       .select()
       .single();
+
+    console.log(submissionData, submissionError)
 
     if (submissionError) {
       console.error('Submission error:', submissionError);
@@ -60,23 +80,11 @@ export async function handleBountySubmission(
       throw updateError;
     }
 
-    // Get the sponsor ID directly from the bounty using a separate query
-    const { data: bountyData, error: bountyError } = await supabase
-      .from('bounties')
-      .select('sponsor_id')
-      .eq('id', bounty.id)
-      .single();
-
-    if (bountyError) {
-      console.error('Bounty fetch error:', bountyError);
-      throw bountyError;
-    }
-
     // Create notification for the sponsor
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
-        sponsor_id: bountyData.sponsor_id,
+        sponsor_id: bounty.sponsor_id,
         user_id: userId,
         submission_id: submissionData.id,
         submission_type: 'bounty',
@@ -90,6 +98,7 @@ export async function handleBountySubmission(
       throw notificationError;
     }
 
+    console.log('Submission successful:', submissionData.id);
     return { success: true, submission: submissionData };
   } catch (error) {
     console.error('Error handling submission:', error);

@@ -333,7 +333,7 @@ export default function BountyDetails() {
                   </p>
                 </section>
 
-                {/* <section>
+                <section>
                   <div className={`flex items-center gap-2 mb-4 ${textColor}`}>
                     <MessageSquare className="w-5 h-5" />
                     <h2 className="text-lg font-bold">Discussion</h2>
@@ -353,7 +353,7 @@ export default function BountyDetails() {
                       />
                     </div>
                   </div>
-                </section> */}
+                </section>
               </div>
             </Tabs>
           </div>
@@ -367,23 +367,30 @@ export default function BountyDetails() {
         isOpen={isSubmitDialogOpen}
         onClose={() => setIsSubmitDialogOpen(false)}
         onSubmissionComplete={() => {
-          // Refresh bounty data
+          // Refresh bounty data after successful submission
           const fetchBounty = async () => {
             try {
+              setLoading(true); // Show loading state
               const { data, error } = await supabase
                 .from('bounties')
-                .select('*')
+                .select(`
+                  *,
+                  sponsor:sponsors(*)
+                `)
                 .eq('id', id)
-                .single()
+                .single();
 
-              if (error) throw error
-              setBounty(data)
+              if (error) throw error;
+              setBounty(data);
+              toast.success("Your submission has been received!");
             } catch (error) {
-              console.error('Error fetching bounty:', error)
-              toast.error("Failed to refresh bounty details")
+              console.error('Error refreshing bounty:', error);
+              toast.error("Failed to refresh bounty details");
+            } finally {
+              setLoading(false);
             }
-          }
-          fetchBounty()
+          };
+          fetchBounty();
         }}
       />
       {/* <SubmissionDialog

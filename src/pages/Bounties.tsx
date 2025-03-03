@@ -33,7 +33,10 @@ export function Bounties() {
         setLoading(true)
         const { data, error } = await supabase
           .from('bounties')
-          .select('*')
+          .select(`
+            *,
+            sponsor:sponsors(name, is_verified)
+          `)
           .eq('status', selectedStatus)
           .order('created_at', { ascending: false })
 
@@ -58,7 +61,7 @@ export function Bounties() {
     
     const matchesSearch = searchQuery === '' || 
       bounty.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bounty.company.name.toLowerCase().includes(searchQuery.toLowerCase())
+      bounty.sponsor?.name.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesCategory && matchesSearch
   })
@@ -78,12 +81,6 @@ export function Bounties() {
             <h1 className={`text-2xl font-bold ${textColor}`}>Bounty Board</h1>
             <p className={`${mutedTextColor}`}>Discover and complete bounties to earn rewards</p>
           </div>
-          {/* <Button 
-            className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
-            onClick={() => navigate('/bugbounty')}
-          >
-            Bug Bounty Program
-          </Button> */}
         </div>
 
         {/* Search and Filters */}
@@ -165,23 +162,28 @@ export function Bounties() {
                             <div>
                               <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
                               <div className={`flex items-center gap-1 text-sm ${textColor}`}>
-                                {bounty.company.name}
-                                <Badge variant="secondary" className={`${theme === 'dark' ? 
-                                  'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}>
-                                  <Anchor className="w-3 h-3 mr-1" />
-                                  Verified
-                                </Badge>
+                              {bounty.sponsor?.name || 'Unknown Sponsor'}
+                                {bounty.sponsor?.is_verified && (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={`${theme === 'dark' ? 
+                                      'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                  >
+                                    <Anchor className="w-3 h-3 mr-1" />
+                                    Verified
+                                  </Badge>
+                                )}
                               </div>
                               <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-4 h-4" />
                                   <span>{bounty.category}</span>
                                 </div>
-                                <span>Due in {getTimeRemaining(bounty.due_date)}</span>
-                                {bounty.submissions_count > 0 && (
+                                <span>Due in {getTimeRemaining(bounty.end_date)}</span>
+                                {bounty.current_submissions > 0 && (
                                   <div className="flex items-center gap-1">
                                     <MessageSquare className="w-4 h-4" />
-                                    <span>{bounty.submissions_count}</span>
+                                    <span>{bounty.current_submissions}</span>
                                   </div>
                                 )}
                               </div>
