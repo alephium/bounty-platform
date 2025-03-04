@@ -40,6 +40,8 @@ export function SubmissionDialog({
     tweetUrl: '',
   })
 
+  // console.log(formData)
+
   const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error("Please enter a title")
@@ -75,8 +77,8 @@ export function SubmissionDialog({
         bounty,
         userId,
         formData.submissionUrl,
-        formData.tweetUrl,
         formData.title,
+        formData.tweetUrl,
         formData.description
       )
 

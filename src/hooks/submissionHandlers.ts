@@ -1,6 +1,63 @@
 import { Bounty } from '../types/supabase'
 import supabase from '../supabase/index'
 
+
+// export async function checkSupabaseConnection() {
+//   try {
+//     // Perform a simple, lightweight query to test connection
+//     const { data, error } = await supabase
+//       .from('users')
+//       .select('id')
+//       .limit(1)
+
+//     if (error) {
+//       console.error('❌ Supabase Connection Test Failed:', error)
+//       return {
+//         status: 'error',
+//         message: 'Connection failed',
+//         details: error.message
+//       }
+//     }
+
+//     // Additional connection validation
+//     const connectionChecks = {
+//       basic: data !== null,
+//       responseTime: Date.now() // You can calculate response time if needed
+//     }
+
+//     console.log('✅ Supabase Connection Successful!')
+    
+//     return {
+//       status: 'success',
+//       message: 'Supabase is connected and responding',
+//       checks: connectionChecks
+//     }
+//   } catch (catchError) {
+//     console.error('🚨 Unexpected Supabase Connection Error:', catchError)
+//     return {
+//       status: 'critical',
+//       message: 'Unexpected connection error',
+//       details: catchError instanceof Error ? catchError.message : String(catchError)
+//     }
+//   }
+// }
+
+// Usage example
+async function testSupabaseConnection() {
+  const connectionResult = await checkSupabaseConnection()
+  
+  switch (connectionResult.status) {
+    case 'success':
+      console.log('Connection established successfully! 🎉')
+      break
+    case 'error':
+      console.warn('Connection issues detected. Please check configuration. 🔧')
+      break
+    case 'critical':
+      console.error('Critical connection problem! 🚨')
+      break
+  }
+}
 export async function handleBountySubmission(
   bounty: Bounty,
   userId: string,
@@ -9,6 +66,7 @@ export async function handleBountySubmission(
   tweetUrl: string,
   description: string
 ) {
+  // checkSupabaseConnection()
   try {
     // Check if user and bounty IDs are valid
     if (!userId || !bounty?.id) {
@@ -25,13 +83,13 @@ export async function handleBountySubmission(
         title: title,
         description: description,
         submission_url: submissionUrl,
-        tweetUrl:tweetUrl,
+        tweet_url:tweetUrl,
         status: 'submitted'
       })
       .select()
       .single();
 
-    console.log("0000")
+    console.log("submissionDate", submissionData)
 
     if (submissionError) {
       console.error('Submission error:', submissionError);
