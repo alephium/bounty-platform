@@ -43,21 +43,21 @@ import supabase from '../supabase/index'
 // }
 
 // Usage example
-async function testSupabaseConnection() {
-  const connectionResult = await checkSupabaseConnection()
+// async function testSupabaseConnection() {
+//   const connectionResult = await checkSupabaseConnection()
   
-  switch (connectionResult.status) {
-    case 'success':
-      console.log('Connection established successfully! 🎉')
-      break
-    case 'error':
-      console.warn('Connection issues detected. Please check configuration. 🔧')
-      break
-    case 'critical':
-      console.error('Critical connection problem! 🚨')
-      break
-  }
-}
+//   switch (connectionResult.status) {
+//     case 'success':
+//       console.log('Connection established successfully! 🎉')
+//       break
+//     case 'error':
+//       console.warn('Connection issues detected. Please check configuration. 🔧')
+//       break
+//     case 'critical':
+//       console.error('Critical connection problem! 🚨')
+//       break
+//   }
+// }
 export async function handleBountySubmission(
   bounty: Bounty,
   userId: string,
