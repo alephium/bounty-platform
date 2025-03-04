@@ -62,6 +62,18 @@ export interface Project {
   sponsor?: Sponsor
 }
 
+export interface BountyComment {
+  id: string
+  bounty_id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+  // Join relationships
+  user?: User
+  bounty?: Bounty
+}
+
 // Bounty interface with sponsor relationship and improved tracking
 export interface Bounty {
   id: string

@@ -11,7 +11,8 @@ import { useUser } from "@/contexts/UserContext"
 import { supabase } from "@/lib/supabase"
 import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
-import { SubmissionDialog } from '../components/SubmissionDialog' // Import the fixed component
+import { SubmissionDialog } from '../components/SubmissionDialog'
+import CommentSection from '../components/CommentSection'
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -288,27 +289,17 @@ export default function BountyDetails() {
                 <section>
                   <h2 className={`text-lg font-bold ${textColor} mb-4`}>Timeline</h2>
                   <p className={`${textColor}/80`}>
-                    Due by: {new Date(bounty.end_date).toLocaleDateString()}
+                    End Date: {new Date(bounty.end_date).toLocaleDateString()}
                   </p>
                 </section>
 
                 <section>
                   <div className={`flex items-center gap-2 mb-4 ${textColor}`}>
-                    <MessageSquare className="w-5 h-5" />
-                    <h2 className="text-lg font-bold">Discussion</h2>
-                  </div>
-                  <div className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage src={user?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                        {user?.full_name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
                     <div className="flex-1">
-                      <input
-                        type="text"
-                        placeholder="Write a comment"
-                        className={`w-full ${bgColor} border ${borderColor} rounded-lg px-4 py-2 ${textColor} placeholder-[#C1A461]/40 focus:outline-none focus:border-[#C1A461]`}
+                      <CommentSection 
+                        bountyId={id!} 
+                        user={user} 
+                        theme={theme}
                       />
                     </div>
                   </div>
