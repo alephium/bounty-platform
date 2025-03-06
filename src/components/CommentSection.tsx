@@ -140,6 +140,10 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
           filter: `bounty_id=eq.${bountyId}`
         }, 
         async (payload) => {
+          if (!payload || !payload.new || !payload.new.id) {
+            console.error('Invalid payload received:', payload);
+            return;
+          }
           // When a new comment is added, fetch the complete comment with user data
           try {
             const { data, error } = await supabase
@@ -231,26 +235,49 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
       toast.error('You must be logged in to comment');
       return;
     }
-
+  
     const commentContent = commentText.trim();
     setCommentText(''); // Clear input immediately for better UX
-
+    
+    // Create an optimistic comment
+    const optimisticComment = {
+      id: `temp-${Date.now()}`,
+      bounty_id: bountyId,
+      user_id: user.id,
+      content: commentContent,
+      created_at: new Date().toISOString(),
+      user: {
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        username: user.username
+      }
+    };
+    
+    // Add it to the UI immediately
+    setComments(prev => [optimisticComment, ...prev]);
+  
     try {
       setSubmitting(true);
       
       // Create the comment
-      await CommentService.createComment(
+      const newComment = await CommentService.createComment(
         bountyId,
         user.id,
         commentContent
       );
       
-      // Note: We don't need to manually update the state here as
-      // the real-time subscription will handle it automatically
+      // Replace the optimistic comment with the real one
+      setComments(prev => 
+        prev.map(comment => 
+          comment.id === optimisticComment.id ? newComment : comment
+        )
+      );
       
     } catch (error) {
       console.error('Error posting comment:', error);
       toast.error('Failed to post comment');
+      // Remove the optimistic comment on error
+      setComments(prev => prev.filter(comment => comment.id !== optimisticComment.id));
       // Restore the comment text in case of error
       setCommentText(commentContent);
     } finally {

@@ -30,7 +30,7 @@ export function Bounties() {
   useEffect(() => {
     const fetchBounties = async () => {
       try {
-        setLoading(true)
+        setLoading(false)
         const { data, error } = await supabase
           .from('bounties')
           .select(`
