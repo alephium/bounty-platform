@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Loader2, Edit, Trash } from 'lucide-react';
+import { MessageSquare, Send, Loader2, Edit, Trash, Award } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
 
 // Types for the comment section
 interface Comment {
   id: string;
+  bounty_id: string;
   user_id: string;
   content: string;
   created_at: string;
@@ -16,10 +18,18 @@ interface Comment {
     avatar_url: string | null;
     username: string | null;
   };
+  // Added info for bounty
+  bounty?: {
+    sponsor_id: string;
+  };
+  sponsor?:{
+    user_id: string
+  }
 }
 
 interface CommentSectionProps {
   bountyId: string;
+  sponsorId: string; // Add this to know who the sponsor is
   user: any;
   theme: string;
 }
@@ -27,35 +37,54 @@ interface CommentSectionProps {
 // Comment service functions
 const CommentService = {
   getBountyComments: async (bountyId: string): Promise<Comment[]> => {
-    const { data, error } = await supabase
-      .from('bounty_comments')
-      .select(`
-        *,
-        user:users(full_name, avatar_url, username)
-      `)
-      .eq('bounty_id', bountyId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('bounty_comments')
+        .select(`
+          *,
+          user:users(full_name, avatar_url, username),
+          bounty:bounties!bounty_comments_bounty_id_fkey(
+            sponsor_id,
+            sponsor:sponsors(user_id)
+          )
+        `)
+        .eq('bounty_id', bountyId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching bounty comments:', error);
+      throw error;
+    }
   },
 
+  // Also update other methods similarly
   createComment: async (bountyId: string, userId: string, content: string): Promise<Comment> => {
-    const { data, error } = await supabase
-      .from('bounty_comments')
-      .insert({
-        bounty_id: bountyId,
-        user_id: userId,
-        content: content
-      })
-      .select(`
-        *,
-        user:users(full_name, avatar_url, username)
-      `)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('bounty_comments')
+        .insert({
+          bounty_id: bountyId,
+          user_id: userId,
+          content: content
+        })
+        .select(`
+          *,
+          user:users(full_name, avatar_url, username),
+          bounty:bounties!bounty_comments_bounty_id_fkey(
+            sponsor_id,
+            sponsor:sponsors(user_id)
+          )
+        `)
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      throw error;
+    }
   },
 
   updateComment: async (commentId: string, userId: string, content: string): Promise<Comment> => {
@@ -66,7 +95,8 @@ const CommentService = {
       .eq('user_id', userId) // Security: ensure user owns comment
       .select(`
         *,
-        user:users(full_name, avatar_url, username)
+        user:users(full_name, avatar_url, username),
+        bounty:bounties(sponsor_id)
       `)
       .single();
 
@@ -86,7 +116,7 @@ const CommentService = {
 };
 
 // Comment section component
-const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
+const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -102,6 +132,8 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white';
   const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200';
   const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600';
+  const sponsorBadgeBg = theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100';
+  const sponsorBadgeText = theme === 'dark' ? 'text-amber-400' : 'text-amber-700';
 
   // Fetch comments initially and set up real-time subscription
   useEffect(() => {
@@ -150,7 +182,8 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
               .from('bounty_comments')
               .select(`
                 *,
-                user:users(full_name, avatar_url, username)
+                user:users(full_name, avatar_url, username),
+                bounty:bounties(sponsor_id)
               `)
               .eq('id', payload.new.id)
               .single();
@@ -178,7 +211,8 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
               .from('bounty_comments')
               .select(`
                 *,
-                user:users(full_name, avatar_url, username)
+                user:users(full_name, avatar_url, username),
+                bounty:bounties(sponsor_id)
               `)
               .eq('id', payload.new.id)
               .single();
@@ -250,6 +284,9 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
         full_name: user.full_name,
         avatar_url: user.avatar_url,
         username: user.username
+      },
+      bounty: {
+        sponsor_id: sponsorId
       }
     };
     
@@ -384,6 +421,15 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Helper function to check if a comment is from the sponsor
+  const isFromSponsor = (comment: Comment) => {
+    console.log("Comment user_id:", comment.user_id);
+    console.log("Sponsor data:", comment.sponsor);
+    console.log("Bounty data:", comment.bounty);
+    console.log("is from sponsor", comment.user_id, comment.sponsor?.user_id);
+    return comment.user_id === comment.sponsor?.user_id;
+  };
+
   return (
     <section>
       <div className={`flex items-center gap-2 mb-4 ${textColor}`}>
@@ -452,6 +498,15 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
                     <span className={`font-medium ${textColor}`}>
                       {comment.user?.full_name || 'Anonymous'}
                     </span>
+                    
+                    {/* Sponsor badge - add this to indicate when a comment is from the sponsor */}
+                    {isFromSponsor(comment) && (
+                      <Badge className={`${sponsorBadgeBg} ${sponsorBadgeText} flex items-center gap-1`}>
+                        <Award className="h-3 w-3" />
+                        <span>Sponsor</span>
+                      </Badge>
+                    )}
+                    
                     <span className={`text-sm ${mutedTextColor}`}>
                       {formatDate(comment.created_at)}
                     </span>

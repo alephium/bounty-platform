@@ -293,11 +293,12 @@ export default function BountyDetails() {
                 <section>
                   <div className={`flex items-center gap-2 mb-4 ${textColor}`}>
                     <div className="flex-1">
-                      <CommentSection 
-                        bountyId={id!} 
-                        user={user} 
-                        theme={theme}
-                      />
+                    <CommentSection
+                      bountyId={bounty.id}
+                      sponsorId={bounty.sponsor_id}
+                      user={user}
+                      theme={theme}
+                    />
                     </div>
                   </div>
                 </section>

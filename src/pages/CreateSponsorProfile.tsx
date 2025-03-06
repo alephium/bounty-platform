@@ -33,41 +33,52 @@ export function CreateSponsorProfile() {
   // Check if user already has a sponsor profile
   useEffect(() => {
     const checkExistingSponsor = async () => {
+      // Don't proceed until we have a user
       if (!user?.id) {
-        setCheckingExistingSponsor(false)  // Make sure to set this to false if no user
-        return
+        console.log('No user ID yet, waiting...');
+        return; // Don't set loading to false yet
       }
-
+  
       try {
+        console.log('Checking for existing sponsor profile for user', user.id);
+        
         const { data, error } = await supabase
           .from('sponsors')
           .select('id')
           .eq('user_id', user.id)
-          .single()
-
+          .single();
+  
         if (error) {
           if (error.code !== 'PGRST116') { // no rows returned
-            throw error
+            console.error('Supabase error:', error);
+            throw error;
           }
         }
-
+  
+        console.log('Sponsor data check result:', data);
+        
         if (data) {
-          // User already has a sponsor profile, store the data
-          setExistingSponsor(data)
+          setExistingSponsor(data);
         }
       } catch (error) {
-        console.error('Error checking sponsor status:', error)
+        console.error('Error checking sponsor status:', error);
         toast({
           description: "Error checking sponsor status",
           variant: "destructive"
-        })
+        });
       } finally {
-        setCheckingExistingSponsor(false)
+        setCheckingExistingSponsor(false);
       }
+    };
+  
+    // Only run the check when we have a user
+    if (user?.id) {
+      checkExistingSponsor();
+    } else {
+      // If no user, don't keep showing loading
+      setCheckingExistingSponsor(false);
     }
-
-    checkExistingSponsor()
-  }, [user, navigate])
+  }, [user]);
 
   const handleLogoChange = (file: File | null) => {
     if (!file) return
