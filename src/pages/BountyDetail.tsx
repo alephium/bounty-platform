@@ -13,6 +13,7 @@ import { Bounty } from "@/types/supabase"
 import { toast } from "sonner"
 import { SubmissionDialog } from '../components/SubmissionDialog'
 import CommentSection from '../components/CommentSection'
+import LoadingPage from "./LoadingPage"
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -58,7 +59,7 @@ export default function BountyDetails() {
   const handleSubmitOpen = () => {
     if (!user) {
       toast.error("Please sign in to submit")
-      navigate('/auth')
+      navigate('/auth', { state: { returnPath: `/bounty/${id}` } })
       return
     }
     setIsSubmitDialogOpen(true)
@@ -121,11 +122,7 @@ export default function BountyDetails() {
   }
 
   if (loading) {
-    return (
-      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
-      </div>
-    )
+    return <LoadingPage />
   }
 
   if (!bounty) {
@@ -244,7 +241,7 @@ export default function BountyDetails() {
 
             <Tabs defaultValue="details" className="w-full">
               <TabsList className={`${bgColor} border-b ${borderColor} w-full justify-start rounded-none p-0 h-auto`}>
-                {["Details", "Submissions"].map((tab) => (
+                {["Details"].map((tab) => (
                   <TabsTrigger
                     key={tab}
                     value={tab.toLowerCase()}

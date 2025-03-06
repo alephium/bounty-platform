@@ -1,100 +1,158 @@
-import { supabase } from '../lib/supabase'
-import { BountyComment } from '../types/supabase'
+// src/services/comment.service.ts
+import { supabase } from "../lib/supabase";
+
+export interface Comment {
+  id: string;
+  bounty_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    full_name: string | null;
+    avatar_url: string | null;
+    username: string | null;
+  };
+}
 
 export class CommentService {
-  static async getBountyComments(bountyId: string) {
+  /**
+   * Gets all comments for a bounty
+   */
+  static async getBountyComments(bountyId: string): Promise<Comment[]> {
     try {
       const { data, error } = await supabase
         .from('bounty_comments')
         .select(`
           *,
-          user:users(id, full_name, avatar_url, username)
+          user:users(full_name, avatar_url, username)
         `)
         .eq('bounty_id', bountyId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
-      return data || []
+      if (error) throw error;
+      return data || [];
     } catch (error) {
-      console.error('Error fetching bounty comments:', error)
-      throw error
+      console.error('Error fetching bounty comments:', error);
+      throw error;
     }
   }
 
+  /**
+   * Creates a new comment
+   */
   static async createComment(
     bountyId: string, 
     userId: string, 
     content: string
-  ) {
+  ): Promise<Comment> {
     try {
+      // Validation
+      if (!bountyId || !userId || !content.trim()) {
+        throw new Error('Missing required fields');
+      }
+
       const { data, error } = await supabase
         .from('bounty_comments')
         .insert({
           bounty_id: bountyId,
           user_id: userId,
-          content: content
+          content: content.trim()
         })
-        .select()
-        .single()
+        .select(`
+          *,
+          user:users(full_name, avatar_url, username)
+        `)
+        .single();
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      if (!data) throw new Error('Failed to create comment');
+      
+      return data;
     } catch (error) {
-      console.error('Error creating comment:', error)
-      throw error
+      console.error('Error creating comment:', error);
+      throw error;
     }
   }
 
+  /**
+   * Updates an existing comment
+   */
   static async updateComment(
     commentId: string, 
     userId: string, 
     content: string
-  ) {
+  ): Promise<Comment> {
     try {
+      // Validation
+      if (!commentId || !userId || !content.trim()) {
+        throw new Error('Missing required fields');
+      }
+      
+      // First verify that the user owns this comment
+      const { data: existingComment, error: checkError } = await supabase
+        .from('bounty_comments')
+        .select('id')
+        .eq('id', commentId)
+        .eq('user_id', userId)
+        .single();
+        
+      if (checkError || !existingComment) {
+        throw new Error('You do not have permission to edit this comment');
+      }
+
+      // Update the comment
       const { data, error } = await supabase
         .from('bounty_comments')
-        .update({ content })
+        .update({ content: content.trim() })
         .eq('id', commentId)
-        .eq('user_id', userId) // Security check
-        .select()
-        .single()
+        .select(`
+          *,
+          user:users(full_name, avatar_url, username)
+        `)
+        .single();
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      if (!data) throw new Error('Failed to update comment');
+      
+      return data;
     } catch (error) {
-      console.error('Error updating comment:', error)
-      throw error
+      console.error('Error updating comment:', error);
+      throw error;
     }
   }
 
-  static async deleteComment(commentId: string, userId: string) {
+  /**
+   * Deletes a comment
+   */
+  static async deleteComment(commentId: string, userId: string): Promise<void> {
     try {
+      // Validation
+      if (!commentId || !userId) {
+        throw new Error('Missing required fields');
+      }
+      
+      // First verify that the user owns this comment
+      const { data: existingComment, error: checkError } = await supabase
+        .from('bounty_comments')
+        .select('id')
+        .eq('id', commentId)
+        .eq('user_id', userId)
+        .single();
+        
+      if (checkError || !existingComment) {
+        throw new Error('You do not have permission to delete this comment');
+      }
+
+      // Delete the comment
       const { error } = await supabase
         .from('bounty_comments')
         .delete()
-        .eq('id', commentId)
-        .eq('user_id', userId) // Security check
+        .eq('id', commentId);
 
-      if (error) throw error
-      return true
+      if (error) throw error;
     } catch (error) {
-      console.error('Error deleting comment:', error)
-      throw error
-    }
-  }
-
-  static async getCommentCount(bountyId: string) {
-    try {
-      const { count, error } = await supabase
-        .from('bounty_comments')
-        .select('id', { count: 'exact' })
-        .eq('bounty_id', bountyId)
-
-      if (error) throw error
-      return count || 0
-    } catch (error) {
-      console.error('Error counting comments:', error)
-      throw error
+      console.error('Error deleting comment:', error);
+      throw error;
     }
   }
 }

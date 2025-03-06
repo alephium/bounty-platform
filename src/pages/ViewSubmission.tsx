@@ -22,6 +22,7 @@ import { useToast } from "@/components/ui/use-toast"
 import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
 import { useTheme } from '@/contexts/ThemeContext'
 import { FeedbackDialog } from "../components/FeedbackDialog"
+import LoadingPage from './LoadingPage'
 
 type RealtimeSubscription = ReturnType<ReturnType<typeof supabase.channel>['subscribe']>
 
@@ -296,13 +297,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
   })
 
   if (loading) {
-    return (
-      <Card className="bg-background border-border">
-        <CardContent className="p-8 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-        </CardContent>
-      </Card>
-    )
+    return <LoadingPage />
   }
 
 return (

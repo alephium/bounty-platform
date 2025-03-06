@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { ViewSubmissions } from '@/pages/ViewSubmission'
 import { toast } from 'sonner'
 import type { Bounty, Sponsor } from '@/types/supabase'
+import LoadingPage from './LoadingPage'
 
 export default function SponsorDashboard() {
   const navigate = useNavigate()
@@ -77,11 +78,7 @@ export default function SponsorDashboard() {
   }
 
   if (loading) {
-    return (
-      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
-      </div>
-    )
+    return <LoadingPage />
   }
 
   if (!sponsor) {

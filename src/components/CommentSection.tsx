@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { CommentService } from '../services/comment.service';
+import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Loader2, Edit, Trash } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -25,6 +24,67 @@ interface CommentSectionProps {
   theme: string;
 }
 
+// Comment service functions
+const CommentService = {
+  getBountyComments: async (bountyId: string): Promise<Comment[]> => {
+    const { data, error } = await supabase
+      .from('bounty_comments')
+      .select(`
+        *,
+        user:users(full_name, avatar_url, username)
+      `)
+      .eq('bounty_id', bountyId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  createComment: async (bountyId: string, userId: string, content: string): Promise<Comment> => {
+    const { data, error } = await supabase
+      .from('bounty_comments')
+      .insert({
+        bounty_id: bountyId,
+        user_id: userId,
+        content: content
+      })
+      .select(`
+        *,
+        user:users(full_name, avatar_url, username)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  updateComment: async (commentId: string, userId: string, content: string): Promise<Comment> => {
+    const { data, error } = await supabase
+      .from('bounty_comments')
+      .update({ content })
+      .eq('id', commentId)
+      .eq('user_id', userId) // Security: ensure user owns comment
+      .select(`
+        *,
+        user:users(full_name, avatar_url, username)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  deleteComment: async (commentId: string, userId: string): Promise<void> => {
+    const { error } = await supabase
+      .from('bounty_comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', userId); // Security: ensure user owns comment
+
+    if (error) throw error;
+  }
+};
+
 // Comment section component
 const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -33,6 +93,9 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
   const [commentText, setCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState('');
+  
+  // Use a ref to store the subscription so we can clean it up properly
+  const subscriptionRef = useRef<any>(null);
 
   // Theme-specific styles
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900';
@@ -40,45 +103,128 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
   const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200';
   const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600';
 
-  // Fetch comments and set up real-time subscription
+  // Fetch comments initially and set up real-time subscription
   useEffect(() => {
+    let isMounted = true;
+    
+    const fetchComments = async () => {
+      try {
+        setLoading(true);
+        const data = await CommentService.getBountyComments(bountyId);
+        if (isMounted) {
+          setComments(data);
+        }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        if (isMounted) {
+          toast.error('Failed to load comments');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Initial fetch
     fetchComments();
     
     // Set up real-time subscription
-    const subscription = supabase
+    subscriptionRef.current = supabase
       .channel(`bounty-comments-${bountyId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'bounty_comments',
-        filter: `bounty_id=eq.${bountyId}`
-      }, () => {
-        // Refresh comments when there's any change
-        fetchComments();
-      })
-      .subscribe();
+      .on('postgres_changes', 
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'bounty_comments',
+          filter: `bounty_id=eq.${bountyId}`
+        }, 
+        async (payload) => {
+          // When a new comment is added, fetch the complete comment with user data
+          try {
+            const { data, error } = await supabase
+              .from('bounty_comments')
+              .select(`
+                *,
+                user:users(full_name, avatar_url, username)
+              `)
+              .eq('id', payload.new.id)
+              .single();
+              
+            if (error) throw error;
+            if (data && isMounted) {
+              // Add the new comment to the beginning of the array (newest first)
+              setComments(prev => [data, ...prev]);
+            }
+          } catch (err) {
+            console.error('Error processing new comment:', err);
+          }
+        }
+      )
+      .on('postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'bounty_comments',
+          filter: `bounty_id=eq.${bountyId}`
+        },
+        async (payload) => {
+          try {
+            const { data, error } = await supabase
+              .from('bounty_comments')
+              .select(`
+                *,
+                user:users(full_name, avatar_url, username)
+              `)
+              .eq('id', payload.new.id)
+              .single();
+              
+            if (error) throw error;
+            if (data && isMounted) {
+              // Update the modified comment in the state
+              setComments(prev => 
+                prev.map(comment => 
+                  comment.id === data.id ? data : comment
+                )
+              );
+            }
+          } catch (err) {
+            console.error('Error processing updated comment:', err);
+          }
+        }
+      )
+      .on('postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'bounty_comments',
+          filter: `bounty_id=eq.${bountyId}`
+        },
+        (payload) => {
+          if (isMounted) {
+            // Remove the deleted comment from state
+            setComments(prev => 
+              prev.filter(comment => comment.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status !== 'SUBSCRIBED') {
+          console.error('Failed to subscribe to comments:', status);
+        }
+      });
     
     // Clean up subscription when component unmounts
     return () => {
-      subscription.unsubscribe();
+      isMounted = false;
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+      }
     };
   }, [bountyId]);
 
-  // Function to fetch comments
-  const fetchComments = async () => {
-    try {
-      setLoading(true);
-      const data = await CommentService.getBountyComments(bountyId);
-      setComments(data);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      toast.error('Failed to load comments');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to post a new comment
+  // Function to post a new comment with immediate UI update
   const postComment = async () => {
     if (!commentText.trim()) return;
     if (!user) {
@@ -86,30 +232,42 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
       return;
     }
 
+    const commentContent = commentText.trim();
+    setCommentText(''); // Clear input immediately for better UX
+
     try {
       setSubmitting(true);
+      
+      // Create the comment
       await CommentService.createComment(
         bountyId,
         user.id,
-        commentText.trim()
+        commentContent
       );
-
-      // Clear input after submission
-      setCommentText('');
+      
+      // Note: We don't need to manually update the state here as
+      // the real-time subscription will handle it automatically
+      
     } catch (error) {
       console.error('Error posting comment:', error);
       toast.error('Failed to post comment');
+      // Restore the comment text in case of error
+      setCommentText(commentContent);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Function to delete a comment
+  // Function to delete a comment with optimistic UI update
   const deleteComment = async (commentId: string) => {
     if (!user?.id) {
       toast.error('You must be logged in to delete comments');
       return;
     }
+    
+    // Optimistic UI update - remove comment immediately
+    const commentsCopy = [...comments];
+    setComments(comments.filter(comment => comment.id !== commentId));
     
     try {
       await CommentService.deleteComment(commentId, user.id);
@@ -117,6 +275,8 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast.error('Failed to delete comment');
+      // Restore comments if the deletion fails
+      setComments(commentsCopy);
     }
   };
 
@@ -126,25 +286,38 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
     setEditingCommentText(comment.content);
   };
 
-  // Function to save edited comment
+  // Function to save edited comment with optimistic UI update
   const saveEditedComment = async () => {
     if (!editingCommentId || !user?.id || !editingCommentText.trim()) return;
+    
+    const commentId = editingCommentId;
+    const newContent = editingCommentText.trim();
+    
+    // Optimistic UI update
+    const originalComments = [...comments];
+    setComments(comments.map(comment => 
+      comment.id === commentId 
+        ? { ...comment, content: newContent } 
+        : comment
+    ));
+    
+    // Reset editing state
+    setEditingCommentId(null);
+    setEditingCommentText('');
     
     try {
       setSubmitting(true);
       await CommentService.updateComment(
-        editingCommentId,
+        commentId,
         user.id,
-        editingCommentText.trim()
+        newContent
       );
-      
-      // Reset editing state
-      setEditingCommentId(null);
-      setEditingCommentText('');
       toast.success('Comment updated');
     } catch (error) {
       console.error('Error updating comment:', error);
       toast.error('Failed to update comment');
+      // Restore original comments if update fails
+      setComments(originalComments);
     } finally {
       setSubmitting(false);
     }
@@ -197,7 +370,7 @@ const CommentSection = ({ bountyId, user, theme }: CommentSectionProps) => {
           <Avatar>
             <AvatarImage src={user?.avatar_url || undefined} />
             <AvatarFallback className={`bg-[#C1A461]/20 ${textColor}`}>
-              {user?.full_name?.charAt(0) || 'U'}
+              {getInitials(user?.full_name ?? null)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 flex gap-2">
