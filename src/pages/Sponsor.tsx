@@ -1,26 +1,32 @@
-import { CreateSponsorProfile } from "./CreateSponsorProfile"
-import { PostListing } from "./PostListing"
-import { ViewSubmissions } from "./ViewSubmission"
+import { CreateSponsorProfile } from "../pages/CreateSponsorProfile"
 import { Zap, Briefcase, Check } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion"
 import { Card, CardContent } from "../components/ui/card"
+import { useTheme } from "@/contexts/ThemeContext"
 
 export default function OnboardingSteps() {
+  const { theme } = useTheme()
+  
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  
   return (
-    <div className="min-h-screen bg-[#1B2228] p-8">
+    <div className={`min-h-screen ${bgColor} p-8`}>
       <div className="max-w-4xl mx-auto space-y-16">
         <section className="text-center space-y-12">
-          <h1 className="text-4xl font-bold text-[#C1A461]">Start by posting your first Bounty or Project</h1>
+          <h1 className={`text-4xl font-bold ${textColor}`}>Start by posting your first Bounty or Project</h1>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-[#1B2228] border-[#C1A461]/20 hover:border-[#C1A461]/40 transition-colors">
+            <Card className={`${bgColor} ${borderColor} hover:border-[#C1A461]/40 transition-colors`}>
               <CardContent className="p-6 space-y-6">
                 <div className="w-12 h-12 rounded-full bg-[#C1A461]/10 flex items-center justify-center">
                   <Zap className="w-6 h-6 text-[#C1A461]" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-[#C1A461]">Bounty</h2>
-                  <p className="text-[#C1A461]/80">
+                  <h2 className={`text-xl font-bold ${textColor}`}>Bounty</h2>
+                  <p className={mutedTextColor}>
                     Bounties are listings where everyone completes a given scope of work, and competes for the prize
                     pool
                   </p>
@@ -31,8 +37,8 @@ export default function OnboardingSteps() {
                     "Get multiple options to choose from",
                     "Examples: Twitter Threads, Deep-Dives, Memes, Product Feedback, and more",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-[#C1A461]/80">
-                      <Check className="w-5 h-5 text-[#C1A461] flex-shrink-0 mt-0.5" />
+                    <li key={item} className={`flex items-start gap-2 ${mutedTextColor}`}>
+                      <Check className={`w-5 h-5 ${textColor} flex-shrink-0 mt-0.5`} />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -40,14 +46,14 @@ export default function OnboardingSteps() {
               </CardContent>
             </Card>
 
-            <Card className="bg-[#1B2228] border-[#C1A461]/20 hover:border-[#C1A461]/40 transition-colors">
+            <Card className={`${bgColor} ${borderColor} hover:border-[#C1A461]/40 transition-colors`}>
               <CardContent className="p-6 space-y-6">
                 <div className="w-12 h-12 rounded-full bg-[#C1A461]/10 flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-[#C1A461]" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-[#C1A461]">Project</h2>
-                  <p className="text-[#C1A461]/80">
+                  <h2 className={`text-xl font-bold ${textColor}`}>Project</h2>
+                  <p className={mutedTextColor}>
                     Projects are freelance gigs — people apply with their proposals but don't begin working until you
                     pick them
                   </p>
@@ -58,8 +64,8 @@ export default function OnboardingSteps() {
                     "Single output that is specific to your exact needs",
                     "Examples: Full Stack Development, Hype Video Production, Hiring a Community Manager, and more",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-[#C1A461]/80">
-                      <Check className="w-5 h-5 text-[#C1A461] flex-shrink-0 mt-0.5" />
+                    <li key={item} className={`flex items-start gap-2 ${mutedTextColor}`}>
+                      <Check className={`w-5 h-5 ${textColor} flex-shrink-0 mt-0.5`} />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -71,30 +77,14 @@ export default function OnboardingSteps() {
 
         <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
           <div className="sticky top-8 space-y-2">
-            <h2 className="text-lg font-bold text-[#C1A461]">STEP 1</h2>
-            <p className="text-[#C1A461]/60">Create a profile</p>
+            <h2 className={`text-lg font-bold ${textColor}`}>STEP 1</h2>
+            <p className={mutedTextColor}>Create a profile</p>
           </div>
           <CreateSponsorProfile />
         </div>
 
-        <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
-          <div className="sticky top-8 space-y-2">
-            <h2 className="text-lg font-bold text-[#C1A461]">STEP 2</h2>
-            <p className="text-[#C1A461]/60">Post your listing</p>
-          </div>
-          <PostListing />
-        </div>
-
-        <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
-          <div className="sticky top-8 space-y-2">
-            <h2 className="text-lg font-bold text-[#C1A461]">STEP 3</h2>
-            <p className="text-[#C1A461]/60">Get submissions</p>
-          </div>
-          <ViewSubmissions />
-        </div>
-
         <section className="space-y-6">
-          <h2 className="text-3xl font-bold text-center text-[#C1A461]">FAQs</h2>
+          <h2 className={`text-3xl font-bold text-center ${textColor}`}>FAQs</h2>
           <Accordion type="single" collapsible className="w-full">
             {[
               {
@@ -128,11 +118,11 @@ export default function OnboardingSteps() {
                   "Our support team is available to help. You can reach out through our support channels or contact yuanying.li@alephium.org.",
               },
             ].map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-[#C1A461]/20">
-                <AccordionTrigger className="text-[#C1A461] hover:text-[#C1A461] hover:no-underline">
+              <AccordionItem key={index} value={`item-${index}`} className={borderColor}>
+                <AccordionTrigger className={`${textColor} hover:${textColor} hover:no-underline`}>
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-[#C1A461]/80">{faq.answer}</AccordionContent>
+                <AccordionContent className={mutedTextColor}>{faq.answer}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
@@ -141,4 +131,3 @@ export default function OnboardingSteps() {
     </div>
   )
 }
-

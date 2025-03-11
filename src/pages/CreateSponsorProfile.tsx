@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
-import { ImagePlus, X, ArrowRight } from "lucide-react"
 import { useUser } from "@/contexts/UserContext"
+import { ImagePlus, X } from "lucide-react"
+import { useTheme } from "@/contexts/ThemeContext"
 
 interface FormData {
   name: string
@@ -19,9 +20,8 @@ interface FormData {
 export function CreateSponsorProfile() {
   const navigate = useNavigate()
   const { user } = useUser()
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
-  const [checkingExistingSponsor, setCheckingExistingSponsor] = useState(true)
-  const [existingSponsor, setExistingSponsor] = useState<{ id: string } | null>(null)
   const [formData, setFormData] = useState<FormData>({
     name: "",
     website_url: "",
@@ -30,72 +30,20 @@ export function CreateSponsorProfile() {
   })
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  // Check if user already has a sponsor profile
-  useEffect(() => {
-    const checkExistingSponsor = async () => {
-      // Don't proceed until we have a user
-      if (!user?.id) {
-        console.log('No user ID yet, waiting...');
-        return; // Don't set loading to false yet
-      }
-  
-      try {
-        console.log('Checking for existing sponsor profile for user', user.id);
-        
-        const { data, error } = await supabase
-          .from('sponsors')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-  
-        if (error) {
-          if (error.code !== 'PGRST116') { // no rows returned
-            console.error('Supabase error:', error);
-            throw error;
-          }
-        }
-  
-        console.log('Sponsor data check result:', data);
-        
-        if (data) {
-          setExistingSponsor(data);
-        }
-      } catch (error) {
-        console.error('Error checking sponsor status:', error);
-        toast({
-          description: "Error checking sponsor status",
-          variant: "destructive"
-        });
-      } finally {
-        setCheckingExistingSponsor(false);
-      }
-    };
-  
-    // Only run the check when we have a user
-    if (user?.id) {
-      checkExistingSponsor();
-    } else {
-      // If no user, don't keep showing loading
-      setCheckingExistingSponsor(false);
-    }
-  }, [user]);
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   const handleLogoChange = (file: File | null) => {
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        description: "File size should be less than 5MB",
-        variant: "destructive"
-      })
+      toast.error("File size should be less than 5MB")
       return
     }
 
     if (!file.type.startsWith('image/')) {
-      toast({
-        description: "Please upload an image file",
-        variant: "destructive"
-      })
+      toast.error("Please upload an image file")
       return
     }
 
@@ -129,22 +77,16 @@ export function CreateSponsorProfile() {
   }
 
   const handleSubmit = async () => {
-    if (!user?.id) {
-      toast({
-        description: "You must be logged in to create a sponsor profile",
-        variant: "destructive"
-      })
-      return
-    }
-
     try {
+      if (!user?.id) {
+        toast.error("You must be logged in")
+        return
+      }
+
       setLoading(true)
 
       if (!formData.name.trim()) {
-        toast({
-          description: "Company name is required",
-          variant: "destructive"
-        })
+        toast.error("Organization name is required")
         return
       }
 
@@ -161,70 +103,34 @@ export function CreateSponsorProfile() {
           website_url: formData.website_url || null,
           twitter_handle: formData.twitter_handle || null,
           logo_url,
+          is_verified: false,
           total_bounties_count: 0,
           total_projects_count: 0,
-          total_reward_amount: 0,
-          is_verified: false
+          total_reward_amount: 0
         }])
         .select()
         .single()
 
       if (error) throw error
 
-      toast({ description: "Sponsor profile created successfully" })
-      navigate('/sponsor/dashboard')
+      toast.success("Sponsor profile created successfully!")
+      navigate(`/sponsor/dashboard`)
     } catch (error) {
       console.error('Error creating sponsor:', error)
-      toast({
-        description: "Failed to create sponsor profile",
-        variant: "destructive"
-      })
+      toast.error("Failed to create sponsor profile")
     } finally {
       setLoading(false)
     }
   }
 
-  if (checkingExistingSponsor) {
-    return (
-      <Card className="bg-[#1B2228] border-[#C1A461]/20">
-        <CardContent className="p-6 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461] border-t-transparent" />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // If user already has a sponsor profile, show the go to dashboard button
-  if (existingSponsor) {
-    return (
-      <Card className="bg-[#1B2228] border-[#C1A461]/20">
-        <CardHeader>
-          <CardTitle className="text-[#C1A461]">Sponsor Profile Exists</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-[#C1A461]">
-            You already have a sponsor profile. You can go to your sponsor dashboard to manage your listings.
-          </p>
-          <Button 
-            className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center justify-center"
-            onClick={() => navigate('/sponsor/dashboard')}
-          >
-            Go to Sponsor Dashboard
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
-    <Card className="bg-[#1B2228] border-[#C1A461]/20">
+    <Card className={`${bgColor} ${borderColor}`}>
       <CardHeader>
-        <CardTitle className="text-[#C1A461]">Create Sponsor Profile</CardTitle>
+        <CardTitle className={textColor}>Create Sponsor Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label className="text-[#C1A461]">Logo</Label>
+          <Label className={textColor}>Logo</Label>
           <div className="relative h-48 border-2 border-dashed rounded-lg border-[#C1A461]/20">
             <input
               type="file"
@@ -261,27 +167,29 @@ export function CreateSponsorProfile() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-[#C1A461]">Company Name *</Label>
+            <Label className={textColor}>Organization Name *</Label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
+              className={`${bgColor} ${borderColor} ${textColor}`}
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[#C1A461]">Website URL</Label>
+            <Label className={textColor}>Website URL</Label>
             <Input
               value={formData.website_url}
               onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
-              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
+              className={`${bgColor} ${borderColor} ${textColor}`}
+              placeholder="https://example.com"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[#C1A461]">Twitter Handle</Label>
+            <Label className={textColor}>Twitter Handle</Label>
             <Input
               value={formData.twitter_handle}
               onChange={(e) => setFormData(prev => ({ ...prev, twitter_handle: e.target.value }))}
-              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
+              className={`${bgColor} ${borderColor} ${textColor}`}
+              placeholder="@username"
             />
           </div>
         </div>
@@ -291,7 +199,7 @@ export function CreateSponsorProfile() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? "Creating..." : "Create Profile"}
+          {loading ? "Creating..." : "Create Sponsor Profile"}
         </Button>
       </CardContent>
     </Card>

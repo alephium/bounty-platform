@@ -10,6 +10,8 @@ import { AvatarDropdown } from './ui/AvatarDropdown'
 import { SessionProvider } from "../contexts/SessionContext";
 import { ThemeToggle } from './ThemeToggle'
 import { useRewards } from '../hooks/useRewards'
+import { supabase } from '../lib/supabase'
+import { Sponsor } from '../types/supabase'
 
 const Layout = () => {
   const { user } = useUser()
@@ -19,29 +21,61 @@ const Layout = () => {
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { metrics, loading } = useRewards()
+  const [isSponsor, setIsSponsor] = useState(false)
+  const [checkingSponsor, setCheckingSponsor] = useState(false)
 
-  const isAlephiumTeam = user?.email?.endsWith('@alephium.org')
-
-  // useEffect(() => {
-  //   if (!user && !location.pathname.includes('/auth')) {
-  //     const timer = setTimeout(() => {
-  //       setShowAuthPrompt(true)
-  //     }, 15000)
-  //     return () => clearTimeout(timer)
-  //   }
-  // }, [user, location.pathname])
+  // Check if the current user is a sponsor
+  useEffect(() => {
+    const checkSponsorStatus = async () => {
+      if (!user?.id) return
+      
+      try {
+        setCheckingSponsor(true)
+        const { data, error } = await supabase
+          .from('sponsors')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+          
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking sponsor status:', error)
+        }
+        
+        setIsSponsor(!!data)
+      } catch (error) {
+        console.error('Error checking sponsor status:', error)
+      } finally {
+        setCheckingSponsor(false)
+      }
+    }
+    
+    checkSponsorStatus()
+  }, [user])
 
   useEffect(() => {
     if (user && location.pathname.includes('/auth')) {
       navigate('/')
     }
   }, [user, location.pathname, navigate])
-
+  
   useEffect(() => {
     if (showAuthPrompt) {
       setIsModalOpen(true)
     }
   }, [showAuthPrompt])
+
+  const handleSponsorClick = () => {
+    if (!user) {
+      navigate('/auth')
+      return
+    }
+    
+    if (isSponsor) {
+      navigate('/sponsor/dashboard')
+    } else {
+      navigate('/sponsor')
+    }
+  }
 
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
@@ -88,24 +122,14 @@ const Layout = () => {
             
             {user ? (
               <div className="flex items-center gap-4">
-                {isAlephiumTeam && (
-                  <Button 
-                    className={theme === 'dark' ? 
-                      "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                      "bg-amber-500 hover:bg-amber-600 text-white"}
-                    onClick={() => navigate('/sponsor')}
-                  >
-                    Sponsor
-                  </Button>
-                )}
-                {/* <Button 
+                <Button 
                   className={theme === 'dark' ? 
                     "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
                     "bg-amber-500 hover:bg-amber-600 text-white"}
-                  onClick={() => navigate('/sponsor')}
+                  onClick={handleSponsorClick}
                 >
-                  Become a Sponsor
-                </Button> */}
+                  {isSponsor ? 'Sponsor Dashboard' : 'Become a Sponsor'}
+                </Button>
                 {renderAvatar()}
               </div>
             ) : (
@@ -117,7 +141,7 @@ const Layout = () => {
                     "border-amber-500 text-amber-500 hover:bg-amber-50"}
                   onClick={() => navigate('/sponsor')}
                 >
-                  Sponsor
+                  Become a Sponsor
                 </Button>
                 <Button 
                   className={theme === 'dark' ? 

@@ -17,46 +17,10 @@ import EditBounty from './pages/EditBounty'
 import BountyDetail from './pages/BountyDetail'
 import Terms from './pages/Terms'
 import Privacy from './pages/Privacy'
+import { CreateSponsorProfile } from './pages/CreateSponsorProfile'
 import { PostListing } from './pages/PostListing'
-import OnboardingSteps from './pages/Sponsor'
 import SponsorDashboard from './pages/SponsorDashboard'
-import { useUser } from './contexts/UserContext'
-import { supabase } from './lib/supabase'
-
-
-function SponsorRoute() {
-  const { user } = useUser()
-  const [loading, setLoading] = useState(true)
-  const [hasSponsorProfile, setHasSponsorProfile] = useState(false)
-
-  useEffect(() => {
-    const checkSponsorProfile = async () => {
-      if (!user?.id) return
-
-      try {
-        const { data } = await supabase
-          .from('sponsors')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-
-        setHasSponsorProfile(!!data)
-      } catch (error) {
-        console.error('Error checking sponsor profile:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkSponsorProfile()
-  }, [user])
-
-  if (loading) {
-    return <LoadingPage />
-  }
-
-  return hasSponsorProfile ? <Navigate to="/sponsor/dashboard" replace /> : <OnboardingSteps />
-}
+import OnboardingSteps from './pages/Sponsor'
 
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
@@ -86,15 +50,14 @@ export default function App() {
               <Route path="/sponsor" element={<OnboardingSteps />} />
               <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               <Route path="/bounties" element={<Bounties />} />
-              {/* <Route path="/bounties/publisher" element={<BountyPublischer />} /> */}
-              <Route path="/postListing" element={<PostListing />} />
+              <Route path="/PostListing" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />
-              <Route path="/editbounty/:id" element={<PostListing />} />
-              <Route path="/editproject/:id" element={<PostListing />} />
+              <Route path="/editbounty" element={<EditBounty />} />
+              <Route path="/editbounty/:id" element={<EditBounty />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
