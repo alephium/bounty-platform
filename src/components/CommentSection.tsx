@@ -18,36 +18,23 @@ interface Comment {
     avatar_url: string | null;
     username: string | null;
   };
-  // Added info for bounty
-  bounty?: {
-    sponsor_id: string;
-  };
-  sponsor?:{
-    user_id: string
-  }
 }
 
 interface CommentSectionProps {
   bountyId: string;
-  sponsorId: string; // Add this to know who the sponsor is
+  sponsorId: string; // Sponsor user ID, not sponsor record ID
   user: any;
   theme: string;
 }
 
-// Comment service functions
+// Comment service functions - simplified queries to avoid 406 errors
 const CommentService = {
   getBountyComments: async (bountyId: string): Promise<Comment[]> => {
     try {
+      // Simpler query with no nested joins
       const { data, error } = await supabase
         .from('bounty_comments')
-        .select(`
-          *,
-          user:users(full_name, avatar_url, username),
-          bounty:bounties!bounty_comments_bounty_id_fkey(
-            sponsor_id,
-            sponsor:sponsors(user_id)
-          )
-        `)
+        .select('*, user:users(full_name, avatar_url, username)')
         .eq('bounty_id', bountyId)
         .order('created_at', { ascending: false });
 
@@ -59,24 +46,27 @@ const CommentService = {
     }
   },
 
-  // Also update other methods similarly
   createComment: async (bountyId: string, userId: string, content: string): Promise<Comment> => {
     try {
-      const { data, error } = await supabase
+      // First insert the comment
+      const { error: insertError } = await supabase
         .from('bounty_comments')
         .insert({
           bounty_id: bountyId,
           user_id: userId,
           content: content
-        })
-        .select(`
-          *,
-          user:users(full_name, avatar_url, username),
-          bounty:bounties!bounty_comments_bounty_id_fkey(
-            sponsor_id,
-            sponsor:sponsors(user_id)
-          )
-        `)
+        });
+
+      if (insertError) throw insertError;
+      
+      // Then fetch the comment with user data
+      const { data, error } = await supabase
+        .from('bounty_comments')
+        .select('*, user:users(full_name, avatar_url, username)')
+        .eq('bounty_id', bountyId)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
       if (error) throw error;
@@ -88,20 +78,29 @@ const CommentService = {
   },
 
   updateComment: async (commentId: string, userId: string, content: string): Promise<Comment> => {
-    const { data, error } = await supabase
-      .from('bounty_comments')
-      .update({ content })
-      .eq('id', commentId)
-      .eq('user_id', userId) // Security: ensure user owns comment
-      .select(`
-        *,
-        user:users(full_name, avatar_url, username),
-        bounty:bounties(sponsor_id)
-      `)
-      .single();
+    try {
+      // First update the comment
+      const { error: updateError } = await supabase
+        .from('bounty_comments')
+        .update({ content })
+        .eq('id', commentId)
+        .eq('user_id', userId);
 
-    if (error) throw error;
-    return data;
+      if (updateError) throw updateError;
+      
+      // Then fetch the updated comment
+      const { data, error } = await supabase
+        .from('bounty_comments')
+        .select('*, user:users(full_name, avatar_url, username)')
+        .eq('id', commentId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      throw error;
+    }
   },
 
   deleteComment: async (commentId: string, userId: string): Promise<void> => {
@@ -135,7 +134,7 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
   const sponsorBadgeBg = theme === 'dark' ? 'bg-amber-500/20' : 'bg-amber-100';
   const sponsorBadgeText = theme === 'dark' ? 'text-amber-400' : 'text-amber-700';
 
-  // Fetch comments initially and set up real-time subscription
+  // Fetch comments initially
   useEffect(() => {
     let isMounted = true;
     
@@ -161,103 +160,97 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
     // Initial fetch
     fetchComments();
     
-    // Set up real-time subscription
-    subscriptionRef.current = supabase
-      .channel(`bounty-comments-${bountyId}`)
-      .on('postgres_changes', 
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'bounty_comments',
-          filter: `bounty_id=eq.${bountyId}`
-        }, 
-        async (payload) => {
-          if (!payload || !payload.new || !payload.new.id) {
-            console.error('Invalid payload received:', payload);
-            return;
-          }
-          // When a new comment is added, fetch the complete comment with user data
-          try {
-            const { data, error } = await supabase
-              .from('bounty_comments')
-              .select(`
-                *,
-                user:users(full_name, avatar_url, username),
-                bounty:bounties(sponsor_id)
-              `)
-              .eq('id', payload.new.id)
-              .single();
-              
-            if (error) throw error;
-            if (data && isMounted) {
-              // Add the new comment to the beginning of the array (newest first)
-              setComments(prev => [data, ...prev]);
-            }
-          } catch (err) {
-            console.error('Error processing new comment:', err);
-          }
-        }
-      )
-      .on('postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'bounty_comments',
-          filter: `bounty_id=eq.${bountyId}`
-        },
-        async (payload) => {
-          try {
-            const { data, error } = await supabase
-              .from('bounty_comments')
-              .select(`
-                *,
-                user:users(full_name, avatar_url, username),
-                bounty:bounties(sponsor_id)
-              `)
-              .eq('id', payload.new.id)
-              .single();
-              
-            if (error) throw error;
-            if (data && isMounted) {
-              // Update the modified comment in the state
-              setComments(prev => 
-                prev.map(comment => 
-                  comment.id === data.id ? data : comment
-                )
-              );
-            }
-          } catch (err) {
-            console.error('Error processing updated comment:', err);
-          }
-        }
-      )
-      .on('postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'bounty_comments',
-          filter: `bounty_id=eq.${bountyId}`
-        },
-        (payload) => {
+    return () => {
+      isMounted = false;
+    };
+  }, [bountyId]);
+  
+  // Set up real-time subscription separately to avoid overwhelming the component
+  useEffect(() => {
+    let isMounted = true;
+    
+    // This helps ensure we have valid authentication before subscribing
+    const authListener = supabase.auth.onAuthStateChange(async (_, session) => {
+      if (session?.user) {
+        // Small delay to ensure auth is fully processed
+        setTimeout(async () => {
+          // Only setup subscription if component is still mounted
           if (isMounted) {
-            // Remove the deleted comment from state
-            setComments(prev => 
-              prev.filter(comment => comment.id !== payload.old.id)
-            );
+            // Refresh auth connection with the database
+            await supabase
+              .from('users')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            // Now setup the subscription
+            setupSubscription();
+          }
+        }, 100);
+      }
+    });
+    
+    // Set up real-time subscription with simplified approach
+    const setupSubscription = () => {
+      try {
+        // Clean up existing subscription if any
+        if (subscriptionRef.current) {
+          try {
+            supabase.removeChannel(subscriptionRef.current);
+          } catch (e) {
+            console.log('Error removing existing channel:', e);
           }
         }
-      )
-      .subscribe((status) => {
-        if (status !== 'SUBSCRIBED') {
-          console.error('Failed to subscribe to comments:', status);
-        }
-      });
+        
+        subscriptionRef.current = supabase
+          .channel(`bounty-comments-${bountyId}`)
+          .on('postgres_changes', 
+            {
+              event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+              schema: 'public',
+              table: 'bounty_comments',
+              filter: `bounty_id=eq.${bountyId}`
+            },
+            async (payload) => {
+              // Handle all events with a single refresh of the comments
+              if (isMounted) {
+                try {
+                  const data = await CommentService.getBountyComments(bountyId);
+                  setComments(data);
+                } catch (err) {
+                  console.error('Error refreshing comments:', err);
+                }
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('Subscription status:', status);
+            if (status !== 'SUBSCRIBED') {
+              console.error('Failed to subscribe to comments:', status);
+              // Don't throw error, just log it
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up subscription:', error);
+      }
+    };
+    
+    // Initial subscription setup
+    setupSubscription();
     
     // Clean up subscription when component unmounts
     return () => {
       isMounted = false;
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
+      try {
+        // Unsubscribe from auth changes
+        authListener.data.subscription.unsubscribe();
+        
+        // Remove the real-time channel
+        if (subscriptionRef.current) {
+          supabase.removeChannel(subscriptionRef.current);
+        }
+      } catch (error) {
+        console.error('Error cleaning up:', error);
       }
     };
   }, [bountyId]);
@@ -284,9 +277,6 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
         full_name: user.full_name,
         avatar_url: user.avatar_url,
         username: user.username
-      },
-      bounty: {
-        sponsor_id: sponsorId
       }
     };
     
@@ -421,13 +411,10 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
     return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // Helper function to check if a comment is from the sponsor
+  // Helper function to check if a comment is from the sponsor - simplified
   const isFromSponsor = (comment: Comment) => {
-    console.log("Comment user_id:", comment.user_id);
-    console.log("Sponsor data:", comment.sponsor);
-    console.log("Bounty data:", comment.bounty);
-    console.log("is from sponsor", comment.user_id, comment.sponsor?.user_id);
-    return comment.user_id === comment.sponsor?.user_id;
+    // Simply check if the comment's user_id matches the provided sponsorId
+    return comment.user_id === sponsorId;
   };
 
   return (
@@ -499,7 +486,7 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
                       {comment.user?.full_name || 'Anonymous'}
                     </span>
                     
-                    {/* Sponsor badge - add this to indicate when a comment is from the sponsor */}
+                    {/* Sponsor badge - check if comment is from sponsor */}
                     {isFromSponsor(comment) && (
                       <Badge className={`${sponsorBadgeBg} ${sponsorBadgeText} flex items-center gap-1`}>
                         <Award className="h-3 w-3" />
@@ -566,7 +553,7 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
                         setEditingCommentText('');
                       }}
                       disabled={submitting}
-                      className={`border-${borderColor} ${textColor}`}
+                      className="border-[#C1A461]/20 text-[#C1A461]"
                     >
                       Cancel
                     </Button>

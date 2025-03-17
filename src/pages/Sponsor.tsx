@@ -1,4 +1,6 @@
 import { CreateSponsorProfile } from "../pages/CreateSponsorProfile"
+import { PostListing } from "./PostListing"
+import { ViewSubmissions } from "./ViewSubmission"
 import { Zap, Briefcase, Check } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion"
 import { Card, CardContent } from "../components/ui/card"
@@ -81,6 +83,22 @@ export default function OnboardingSteps() {
             <p className={mutedTextColor}>Create a profile</p>
           </div>
           <CreateSponsorProfile />
+        </div>
+
+        <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
+          <div className="sticky top-8 space-y-2">
+            <h2 className="text-lg font-bold text-[#C1A461]">STEP 2</h2>
+            <p className="text-[#C1A461]/60">Post your listing</p>
+          </div>
+          <PostListing />
+        </div>
+
+        <div className="grid grid-cols-[auto,1fr] gap-8 items-start">
+          <div className="sticky top-8 space-y-2">
+            <h2 className="text-lg font-bold text-[#C1A461]">STEP 3</h2>
+            <p className="text-[#C1A461]/60">Get submissions</p>
+          </div>
+          <ViewSubmissions />
         </div>
 
         <section className="space-y-6">
