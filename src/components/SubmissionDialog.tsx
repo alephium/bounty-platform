@@ -34,13 +34,10 @@ export function SubmissionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
-    userId:'',
     description: '',
     submissionUrl: '',
     tweetUrl: '',
   })
-
-  // console.log(formData)
 
   const validateForm = () => {
     if (!formData.title.trim()) {
@@ -57,7 +54,7 @@ export function SubmissionDialog({
     }
     try {
       new URL(formData.submissionUrl)
-      if (formData.tweetUrl) {
+      if (formData.tweetUrl && formData.tweetUrl.trim() !== '') {
         new URL(formData.tweetUrl)
       }
     } catch {
@@ -73,12 +70,17 @@ export function SubmissionDialog({
 
     setIsSubmitting(true)
     try {
+      // Make sure the sponsor data is available in the bounty object
+      if (!bounty.sponsor) {
+        throw new Error("Sponsor information is missing. Please refresh the page.")
+      }
+      
       const result = await handleBountySubmission(
         bounty,
         userId,
         formData.submissionUrl,
         formData.title,
-        formData.tweetUrl,
+        formData.tweetUrl || null,
         formData.description
       )
 
@@ -174,19 +176,6 @@ export function SubmissionDialog({
               className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
             />
           </div>
-
-          {/* <div className="space-y-2">
-            <Label className="text-[#C1A461]">Additional Information</Label>
-            <div className="text-sm text-[#C1A461]/60 mb-2">
-              If you have any other links or information you'd like to share, please add them here!
-            </div>
-            <Input
-              value={formData.additionalInfo}
-              onChange={(e) => setFormData(prev => ({ ...prev, additionalInfo: e.target.value }))}
-              placeholder="Add info or link"
-              className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461]"
-            />
-          </div> */}
 
           <DialogFooter className="pt-4">
             <Button

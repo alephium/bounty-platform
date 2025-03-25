@@ -7,7 +7,7 @@ import { Badge } from "../components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs"
 import { Input } from "../components/ui/input"
 import PersonalProjectCard from "../components/PersonalProjectCard"
-import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send, Plus} from 'lucide-react'
+import { Edit, Share, Twitter, Linkedin, Github, Globe, X, Copy, Send, Plus, MessageSquare } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
@@ -348,6 +348,15 @@ export default function Profile() {
                     </p>
                     <p className={`text-sm ${mutedTextColor}`}>Grant Completed</p>
                   </div>
+                  {isOwnProfile && (
+                    <Button 
+                      className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center gap-2"
+                      onClick={() => navigate('/mysubmission')}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      View My Submissions
+                    </Button>
+                  )}
                   {/* <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
                       {profileUser.completed_hackathons_count || 0}

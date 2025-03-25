@@ -31,18 +31,18 @@ export interface Sponsor {
   updated_at: string
 }
 
-export interface Notification {
-  id: string
-  sponsor_id: string
-  user_id: string
-  submission_id: string
-  submission_type: 'bounty' | 'project'
-  status: 'unread' | 'read'
-  title: string
-  message: string | null
-  created_at: string
-  updated_at: string
-}
+// export interface Notification {
+//   id: string
+//   sponsor_id: string
+//   user_id: string
+//   submission_id: string
+//   submission_type: 'bounty' | 'project'
+//   status: 'unread' | 'read'
+//   title: string
+//   message: string | null
+//   created_at: string
+//   updated_at: string
+// }
 
 export interface Project {
   id: string
@@ -107,8 +107,11 @@ export interface Bounty {
 export interface BountySubmission {
   id: string
   bounty_id: string
+  bounty_name:string
   user_id: string
   sponsor_id:string
+  sponsor_name:string
+  sponsor_avatar:string
   title: string
   description: string
   submission_url: string
@@ -119,6 +122,11 @@ export interface BountySubmission {
   completed_at: string | null
   created_at: string
   updated_at: string
+  reward: {
+    amount: number
+    token: string
+    usd_equivalent: number
+  }
   user?: {
     full_name: string | null
     avatar_url: string | null

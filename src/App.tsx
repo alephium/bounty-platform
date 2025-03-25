@@ -21,7 +21,7 @@ import { CreateSponsorProfile } from './pages/CreateSponsorProfile'
 import { PostListing } from './pages/PostListing'
 import SponsorDashboard from './pages/SponsorDashboard'
 import OnboardingSteps from './pages/Sponsor'
-
+import MySubmission from './pages/MySubmission'
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
   const [initializing, setInitializing] = useState(true)
@@ -50,9 +50,10 @@ export default function App() {
               <Route path="/sponsor" element={<OnboardingSteps />} />
               <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
               <Route path="/bounties" element={<Bounties />} />
-              <Route path="/PostListing" element={<PostListing />} />
+              <Route path="/postlisting" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
+              <Route path="/mysubmission" element={<MySubmission />} />
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/bounty/:id" element={<BountyDetail />} />

@@ -28,12 +28,14 @@ export default function BountyDetails() {
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
   const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
+  // Fetch bounty data including sponsor details
   useEffect(() => {
     const fetchBounty = async () => {
       if (!id) return
       
       try {
         setLoading(true)
+        // Make sure to fetch sponsor details by using the join syntax
         const { data, error } = await supabase
           .from('bounties')
           .select(`
@@ -44,6 +46,12 @@ export default function BountyDetails() {
           .single()
 
         if (error) throw error
+        
+        // Verify sponsor data is available
+        if (!data.sponsor) {
+          console.warn('Sponsor data not retrieved with bounty:', data.id)
+        }
+        
         setBounty(data)
       } catch (error) {
         console.error('Error fetching bounty:', error)
@@ -54,7 +62,7 @@ export default function BountyDetails() {
     }
 
     fetchBounty()
-  }, [id]) // Only re-run when id changes
+  }, [id])
 
   const handleSubmitOpen = () => {
     if (!user) {
@@ -62,6 +70,13 @@ export default function BountyDetails() {
       navigate('/auth', { state: { returnPath: `/bounty/${id}` } })
       return
     }
+    
+    // Make sure bounty has sponsor data before opening dialog
+    if (!bounty?.sponsor) {
+      toast.error("Sponsor information is missing. Please refresh the page.")
+      return
+    }
+    
     setIsSubmitDialogOpen(true)
   }
 
@@ -69,7 +84,7 @@ export default function BountyDetails() {
     if (!id) return
 
     try {
-      // Only fetch updated bounty data, don't set loading state to avoid full re-render
+      // Refresh bounty data after submission
       const { data, error } = await supabase
         .from('bounties')
         .select(`
@@ -222,7 +237,7 @@ export default function BountyDetails() {
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
-                  <span>by {bounty.sponsor?.name}</span>
+                  <span>by {bounty.sponsor?.name || 'Unknown Sponsor'}</span>
 
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}

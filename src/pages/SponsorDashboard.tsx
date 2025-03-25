@@ -213,7 +213,7 @@ export default function SponsorDashboard() {
             <p className={mutedTextColor}>{sponsor.name}</p>
           </div>
           <Button
-            onClick={() => navigate('/PostListing')}
+            onClick={() => navigate('/postlisting')}
             className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
           >
             <Plus className="w-4 h-4 mr-2" />

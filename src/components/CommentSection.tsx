@@ -226,6 +226,7 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
           .subscribe((status) => {
             console.log('Subscription status:', status);
             if (status !== 'SUBSCRIBED') {
+            // if (status !== 'CLOSED') {
               console.error('Failed to subscribe to comments:', status);
               // Don't throw error, just log it
             }
