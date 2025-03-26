@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Types for the comment section
 interface Comment {
@@ -169,86 +170,158 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
   useEffect(() => {
     let isMounted = true;
     
-    // This helps ensure we have valid authentication before subscribing
-    const authListener = supabase.auth.onAuthStateChange(async (_, session) => {
-      if (session?.user) {
-        // Small delay to ensure auth is fully processed
-        setTimeout(async () => {
-          // Only setup subscription if component is still mounted
-          if (isMounted) {
-            // Refresh auth connection with the database
-            await supabase
-              .from('users')
-              .select('id')
-              .eq('id', session.user.id)
-              .maybeSingle();
-              
-            // Now setup the subscription
-            setupSubscription();
-          }
-        }, 100);
-      }
-    });
-    
-    // Set up real-time subscription with simplified approach
+    // Set up real-time subscription with improved error handling
     const setupSubscription = () => {
       try {
         // Clean up existing subscription if any
         if (subscriptionRef.current) {
           try {
             supabase.removeChannel(subscriptionRef.current);
+            subscriptionRef.current = null;
           } catch (e) {
             console.log('Error removing existing channel:', e);
           }
         }
         
-        subscriptionRef.current = supabase
-          .channel(`bounty-comments-${bountyId}`)
-          .on('postgres_changes', 
-            {
-              event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
-              schema: 'public',
-              table: 'bounty_comments',
-              filter: `bounty_id=eq.${bountyId}`
-            },
-            async (payload) => {
-              // Handle all events with a single refresh of the comments
-              if (isMounted) {
-                try {
-                  const data = await CommentService.getBountyComments(bountyId);
-                  setComments(data);
-                } catch (err) {
-                  console.error('Error refreshing comments:', err);
-                }
+        // Check authentication status before creating channel
+        const session = supabase.auth.getSession();
+        if (!session) {
+          console.log('No active session, deferring subscription setup');
+          return;
+        }
+        
+        // Create and setup the channel
+        const channel = supabase.channel(`bounty-comments-${bountyId}`);
+        
+        // Configure the channel before subscribing
+        channel.on('postgres_changes', 
+          {
+            event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'bounty_comments',
+            filter: `bounty_id=eq.${bountyId}`
+          },
+          async (payload) => {
+            // Handle all events with a single refresh of the comments
+            if (isMounted) {
+              try {
+                const data = await CommentService.getBountyComments(bountyId);
+                setComments(data);
+              } catch (err) {
+                console.error('Error refreshing comments:', err);
               }
             }
-          )
-          .subscribe((status) => {
-            console.log('Subscription status:', status);
-            if (status !== 'SUBSCRIBED') {
-            // if (status !== 'CLOSED') {
-              console.error('Failed to subscribe to comments:', status);
-              // Don't throw error, just log it
-            }
-          });
+          }
+        );
+        
+        // Now subscribe and store the reference
+        channel.subscribe((status) => {
+          console.log('Subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('Successfully subscribed to comments');
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Channel error during subscription');
+          } else if (status === 'TIMED_OUT') {
+            console.error('Subscription timed out');
+          }
+        });
+        
+        subscriptionRef.current = channel;
+        
       } catch (error) {
         console.error('Error setting up subscription:', error);
       }
     };
     
-    // Initial subscription setup
-    setupSubscription();
+    // Handle auth state changes
+    const authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+      
+      if (session?.user) {
+        // Small delay to ensure auth is fully processed
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
+          try {
+            // Verify the session is still valid with a simple query
+            const { error } = await supabase
+              .from('users')
+              .select('id')
+              .eq('id', session.user.id)
+              .maybeSingle();
+              
+            if (error) {
+              console.error('Error verifying session:', error);
+              return;
+            }
+            
+            // Check if we already have an active subscription
+            const activeChannels = supabase.getChannels();
+            const existingChannel = activeChannels.find(
+              channel => channel.topic === `bounty-comments-${bountyId}`
+            );
+            
+            if (existingChannel) {
+              console.log('Channel already exists, checking state');
+              if (!existingChannel.subscribe) {
+                console.log('Channel exists but not subscribed, removing and recreating');
+                supabase.removeChannel(existingChannel);
+                setupSubscription();
+              }
+            } else {
+              console.log('No existing channel, setting up subscription');
+              setupSubscription();
+            }
+          } catch (error) {
+            console.error('Error in auth listener:', error);
+          }
+        }, 100);
+      } else if (event === 'SIGNED_OUT') {
+        // Clean up subscription on sign out
+        if (subscriptionRef.current) {
+          try {
+            console.log('Removing subscription due to sign out');
+            supabase.removeChannel(subscriptionRef.current);
+            subscriptionRef.current = null;
+          } catch (e) {
+            console.error('Error removing channel on sign out:', e);
+          }
+        }
+      }
+    });
+    
+    // Check auth status on initial mount
+    const checkInitialAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          console.log('Found existing session on component mount');
+          setupSubscription();
+        } else {
+          console.log('No session on component mount, waiting for auth');
+        }
+      } catch (error) {
+        console.error('Error checking initial auth:', error);
+      }
+    };
+    
+    // Run initial auth check
+    checkInitialAuth();
     
     // Clean up subscription when component unmounts
     return () => {
       isMounted = false;
       try {
         // Unsubscribe from auth changes
-        authListener.data.subscription.unsubscribe();
+        if (authListener && authListener.data && authListener.data.subscription) {
+          authListener.data.subscription.unsubscribe();
+        }
         
         // Remove the real-time channel
         if (subscriptionRef.current) {
+          console.log('Cleaning up subscription on unmount');
           supabase.removeChannel(subscriptionRef.current);
+          subscriptionRef.current = null;
         }
       } catch (error) {
         console.error('Error cleaning up:', error);
