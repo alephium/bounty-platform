@@ -31,19 +31,6 @@ export interface Sponsor {
   updated_at: string
 }
 
-// export interface Notification {
-//   id: string
-//   sponsor_id: string
-//   user_id: string
-//   submission_id: string
-//   submission_type: 'bounty' | 'project'
-//   status: 'unread' | 'read'
-//   title: string
-//   message: string | null
-//   created_at: string
-//   updated_at: string
-// }
-
 export interface Project {
   id: string
   sponsor_id: string
@@ -184,11 +171,6 @@ export interface Database {
         Insert: Omit<ProjectSubmission, 'id' | 'created_at' | 'updated_at' | 
           'review_started_at' | 'completed_at'>
         Update: Partial<Omit<ProjectSubmission, 'id' | 'created_at' | 'updated_at'>>
-      }
-      notifications: {
-        Row: Notification
-        Insert: Omit<Notification, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Notification, 'id'>>
       }
     }
   }

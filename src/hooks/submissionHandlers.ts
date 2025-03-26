@@ -72,24 +72,6 @@ export async function handleBountySubmission(
       // Continue anyway since the submission was created
     }
 
-    // Create notification for the sponsor
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        sponsor_id: bounty.sponsor_id,
-        user_id: userId,
-        submission_id: submissionData.id,
-        submission_type: 'bounty',
-        status: 'unread',
-        title: `New submission for ${bounty.title}`,
-        message: `A new submission has been received for your bounty "${bounty.title}"`
-      });
-
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError);
-      // Continue anyway since the submission was created
-    }
-
     console.log('Submission successful:', submissionData.id);
     return { success: true, submission: submissionData };
   } catch (error) {

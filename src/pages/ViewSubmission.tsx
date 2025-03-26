@@ -216,22 +216,6 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
   
       if (updateError) throw updateError
   
-      // Create notification
-      const notificationData = {
-        sponsor_id: type === 'bounty' ? submission.bounty_id : submission.project_id,
-        user_id: submission.user_id,
-        submission_id: submissionId,
-        submission_type: type,
-        status: 'unread',
-        title: `Submission ${newStatus}`,
-        message: feedback || `Your submission has been ${newStatus}`
-      }
-  
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert([notificationData])
-  
-      if (notificationError) throw notificationError
   
       // Send email notification based on status
       const emailContent = {
