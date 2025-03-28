@@ -75,15 +75,20 @@ export function SubmissionDialog({
         throw new Error("Sponsor information is missing. Please refresh the page.")
       }
       
+      // Add timestamp to make each submission unique
+      const timestamp = new Date().getTime()
+      console.log("starting handleBountySubmission0")
+      
       const result = await handleBountySubmission(
         bounty,
         userId,
-        formData.submissionUrl,
+        formData.submissionUrl + `?t=${timestamp}`, // Add timestamp to URL to make it unique
         formData.title,
         formData.tweetUrl || null,
         formData.description
       )
-
+      console.log("starting handleBountySubmission1")
+      
       if (result.success) {
         toast.success("Submission successful!")
         onSubmissionComplete()
@@ -95,12 +100,24 @@ export function SubmissionDialog({
       console.error('Submission process failed:', error)
       toast.error(error.message || "Failed to submit. Please try again.")
     } finally {
+      console.log("starting handleBountySubmission2")
       setIsSubmitting(false)
     }
   }
 
+  // Reset form data when dialog is closed
+  const handleClose = () => {
+    setFormData({
+      title: '',
+      description: '',
+      submissionUrl: '',
+      tweetUrl: '',
+    })
+    onClose()
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] bg-[#1B2228] border-[#C1A461]/20">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -111,7 +128,7 @@ export function SubmissionDialog({
               variant="ghost"
               size="icon"
               className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
-              onClick={onClose}
+              onClick={handleClose}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -181,7 +198,7 @@ export function SubmissionDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
               className="border-[#C1A461]/20 text-[#C1A461]"
             >

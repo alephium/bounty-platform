@@ -1,84 +1,124 @@
+// import { supabase } from '../lib/supabase'
 import { Bounty } from '../types/supabase'
-import { supabase } from '@/lib/supabase'
+import supabase from '../supabase/index'
 
-export async function handleBountySubmission(
+
+interface SubmissionResult {
+  success: boolean
+  error?: string
+  data?: any
+}
+
+/**
+ * Handles the submission of a bounty solution
+ * @param bounty The bounty being submitted for
+ * @param userId The ID of the user submitting
+ * @param submissionUrl The URL of the submission
+ * @param title The title of the submission
+ * @param tweetUrl Optional X/Twitter URL
+ * @param description Description of the submission
+ * @returns A result object indicating success or failure
+ */
+export const handleBountySubmission = async (
   bounty: Bounty,
   userId: string,
   submissionUrl: string,
   title: string,
   tweetUrl: string | null,
   description: string
-) {
+): Promise<SubmissionResult> => {
   try {
-    // Check if user and bounty IDs are valid
-    if (!userId || !bounty?.id) {
-      throw new Error('Invalid user or bounty information');
+    // Validate required fields
+    console.log("handlers0")
+    if (!bounty.id || !userId || !submissionUrl || !title) {
+      return {
+        success: false,
+        error: 'Missing required submission data'
+      }
+    }
+    console.log("handlers1")
+    // Make sure sponsor data is available
+    if (!bounty.sponsor) {
+      return {
+        success: false,
+        error: 'Sponsor information is missing'
+      }
     }
 
-    // Get sponsor information
-    const sponsorName = bounty.sponsor?.name || '';
-    const sponsorAvatar = bounty.sponsor?.logo_url || '';
+    console.log("handlers2, userId: ", userId)
+    console.log("handlers2, title: ", title)
+    console.log("handlers2, description: ", description)
+    console.log("handlers2, submissionUrl: ", submissionUrl)
+    console.log("handlers2, tweetUrl: ", tweetUrl)
+    
 
-    // Create the bounty submission with additional fields
-    const { data: submissionData, error: submissionError } = await supabase
-      .from('bounty_submissions')
-      .insert({
-        bounty_id: bounty.id,
-        bounty_name: bounty.title,
-        user_id: userId,
-        sponsor_id: bounty.sponsor_id,
-        sponsor_name: sponsorName,
-        sponsor_avatar: sponsorAvatar,
-        title: title,
-        description: description,
-        submission_url: submissionUrl,
-        tweet_url: tweetUrl,
-        status: 'submitted',
-        reward: {
-          amount: bounty.reward.amount,
-          token: bounty.reward.token,
-          usd_equivalent: bounty.reward.usd_equivalent
+    try {
+      console.log("Starting Supabase insert...");
+      // Using flat structure instead of nested JSONB
+      const { data, error } = await supabase
+        .from('bounty_submissions')
+        .insert({
+          bounty_id: bounty.id,
+          bounty_name: bounty.title,
+          sponsor_id: bounty.sponsor.id,
+          sponsor_name: bounty.sponsor.name,
+          sponsor_logo_url: bounty.sponsor.logo_url || "",
+          user_id: userId,
+          title: title,
+          description: description,
+          submission_url: submissionUrl,
+          tweet_url: tweetUrl,
+          status: 'submitted',
+          feedback: null,
+          reward: {
+            amount: 0,
+            token: "",
+            usd_equivalent: 0,
+          }
+        })
+        .select();
+      
+      console.log("handlers3");
+      
+      if (error) {
+        console.error('Error submitting bounty solution:', error)
+        return {
+          success: false,
+          error: error.message
         }
-      })
-      .select()
-      .single();
-
-    if (submissionError) {
-      console.error('Submission error:', submissionError);
-      
-      // Handle foreign key violation
-      if (submissionError.code === '23503') {
-        throw new Error('The sponsor information is invalid. Please try again later.');
       }
       
-      // Handle unique constraint violation
-      if (submissionError.code === '23505') {
-        throw new Error('You have already submitted to this bounty');
-      }
       
-      throw submissionError;
+      console.log("handlers4")
+      // Increment the bounty's submission count
+      const { error: updateError } = await supabase
+        .from('bounties')
+        .update({ 
+          current_submissions: bounty.current_submissions + 1
+        })
+        .eq('id', bounty.id)
+
+      if (updateError) {
+        console.error('Error updating bounty submission count:', updateError)
+        // We don't return error here since the submission was successful
+      }
+
+      return {
+        success: true,
+        data: data
+      }
+    } catch (innerError: any) {
+      console.error("Inner error in Supabase operation:", innerError);
+      return {
+        success: false,
+        error: innerError.message || 'Error during database operation'
+      };
     }
-
-    // Update bounty's current_submissions count
-    const { error: updateError } = await supabase
-      .from('bounties')
-      .update({ 
-        current_submissions: bounty.current_submissions + 1 
-      })
-      .eq('id', bounty.id);
-
-    if (updateError) {
-      console.error('Error updating bounty count:', updateError);
-      // Continue anyway since the submission was created
+  } catch (error: any) {
+    console.error('Unexpected error in handleBountySubmission:', error)
+    return {
+      success: false,
+      error: error.message || 'An unexpected error occurred'
     }
-
-    console.log('Submission successful:', submissionData.id);
-    return { success: true, submission: submissionData };
-  } catch (error) {
-    console.error('Error handling submission:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'An error occurred during submission'
-    };
   }
 }

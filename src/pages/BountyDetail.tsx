@@ -188,13 +188,13 @@ export default function BountyDetails() {
                 >
                   Submit
                 </Button>
-                
+{/*                 
                 <div className="p-3 bg-[#C1A461]/10 rounded-lg border border-[#C1A461]/20">
                   <div className={`flex gap-2 text-sm ${textColor}`}>
                     <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-1" />
                     <p>Register first and wait for approval before starting work.</p>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
 

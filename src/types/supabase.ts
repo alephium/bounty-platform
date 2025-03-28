@@ -91,14 +91,47 @@ export interface Bounty {
   sponsor?: Sponsor
 }
 
+// export interface BountySubmission {
+//   id: string
+//   bounty?: {
+//     bounty_id: string
+//     bounty_name: string
+//     sponsor?: {
+//       id: string
+//       name: string
+//       logo_url: string
+//     }
+//   }
+//   user_id: string
+//   title: string
+//   description: string
+//   submission_url: string
+//   tweet_url: string | null
+//   status: 'submitted' | 'in_review' | 'accepted' | 'rejected'
+//   feedback: string | null
+//   review_started_at: string | null
+//   completed_at: string | null
+//   created_at: string
+//   updated_at: string
+//   reward: {
+//     amount: number
+//     token: string
+//     usd_equivalent: number
+//   }
+//   user?: {
+//     full_name: string | null
+//     avatar_url: string | null
+//   }
+// }
+
 export interface BountySubmission {
   id: string
   bounty_id: string
-  bounty_name:string
+  bounty_name: string
+  sponsor_id: string
+  sponsor_name: string
+  sponsor_logo_url: string
   user_id: string
-  sponsor_id:string
-  sponsor_name:string
-  sponsor_avatar:string
   title: string
   description: string
   submission_url: string
@@ -119,6 +152,7 @@ export interface BountySubmission {
     avatar_url: string | null
   }
 }
+
 
 export interface ProjectSubmission {
   id: string
