@@ -39,6 +39,9 @@ export function SubmissionDialog({
     tweetUrl: '',
   })
 
+// console.log("in SubmissionDialog bounty: ", bounty)
+// console.log("in SubmissionDialog userId: ", userId)
+
   const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error("Please enter a title")
@@ -77,7 +80,6 @@ export function SubmissionDialog({
       
       // Add timestamp to make each submission unique
       const timestamp = new Date().getTime()
-      console.log("starting handleBountySubmission0")
       
       const result = await handleBountySubmission(
         bounty,

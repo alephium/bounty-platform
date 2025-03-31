@@ -216,9 +216,9 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
         
         // Now subscribe and store the reference
         channel.subscribe((status) => {
-          console.log('Subscription status:', status);
+          // console.log('Subscription status:', status);
           if (status === 'SUBSCRIBED') {
-            console.log('Successfully subscribed to comments');
+            // console.log('Successfully subscribed to comments');
           } else if (status === 'CHANNEL_ERROR') {
             console.error('Channel error during subscription');
           } else if (status === 'TIMED_OUT') {
@@ -262,14 +262,14 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
             );
             
             if (existingChannel) {
-              console.log('Channel already exists, checking state');
+              // console.log('Channel already exists, checking state');
               if (!existingChannel.subscribe) {
                 console.log('Channel exists but not subscribed, removing and recreating');
                 supabase.removeChannel(existingChannel);
                 setupSubscription();
               }
             } else {
-              console.log('No existing channel, setting up subscription');
+              // console.log('No existing channel, setting up subscription');
               setupSubscription();
             }
           } catch (error) {
@@ -295,7 +295,7 @@ const CommentSection = ({ bountyId, sponsorId, user, theme }: CommentSectionProp
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
-          console.log('Found existing session on component mount');
+          // console.log('Found existing session on component mount');
           setupSubscription();
         } else {
           console.log('No session on component mount, waiting for auth');
