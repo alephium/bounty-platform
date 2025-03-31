@@ -9,7 +9,7 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 import type { Bounty, Sponsor, BountySubmission } from '@/types/supabase'
-import LoadingPage from './LoadingPage'
+import LoadingPage from '../pages/LoadingPage'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -32,6 +32,7 @@ export default function SponsorDashboard() {
   const [bounties, setBounties] = useState<Bounty[]>([])
   const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null)
   const [submissions, setSubmissions] = useState<BountySubmission[]>([])
+  const [allSubmissions, setAllSubmissions] = useState<BountySubmission[]>([])
   const [loadingSubmissions, setLoadingSubmissions] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'bounties' | 'submissions'>('overview')
   const [selectedSubmission, setSelectedSubmission] = useState<BountySubmission | null>(null)
@@ -71,6 +72,31 @@ export default function SponsorDashboard() {
         if (bountiesError) throw bountiesError
         setBounties(bountiesData || [])
 
+        // Fetch all submissions for this sponsor
+        try {
+          const { data: submissionsData, error: submissionsError } = await supabase
+            .from('bounty_submissions')
+            .select('*')  // Just fetch all fields without trying to join with users
+            .order('created_at', { ascending: false })
+            
+          if (submissionsError) {
+            console.error('Error fetching submissions:', submissionsError)
+            // Continue with empty submissions rather than throwing
+            setAllSubmissions([])
+          } else {
+            // Filter submissions to only those related to bounties owned by this sponsor
+            const filteredSubmissions = submissionsData?.filter(
+              submission => bounties.some(bounty => bounty.id === submission.bounty_id)
+            ) || []
+            
+            console.log(`Found ${filteredSubmissions.length} total submissions for sponsor ${sponsorData.id}`)
+            setAllSubmissions(filteredSubmissions)
+          }
+        } catch (error) {
+          console.error('Error processing submissions:', error)
+          setAllSubmissions([])
+        }
+
       } catch (error) {
         console.error('Error fetching sponsor data:', error)
         toast.error('Failed to load sponsor data')
@@ -82,26 +108,30 @@ export default function SponsorDashboard() {
     fetchSponsorData()
   }, [user])
 
-  // Fetch submissions for a bounty
+  // Fetch submissions for a specific bounty
   const fetchSubmissions = async (bountyId: string) => {
     try {
       setLoadingSubmissions(true)
       
+      // Fetch submissions for this bounty without joining with users
       const { data, error } = await supabase
         .from('bounty_submissions')
-        .select(`
-          *,
-          user:users(full_name, avatar_url, username)
-        `)
+        .select('*')  // Just fetch all fields without the join
         .eq('bounty_id', bountyId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      
-      setSubmissions(data || [])
+      if (error) {
+        console.error('Error fetching submissions:', error)
+        toast.error('Failed to load submissions')
+        setSubmissions([])
+      } else {
+        console.log(`Found ${data?.length || 0} submissions for bounty ${bountyId}`)
+        setSubmissions(data || [])
+      }
     } catch (error) {
       console.error('Error fetching submissions:', error)
       toast.error('Failed to load submissions')
+      setSubmissions([])
     } finally {
       setLoadingSubmissions(false)
     }
@@ -110,7 +140,27 @@ export default function SponsorDashboard() {
   // Handle bounty selection
   const handleSelectBounty = (bounty: Bounty) => {
     setSelectedBounty(bounty)
+    
+    // Debug info
+    console.log(`Selected bounty: ${bounty.id} - ${bounty.title}`)
+    console.log(`This bounty has ${bounty.current_submissions} submissions according to the bounty record`)
+    
+    // We can either:
+    // 1. Fetch submissions from the database
     fetchSubmissions(bounty.id)
+    
+    // 2. Or filter from already loaded submissions (as a fallback)
+    const bountySubmissions = allSubmissions.filter(sub => sub.bounty_id === bounty.id)
+    console.log(`Found ${bountySubmissions.length} submissions in already loaded data`)
+    
+    // If there's a major discrepancy, we'll use the database fetch to be sure
+    if (Math.abs(bounty.current_submissions - bountySubmissions.length) > 2) {
+      console.log("Discrepancy between expected and found submissions - fetching fresh data")
+    } else if (bountySubmissions.length > 0) {
+      // Use already loaded data as it seems accurate
+      setSubmissions(bountySubmissions)
+    }
+    
     setActiveTab('submissions')
   }
 
@@ -135,14 +185,16 @@ export default function SponsorDashboard() {
       setSelectedSubmission(null)
       setFeedback('')
 
-      // Update the local submission list
-      setSubmissions(prev => 
-        prev.map(sub => 
+      // Update the local submission lists
+      const updateSubmissionStatus = (submissions: BountySubmission[]) => 
+        submissions.map(sub => 
           sub.id === submissionId 
             ? { ...sub, status: newStatus, feedback: feedback || null } 
             : sub
-        )
-      )
+        );
+      
+      setSubmissions(updateSubmissionStatus(submissions));
+      setAllSubmissions(updateSubmissionStatus(allSubmissions));
 
       toast.success(`Submission ${newStatus}`)
     } catch (error) {
@@ -166,6 +218,29 @@ export default function SponsorDashboard() {
   // Handle viewing a bounty
   const handleViewBounty = (bountyId: string) => {
     navigate(`/bounty/${bountyId}`)
+  }
+
+  // Get bounty title by ID
+  const getBountyTitle = (bountyId: string) => {
+    // First check in our loaded bounties
+    const bounty = bounties.find(b => b.id === bountyId)
+    if (bounty?.title) return bounty.title
+    
+    // If not found, check if the submission has bounty info attached
+    const submission = allSubmissions.find(s => s.bounty_id === bountyId)
+    if (submission?.bounty_name) return submission.bounty_name
+    
+    // Try to extract from submission title
+    const submissionWithTitle = allSubmissions.find(s => 
+      s.bounty_id === bountyId && s.title && s.title.includes('for')
+    )
+    if (submissionWithTitle?.title) {
+      const parts = submissionWithTitle.title.split('for')
+      if (parts.length > 1) return parts[1].trim()
+    }
+    
+    // If nothing worked, return generic
+    return 'Unknown Bounty'
   }
 
   if (loading) {
@@ -201,6 +276,20 @@ export default function SponsorDashboard() {
   const getInitials = (name: string | null) => {
     if (!name) return '?'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  // Get status color
+  const getStatusBadgeClass = (status: string) => {
+    switch(status) {
+      case 'accepted':
+        return 'bg-green-500/20 text-green-500';
+      case 'rejected':
+        return 'bg-red-500/20 text-red-500';
+      case 'in_review':
+        return 'bg-blue-500/20 text-blue-500';
+      default:
+        return 'bg-yellow-500/20 text-yellow-500';
+    }
   }
 
   return (
@@ -296,62 +385,135 @@ export default function SponsorDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <Card className={`${bgColor} ${borderColor}`}>
-              <CardHeader>
-                <CardTitle className={textColor}>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {bounties.length === 0 ? (
-                  <p className={mutedTextColor}>No recent activity</p>
-                ) : (
-                  <div className="space-y-4">
-                    {bounties.slice(0, 5).map((bounty) => (
-                      <div
-                        key={bounty.id}
-                        className={`p-4 border ${borderColor} rounded-lg cursor-pointer hover:border-[#C1A461]/40 relative`}
-                        onClick={() => handleViewBounty(bounty.id)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                            <p className={`mt-1 text-sm ${mutedTextColor}`}>
-                              {new Date(bounty.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className={`${textColor} hover:bg-[#C1A461]/10`}
-                              onClick={(e) => handleEditBounty(bounty.id, e)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className={`${textColor} hover:bg-[#C1A461]/10`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/bounty/${bounty.id}`);
-                              }}
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Recent Bounties */}
+              <Card className={`${bgColor} ${borderColor}`}>
+                <CardHeader>
+                  <CardTitle className={textColor}>Recent Bounties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {bounties.length === 0 ? (
+                    <p className={mutedTextColor}>No bounties found</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {bounties.slice(0, 5).map((bounty) => (
+                        <div
+                          key={bounty.id}
+                          className={`p-4 border ${borderColor} rounded-lg cursor-pointer hover:border-[#C1A461]/40 relative`}
+                          onClick={() => handleViewBounty(bounty.id)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge 
+                                  variant="outline" 
+                                  className={
+                                    bounty.status === 'open' ? 'bg-green-500/20 text-green-500' :
+                                    bounty.status === 'in_review' ? 'bg-yellow-500/20 text-yellow-500' :
+                                    'bg-blue-500/20 text-blue-500'
+                                  }
+                                >
+                                  {bounty.status}
+                                </Badge>
+                                <span className={`text-sm ${mutedTextColor}`}>
+                                  {bounty.current_submissions} submissions
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className={`${textColor} hover:bg-[#C1A461]/10`}
+                                onClick={(e) => handleEditBounty(bounty.id, e)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className={`${textColor} hover:bg-[#C1A461]/10`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/bounty/${bounty.id}`);
+                                }}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Submissions */}
+              <Card className={`${bgColor} ${borderColor}`}>
+                <CardHeader>
+                  <CardTitle className={textColor}>Recent Submissions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {allSubmissions.length === 0 ? (
+                    <p className={mutedTextColor}>No submissions found</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {allSubmissions.slice(0, 5).map((submission) => (
+                        <div
+                          key={submission.id}
+                          className={`p-4 border ${borderColor} rounded-lg cursor-pointer hover:border-[#C1A461]/40 relative`}
+                          onClick={() => viewSubmission(submission)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage src={submission.user?.avatar_url || undefined} />
+                                <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
+                                  {getInitials(submission.user?.full_name || null)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h3 className={`font-medium ${textColor}`}>
+                                  {submission.user?.full_name || 'Anonymous'}
+                                </h3>
+                                <p className={`text-xs ${mutedTextColor}`}>
+                                  {getBountyTitle(submission.bounty_id)}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className={getStatusBadgeClass(submission.status)}
+                            >
+                              {submission.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="bounties" className="mt-6">
             <div className="space-y-4">
               {bounties.length === 0 ? (
-                <p className={mutedTextColor}>No bounties found. Create your first bounty to get started.</p>
+                <Card className={`${bgColor} ${borderColor}`}>
+                  <CardContent className="p-8 text-center">
+                    <p className={mutedTextColor}>No bounties found. Create your first bounty to get started.</p>
+                    <Button
+                      onClick={() => navigate('/postlisting')}
+                      className="mt-4 bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Bounty
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : (
                 bounties.map((bounty) => (
                   <Card
@@ -363,11 +525,34 @@ export default function SponsorDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                          <div className="flex justify-between items-center mt-2">
-                            <p className={`text-sm ${mutedTextColor}`}>
-                              {bounty.current_submissions} submissions
-                            </p>
-                            <p className={`text-sm ${mutedTextColor}`}>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                bounty.status === 'open' ? 'bg-green-500/20 text-green-500' :
+                                bounty.status === 'in_review' ? 'bg-yellow-500/20 text-yellow-500' :
+                                'bg-blue-500/20 text-blue-500'
+                              }
+                            >
+                              {bounty.status}
+                            </Badge>
+                            <Badge variant="outline" className="bg-[#C1A461]/20 text-[#C1A461]">
+                              {bounty.category}
+                            </Badge>
+                            <Badge variant="outline" className="bg-[#C1A461]/10 text-[#C1A461]">
+                              {bounty.difficulty_level}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center mt-3">
+                            <div className="flex items-center gap-4">
+                              <p className={`text-sm ${mutedTextColor}`}>
+                                {bounty.current_submissions} submissions
+                              </p>
+                              <p className={`text-sm ${mutedTextColor}`}>
+                                Due: {formatDate(bounty.end_date)}
+                              </p>
+                            </div>
+                            <p className={`text-sm font-medium ${textColor}`}>
                               {bounty.reward.amount} {bounty.reward.token}
                             </p>
                           </div>
@@ -415,7 +600,7 @@ export default function SponsorDashboard() {
                       onClick={() => setSelectedBounty(null)}
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back to bounties
+                      Back to all submissions
                     </Button>
                     <h2 className={`text-xl font-medium ${textColor}`}>
                       Submissions for: {selectedBounty.title}
@@ -442,23 +627,19 @@ export default function SponsorDashboard() {
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-4">
                               <Avatar>
-                                <AvatarImage src={submission.user?.avatar_url || undefined} />
+                                <AvatarImage src={submission.sponsor_logo_url || undefined} />
                                 <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                                  {getInitials(submission.user?.full_name || null)}
+                                  {submission.sponsor_name?.charAt(0) || "?"}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h3 className={`font-medium ${textColor}`}>
-                                    {submission.user?.full_name || 'Anonymous'}
+                                    {submission.title || 'Untitled Submission'}
                                   </h3>
                                   <Badge 
                                     variant="outline" 
-                                    className={
-                                      submission.status === 'accepted' ? 'bg-green-500/20 text-green-500' :
-                                      submission.status === 'rejected' ? 'bg-red-500/20 text-red-500' :
-                                      'bg-yellow-500/20 text-yellow-500'
-                                    }
+                                    className={getStatusBadgeClass(submission.status)}
                                   >
                                     {submission.status}
                                   </Badge>
@@ -502,20 +683,92 @@ export default function SponsorDashboard() {
                 )}
               </>
             ) : (
-              <Card className={`${bgColor} ${borderColor}`}>
-                <CardContent className="p-8 text-center">
-                  <p className={mutedTextColor}>
-                    Select a bounty from the "Bounties" tab to view its submissions.
-                  </p>
-                  <Button
-                    onClick={() => setActiveTab('bounties')}
-                    variant="outline"
-                    className={`mt-4 border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
-                  >
-                    Go to Bounties
-                  </Button>
-                </CardContent>
-              </Card>
+              // All Submissions view
+              <>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className={`text-xl font-medium ${textColor}`}>All Submissions</h2>
+                  <Badge className="bg-[#C1A461]/20 text-[#C1A461]">
+                    {allSubmissions.length} Total
+                  </Badge>
+                </div>
+                
+                {allSubmissions.length === 0 ? (
+                  <Card className={`${bgColor} ${borderColor}`}>
+                    <CardContent className="p-8 text-center">
+                      <p className={mutedTextColor}>
+                        No submissions found. Create bounties to start receiving submissions.
+                      </p>
+                      <Button
+                        onClick={() => setActiveTab('bounties')}
+                        variant="outline"
+                        className={`mt-4 border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
+                      >
+                        Go to Bounties
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {allSubmissions.map((submission) => (
+                      <Card 
+                        key={submission.id} 
+                        className={`${bgColor} ${borderColor} hover:border-[#C1A461]/40 transition-colors cursor-pointer`}
+                        onClick={() => viewSubmission(submission)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                              <Avatar>
+                                <AvatarImage src={submission.sponsor_logo_url || undefined} />
+                                <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
+                                  {submission.sponsor_name?.charAt(0) || "?"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h3 className={`font-medium ${textColor}`}>
+                                    {submission.title || 'Untitled Submission'}
+                                  </h3>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={getStatusBadgeClass(submission.status)}
+                                  >
+                                    {submission.status}
+                                  </Badge>
+                                </div>
+                                <p className={`text-sm ${mutedTextColor}`}>
+                                  <span className="font-medium">{submission.bounty_name || "Unknown Bounty"}</span> - 
+                                  Submitted on {formatDate(submission.created_at)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`${textColor} hover:bg-[#C1A461]/10`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(submission.submission_url, '_blank');
+                                }}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`${textColor} hover:bg-[#C1A461]/10`}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>
@@ -532,14 +785,14 @@ export default function SponsorDashboard() {
             <div className="space-y-6 mt-2">
               <div className="flex items-center gap-4">
                 <Avatar>
-                  <AvatarImage src={selectedSubmission.user?.avatar_url || undefined} />
+                  <AvatarImage src={selectedSubmission.sponsor_logo_url || undefined} />
                   <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                    {getInitials(selectedSubmission.user?.full_name || null)}
+                    {getInitials(selectedSubmission.sponsor_name || "?")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className={`font-medium ${textColor}`}>
-                    {selectedSubmission.user?.full_name || 'Anonymous'}
+                    {selectedSubmission.title || 'No Title'}
                   </h3>
                   <p className={`text-sm ${mutedTextColor}`}>
                     Submitted on {formatDate(selectedSubmission.created_at)}
@@ -550,6 +803,7 @@ export default function SponsorDashboard() {
                   className={
                     selectedSubmission.status === 'accepted' ? 'ml-auto bg-green-500/20 text-green-500' :
                     selectedSubmission.status === 'rejected' ? 'ml-auto bg-red-500/20 text-red-500' :
+                    selectedSubmission.status === 'in_review' ? 'ml-auto bg-blue-500/20 text-blue-500' :
                     'ml-auto bg-yellow-500/20 text-yellow-500'
                   }
                 >
@@ -558,6 +812,11 @@ export default function SponsorDashboard() {
               </div>
               
               <div className="space-y-4">
+                <div>
+                  <h4 className={`font-medium ${textColor}`}>Bounty</h4>
+                  <p className={textColor}>{selectedSubmission.bounty_name || "Unknown Bounty"}</p>
+                </div>
+                
                 <div>
                   <h4 className={`font-medium ${textColor}`}>Title</h4>
                   <p className={textColor}>{selectedSubmission.title}</p>
@@ -593,6 +852,13 @@ export default function SponsorDashboard() {
                       <ExternalLink className="w-4 h-4" />
                       {selectedSubmission.tweet_url}
                     </a>
+                  </div>
+                )}
+                
+                {selectedSubmission.feedback && (
+                  <div>
+                    <h4 className={`font-medium ${textColor}`}>Feedback</h4>
+                    <p className={`whitespace-pre-wrap ${textColor}`}>{selectedSubmission.feedback}</p>
                   </div>
                 )}
               </div>
