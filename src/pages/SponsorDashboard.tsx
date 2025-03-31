@@ -76,21 +76,16 @@ export default function SponsorDashboard() {
         try {
           const { data: submissionsData, error: submissionsError } = await supabase
             .from('bounty_submissions')
-            .select('*')  // Just fetch all fields without trying to join with users
+            .select('*')
+            .eq('sponsor_id', sponsorData.id)  // Use sponsor_id directly
             .order('created_at', { ascending: false })
             
           if (submissionsError) {
             console.error('Error fetching submissions:', submissionsError)
-            // Continue with empty submissions rather than throwing
             setAllSubmissions([])
           } else {
-            // Filter submissions to only those related to bounties owned by this sponsor
-            const filteredSubmissions = submissionsData?.filter(
-              submission => bounties.some(bounty => bounty.id === submission.bounty_id)
-            ) || []
-            
-            console.log(`Found ${filteredSubmissions.length} total submissions for sponsor ${sponsorData.id}`)
-            setAllSubmissions(filteredSubmissions)
+            console.log(`Found ${submissionsData?.length || 0} total submissions for sponsor ${sponsorData.id}`)
+            setAllSubmissions(submissionsData || [])
           }
         } catch (error) {
           console.error('Error processing submissions:', error)
@@ -167,8 +162,10 @@ export default function SponsorDashboard() {
   // Handle submission status update
   const handleStatusUpdate = async (submissionId: string, newStatus: 'accepted' | 'rejected') => {
     try {
+      console.log(`Updating submission ${submissionId} status to ${newStatus}`);
+      
       // Update the submission status
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('bounty_submissions')
         .update({ 
           status: newStatus,
@@ -177,29 +174,51 @@ export default function SponsorDashboard() {
           completed_at: new Date().toISOString()
         })
         .eq('id', submissionId)
+        .select();
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating submission status:', error);
+        toast.error(`Failed to ${newStatus} submission: ${error.message}`);
+        return;
+      }
 
+      console.log(`Successfully updated submission status:`, data);
+      
       // Close the dialog
-      setShowSubmissionDetails(false)
-      setSelectedSubmission(null)
-      setFeedback('')
+      setShowSubmissionDetails(false);
+      setSelectedSubmission(null);
+      setFeedback('');
 
       // Update the local submission lists
-      const updateSubmissionStatus = (submissions: BountySubmission[]) => 
-        submissions.map(sub => 
+      setSubmissions(prev => 
+        prev.map(sub => 
           sub.id === submissionId 
             ? { ...sub, status: newStatus, feedback: feedback || null } 
             : sub
-        );
+        )
+      );
       
-      setSubmissions(updateSubmissionStatus(submissions));
-      setAllSubmissions(updateSubmissionStatus(allSubmissions));
+      setAllSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId 
+            ? { ...sub, status: newStatus, feedback: feedback || null } 
+            : sub
+        )
+      );
 
-      toast.success(`Submission ${newStatus}`)
-    } catch (error) {
-      console.error('Error updating submission status:', error)
-      toast.error('Failed to update submission status')
+      // Show success message
+      toast.success(`Submission ${newStatus} successfully`);
+      
+      // Refresh submissions after a short delay to ensure we have the latest data
+      setTimeout(() => {
+        if (selectedBounty) {
+          fetchSubmissions(selectedBounty.id);
+        }
+      }, 500);
+      
+    } catch (error: any) {
+      console.error('Error updating submission status:', error);
+      toast.error(`Failed to ${newStatus} submission: ${error.message || 'Unknown error'}`);
     }
   }
 
