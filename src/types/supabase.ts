@@ -99,6 +99,10 @@ export interface BountySubmission {
   sponsor_name: string
   sponsor_logo_url: string
   user_id: string
+  user_username:string
+  user_avatar_url:string
+  user_full_name:string
+  user_wallet_address:string
   title: string
   description: string
   submission_url: string
@@ -114,10 +118,7 @@ export interface BountySubmission {
     token: string
     usd_equivalent: number
   }
-  user?: {
-    full_name: string | null
-    avatar_url: string | null
-  }
+  user?:User
 }
 
 
@@ -137,7 +138,7 @@ export interface ProjectSubmission {
   created_at: string
   updated_at: string
   user?: {
-    full_name: string | null
+    username: string | null
     avatar_url: string | null
   }
 }

@@ -12,6 +12,7 @@ import type { Bounty, Sponsor, BountySubmission } from '@/types/supabase'
 import LoadingPage from '../pages/LoadingPage'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Link } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -110,10 +111,13 @@ export default function SponsorDashboard() {
       
       // Fetch submissions for this bounty without joining with users
       const { data, error } = await supabase
-        .from('bounty_submissions')
-        .select('*')  // Just fetch all fields without the join
-        .eq('bounty_id', bountyId)
-        .order('created_at', { ascending: false })
+      .from('bounty_submissions')
+      .select(`
+        *,
+        user:users(id, username, wallet_address, avatar_url)
+      `)
+      .eq('bounty_id', bountyId)
+      .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error fetching submissions:', error)
@@ -486,22 +490,24 @@ export default function SponsorDashboard() {
                           onClick={() => viewSubmission(submission)}
                         >
                           <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
                               <Avatar className="w-8 h-8">
-                                <AvatarImage src={submission.user?.avatar_url || undefined} />
+                                <AvatarImage src={submission.user_avatar_url || undefined} />
                                 <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                                  {getInitials(submission.user?.full_name || null)}
+                                  {submission.user_username ? getInitials(submission.user_username) : 'AN'}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <h3 className={`font-medium ${textColor}`}>
-                                  {submission.user?.full_name || 'Anonymous'}
+                                  {submission.user_username || 'Anonymous User'}
                                 </h3>
                                 <p className={`text-xs ${mutedTextColor}`}>
                                   {getBountyTitle(submission.bounty_id)}
                                 </p>
                               </div>
                             </div>
+                          </div>
                             <Badge 
                               variant="outline" 
                               className={getStatusBadgeClass(submission.status)}
@@ -737,12 +743,14 @@ export default function SponsorDashboard() {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-4">
+                            <Link to={`/profile/${submission.user_username}`}>
                               <Avatar>
-                                <AvatarImage src={submission.sponsor_logo_url || undefined} />
+                                <AvatarImage src={submission.user_avatar_url || undefined} />
                                 <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                                  {submission.sponsor_name?.charAt(0) || "?"}
+                                  {submission.user_username || "?"}
                                 </AvatarFallback>
                               </Avatar>
+                            </Link>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h3 className={`font-medium ${textColor}`}>
@@ -803,12 +811,14 @@ export default function SponsorDashboard() {
             
             <div className="space-y-6 mt-2">
               <div className="flex items-center gap-4">
-                <Avatar>
-                  <AvatarImage src={selectedSubmission.sponsor_logo_url || undefined} />
-                  <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                    {getInitials(selectedSubmission.sponsor_name || "?")}
-                  </AvatarFallback>
-                </Avatar>
+                <Link to={`/profile/${selectedSubmission.user_username}`}>
+                  <Avatar>
+                    <AvatarImage src={selectedSubmission.user_avatar_url || undefined} />
+                    <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
+                      {getInitials(selectedSubmission.user_username || "?")}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
                   <h3 className={`font-medium ${textColor}`}>
                     {selectedSubmission.title || 'No Title'}
