@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { SubmissionDialog } from '../components/SubmissionDialog'
 import CommentSection from '../components/CommentSection'
 import LoadingPage from "./LoadingPage"
+import { Link } from "react-router-dom";
 
 export default function BountyDetails() {
   const { id } = useParams()
@@ -237,8 +238,9 @@ export default function BountyDetails() {
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
+                  <Link to={`/sponsor/${id}`}>
                   <span>by {bounty.sponsor?.name || 'Unknown Sponsor'}</span>
-
+                  </Link>
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}
                   </Badge>

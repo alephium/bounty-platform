@@ -190,20 +190,22 @@ export default function Home() {
                               </div>
                               <div>
                                 <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                                <div className={`flex items-center gap-1 text-sm ${textColor}`}>
-                                  {/* If sponsor is available, show the sponsor name */}
-                                  {bounty.sponsor?.name || 'Unknown Sponsor'}
-                                  {bounty.sponsor?.is_verified && (
-                                    <Badge 
-                                      variant="secondary" 
-                                      className={`${theme === 'dark' ? 
-                                        'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
-                                    >
-                                      <Anchor className="w-3 h-3 mr-1" />
-                                      Verified
-                                    </Badge>
-                                  )}
-                                </div>
+                                  <Link to={`/sponsor/${bounty.sponsor?.id}`}>
+                                    <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                      {/* If sponsor is available, show the sponsor name */}
+                                      {bounty.sponsor?.name || 'Unknown Sponsor'}
+                                      {bounty.sponsor?.is_verified && (
+                                        <Badge 
+                                          variant="secondary" 
+                                          className={`${theme === 'dark' ? 
+                                            'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                        >
+                                          <Anchor className="w-3 h-3 mr-1" />
+                                          Verified
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </Link>
                                 <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
                                   <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
