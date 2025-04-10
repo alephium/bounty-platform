@@ -238,9 +238,15 @@ export default function BountyDetails() {
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
-                  <Link to={`/sponsor/${id}`}>
-                  <span>by {bounty.sponsor?.name || 'Unknown Sponsor'}</span>
-                  </Link>
+                  {bounty.sponsor && bounty.sponsor.id ? (
+                      <Link to={`/sponsor/${bounty.sponsor.id}`}>
+                        <span className="hover:underline transition-all">
+                          by {bounty.sponsor.name || 'Unknown Sponsor'}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span>by Unknown Sponsor</span>
+                  )}
                   <Badge variant="secondary" className="bg-[#C1A461]/20 text-[#C1A461]">
                     {bounty.category}
                   </Badge>

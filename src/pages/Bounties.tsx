@@ -36,7 +36,7 @@ export function Bounties() {
           .from('bounties')
           .select(`
             *,
-            sponsor:sponsors(name, is_verified)
+            sponsor:sponsors(id, name, is_verified)
           `)
           .eq('status', selectedStatus)
           .order('created_at', { ascending: false })
@@ -162,21 +162,30 @@ export function Bounties() {
                             </div>
                             <div>
                               <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
-                                <Link to={`/sponsor/${bounty.sponsor?.id}`}>
-                                  <div className={`flex items-center gap-1 text-sm ${textColor}`}>
-                                  {bounty.sponsor?.name || 'Unknown Sponsor'}
-                                    {bounty.sponsor?.is_verified && (
-                                      <Badge 
-                                        variant="secondary" 
-                                        className={`${theme === 'dark' ? 
-                                          'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
-                                      >
-                                        <Anchor className="w-3 h-3 mr-1" />
-                                        Verified
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </Link>
+                              {bounty.sponsor?.id ? (
+                                    <Link to={`/sponsor/${bounty.sponsor.id}`}>
+                                      <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                        {/* Use a simplified hover approach */}
+                                        <span className="hover:underline transition-all">
+                                          {bounty.sponsor?.name || 'Unknown Sponsor'}
+                                        </span>
+                                        {bounty.sponsor?.is_verified && (
+                                          <Badge 
+                                            variant="secondary" 
+                                            className={`${theme === 'dark' ? 
+                                              'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                          >
+                                            <Anchor className="w-3 h-3 mr-1" />
+                                            Verified
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </Link>
+                                  ) : (
+                                    <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                      Unknown Sponsor
+                                    </div>
+                                  )}
                               <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-4 h-4" />
