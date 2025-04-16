@@ -145,7 +145,7 @@ export default function SponsorProfile() {
                 </p>
               </div>
             </div>
-            
+{/*             
             <div className="flex flex-wrap gap-3 mt-2">
               {sponsor.website_url && (
                 <Button 
@@ -191,7 +191,7 @@ export default function SponsorProfile() {
                   Discord
                 </Button>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* Stats Overview */}

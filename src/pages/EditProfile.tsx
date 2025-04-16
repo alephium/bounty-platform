@@ -518,7 +518,7 @@ export const EditProfile = () => {
                 {/* First and Last Name */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">First Name *</Label>
                     <Input 
                       id="firstName"
                       name="firstName"
@@ -533,7 +533,7 @@ export const EditProfile = () => {
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name *</Label>
                     <Input 
                       id="lastName"
                       name="lastName"
@@ -564,7 +564,7 @@ export const EditProfile = () => {
 
                 {/* Wallet Address */}
                 <div className="space-y-1">
-                  <Label htmlFor="walletAddress">Your Alephium Wallet Address</Label>
+                  <Label htmlFor="walletAddress">Your Alephium Wallet Address *</Label>
                   <Input 
                     id="walletAddress"
                     name="walletAddress"

@@ -49,8 +49,8 @@ export default function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/sponsor" element={<OnboardingSteps />} />
-              <Route path="/sponsor/:id" element={<SponsorProfile />} />
               <Route path="/sponsor/dashboard" element={<SponsorDashboard />} />
+              <Route path="/sponsor/:id" element={<SponsorProfile />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/postlisting" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
