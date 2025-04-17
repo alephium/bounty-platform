@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { CircleDollarSign, Plus, BarChart3, Edit, ExternalLink, ArrowLeft, Eye, CheckCircle, XCircle } from 'lucide-react'
+import { CircleDollarSign, Plus, BarChart3, Edit, ExternalLink, ArrowLeft, Eye, CheckCircle, XCircle, Copy, Check } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
@@ -12,7 +12,7 @@ import type { Bounty, Sponsor, BountySubmission } from '@/types/supabase'
 import LoadingPage from '../pages/LoadingPage'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function SponsorDashboard() {
   const navigate = useNavigate()
@@ -39,6 +41,8 @@ export default function SponsorDashboard() {
   const [selectedSubmission, setSelectedSubmission] = useState<BountySubmission | null>(null)
   const [showSubmissionDetails, setShowSubmissionDetails] = useState(false)
   const [feedback, setFeedback] = useState('')
+  const [transactionHash, setTransactionHash] = useState('')
+  const [showWalletCopied, setShowWalletCopied] = useState(false)
 
   // Theme-specific styles
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -163,20 +167,28 @@ export default function SponsorDashboard() {
     setActiveTab('submissions')
   }
 
-  // Handle submission status update
+  // Handle submission status update with transaction hash
   const handleStatusUpdate = async (submissionId: string, newStatus: 'accepted' | 'rejected') => {
     try {
       console.log(`Updating submission ${submissionId} status to ${newStatus}`);
       
+      // Prepare update object
+      const updateData: any = {
+        status: newStatus,
+        feedback: feedback || null,
+        review_started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString()
+      }
+      
+      // Only include transaction hash for accepted submissions
+      if (newStatus === 'accepted' && transactionHash.trim()) {
+        updateData.transaction_hash = transactionHash.trim()
+      }
+      
       // Update the submission status
       const { data, error } = await supabase
         .from('bounty_submissions')
-        .update({ 
-          status: newStatus,
-          feedback: feedback || null,
-          review_started_at: new Date().toISOString(),
-          completed_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', submissionId)
         .select();
 
@@ -192,21 +204,25 @@ export default function SponsorDashboard() {
       setShowSubmissionDetails(false);
       setSelectedSubmission(null);
       setFeedback('');
+      setTransactionHash('');
 
       // Update the local submission lists
+      const updatedSubmission = { 
+        ...submissions.find(s => s.id === submissionId), 
+        status: newStatus, 
+        feedback: feedback || null,
+        transaction_hash: newStatus === 'accepted' ? transactionHash.trim() : null
+      } as BountySubmission;
+      
       setSubmissions(prev => 
         prev.map(sub => 
-          sub.id === submissionId 
-            ? { ...sub, status: newStatus, feedback: feedback || null } 
-            : sub
+          sub.id === submissionId ? updatedSubmission : sub
         )
       );
       
       setAllSubmissions(prev => 
         prev.map(sub => 
-          sub.id === submissionId 
-            ? { ...sub, status: newStatus, feedback: feedback || null } 
-            : sub
+          sub.id === submissionId ? updatedSubmission : sub
         )
       );
 
@@ -230,6 +246,10 @@ export default function SponsorDashboard() {
   const viewSubmission = (submission: BountySubmission) => {
     setSelectedSubmission(submission)
     setShowSubmissionDetails(true)
+    
+    // Reset form fields
+    setFeedback(submission.feedback || '')
+    setTransactionHash(submission.transaction_hash || '')
   }
 
   // Handle editing a bounty
@@ -264,6 +284,58 @@ export default function SponsorDashboard() {
     
     // If nothing worked, return generic
     return 'Unknown Bounty'
+  }
+
+  // Copy wallet address to clipboard
+  const copyWalletAddress = (address: string) => {
+    navigator.clipboard.writeText(address)
+    setShowWalletCopied(true)
+    
+    setTimeout(() => {
+      setShowWalletCopied(false)
+    }, 2000)
+    
+    toast.success("Wallet address copied to clipboard")
+  }
+
+  // Save transaction hash without changing status
+  const saveTransactionHash = async (submissionId: string) => {
+    if (!transactionHash.trim()) {
+      toast.error("Please enter a transaction hash")
+      return
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .update({ transaction_hash: transactionHash.trim() })
+        .eq('id', submissionId)
+
+      if (error) throw error
+      
+      toast.success("Transaction hash saved successfully")
+      
+      // Update the local submission lists
+      setSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId 
+            ? { ...sub, transaction_hash: transactionHash.trim() } 
+            : sub
+        )
+      )
+      
+      setAllSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId 
+            ? { ...sub, transaction_hash: transactionHash.trim() } 
+            : sub
+        )
+      )
+      
+    } catch (error: any) {
+      console.error('Error saving transaction hash:', error)
+      toast.error(`Failed to save transaction hash: ${error.message || 'Unknown error'}`)
+    }
   }
 
   if (loading) {
@@ -652,9 +724,9 @@ export default function SponsorDashboard() {
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-4">
                               <Avatar>
-                                <AvatarImage src={submission.sponsor_logo_url || undefined} />
+                                <AvatarImage src={submission.user_avatar_url || undefined} />
                                 <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                                  {submission.sponsor_name?.charAt(0) || "?"}
+                                  {getInitials(submission.user_username || "?")}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
@@ -668,6 +740,11 @@ export default function SponsorDashboard() {
                                   >
                                     {submission.status}
                                   </Badge>
+                                  {submission.transaction_hash && (
+                                    <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                                      Paid
+                                    </Badge>
+                                  )}
                                 </div>
                                 <p className={`text-sm ${mutedTextColor}`}>
                                   Submitted on {formatDate(submission.created_at)}
@@ -743,14 +820,14 @@ export default function SponsorDashboard() {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-4">
-                            <Link to={`/profile/${submission.user_username}`}>
-                              <Avatar>
-                                <AvatarImage src={submission.user_avatar_url || undefined} />
-                                <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                                  {submission.user_username || "?"}
-                                </AvatarFallback>
-                              </Avatar>
-                            </Link>
+                              <Link to={`/profile/${submission.user_username}`}>
+                                <Avatar>
+                                  <AvatarImage src={submission.user_avatar_url || undefined} />
+                                  <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
+                                    {submission.user_username?.charAt(0) || "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </Link>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <h3 className={`font-medium ${textColor}`}>
@@ -762,6 +839,11 @@ export default function SponsorDashboard() {
                                   >
                                     {submission.status}
                                   </Badge>
+                                  {submission.transaction_hash && (
+                                    <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                                      Paid
+                                    </Badge>
+                                  )}
                                 </div>
                                 <p className={`text-sm ${mutedTextColor}`}>
                                   <span className="font-medium">{submission.bounty_name || "Unknown Bounty"}</span> - 
@@ -854,6 +936,64 @@ export default function SponsorDashboard() {
                 <div>
                   <h4 className={`font-medium ${textColor}`}>Description</h4>
                   <p className={`whitespace-pre-wrap ${textColor}`}>{selectedSubmission.description}</p>
+                </div>
+                
+                {/* Wallet Address Section - NEW */}
+                <div>
+                  <h4 className={`font-medium ${textColor} mb-2`}>User Wallet Address</h4>
+                  <div className="flex items-center gap-2">
+                    <div className={`flex-1 p-2 rounded border ${borderColor} bg-[#1B2228]/80 font-mono text-sm ${textColor}`}>
+                      {selectedSubmission.user_wallet_address || "No wallet address provided"}
+                    </div>
+                    {selectedSubmission.user_wallet_address && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
+                        onClick={() => copyWalletAddress(selectedSubmission.user_wallet_address)}
+                      >
+                        {showWalletCopied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Transaction Hash Section - NEW */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className={`font-medium ${textColor}`}>Transaction Hash</h4>
+                    {selectedSubmission.status === 'accepted' && (
+                      <Badge variant={selectedSubmission.transaction_hash ? "outline" : "destructive"} className={selectedSubmission.transaction_hash ? "bg-green-500/10 text-green-500" : ""}>
+                        {selectedSubmission.transaction_hash ? "Payment Recorded" : "Payment Required"}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={transactionHash}
+                      onChange={(e) => setTransactionHash(e.target.value)}
+                      placeholder="Enter transaction hash after payment"
+                      className={`${bgColor} border-${borderColor} ${textColor}`}
+                      disabled={selectedSubmission.status !== 'accepted' && !selectedSubmission.transaction_hash}
+                    />
+                    <Button
+                      variant="outline"
+                      className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
+                      onClick={() => saveTransactionHash(selectedSubmission.id)}
+                      disabled={!transactionHash.trim() || (selectedSubmission.status !== 'accepted' && !selectedSubmission.transaction_hash)}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                  {selectedSubmission.status === 'accepted' && !selectedSubmission.transaction_hash && (
+                    <p className={`text-xs mt-2 ${mutedTextColor}`}>
+                      Please record the transaction hash after you've paid the contributor
+                    </p>
+                  )}
                 </div>
                 
                 <div>

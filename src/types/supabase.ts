@@ -103,6 +103,7 @@ export interface BountySubmission {
   user_avatar_url:string
   user_full_name:string
   user_wallet_address:string
+  transaction_hash: string | null
   title: string
   description: string
   submission_url: string
