@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from '../types/supabase'
 import { Loader2, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 interface SubmissionDialogProps {
   bounty: Bounty
@@ -31,6 +32,7 @@ export function SubmissionDialog({
   onClose,
   onSubmissionComplete
 }: SubmissionDialogProps) {
+  const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -38,9 +40,6 @@ export function SubmissionDialog({
     submissionUrl: '',
     tweetUrl: '',
   })
-
-// console.log("in SubmissionDialog bounty: ", bounty)
-// console.log("in SubmissionDialog userId: ", userId)
 
   const validateForm = () => {
     if (!formData.title.trim()) {
@@ -81,6 +80,12 @@ export function SubmissionDialog({
       // Add timestamp to make each submission unique
       const timestamp = new Date().getTime()
       
+      console.log("Starting submission process with data:", {
+        bountyId: bounty.id,
+        userId,
+        title: formData.title
+      });
+      
       const result = await handleBountySubmission(
         bounty,
         userId,
@@ -89,20 +94,37 @@ export function SubmissionDialog({
         formData.tweetUrl || null,
         formData.description
       )
-      console.log("starting handleBountySubmission1")
       
       if (result.success) {
         toast.success("Submission successful!")
         onSubmissionComplete()
         onClose()
       } else {
-        throw new Error(result.error)
+        // Handle specific error codes
+        if (result.error && result.error.includes("row-level security policy")) {
+          toast.error("Permission error. Please sign out and sign in again.")
+          setTimeout(() => navigate('/auth'), 2000);
+        } else if (result.error && result.error.includes("No active session found")) {
+          toast.error("Your session has expired. Please sign in again.")
+          setTimeout(() => navigate('/auth'), 2000);
+        } else {
+          throw new Error(result.error)
+        }
       }
     } catch (error: any) {
       console.error('Submission process failed:', error)
-      toast.error(error.message || "Failed to submit. Please try again.")
+      
+      // More detailed error handling
+      if (error.message && error.message.includes("row-level security policy")) {
+        toast.error("Permission denied. Please sign out and sign in again to refresh your session.")
+        setTimeout(() => navigate('/auth'), 2000);
+      } else if (error.message && error.message.includes("No active session found")) {
+        toast.error("Your session has expired. Please sign in again.")
+        setTimeout(() => navigate('/auth'), 2000);
+      } else {
+        toast.error(error.message || "Failed to submit. Please try again.")
+      }
     } finally {
-      console.log("starting handleBountySubmission2")
       setIsSubmitting(false)
     }
   }

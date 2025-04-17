@@ -15,23 +15,101 @@ export const handleBountySubmission = async (
   tweetUrl: string | null,
   description: string
 ): Promise<SubmissionResult> => {
-  console.log("Direct fetch submission attempt");
+  console.log("Starting submission with storage-only approach");
   
-  // Get these from your environment variables or Supabase client
-  const supabaseUrl = SUPABASE_URL;
-  const supabaseKey = SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) {
+  if (!bounty.id || !userId || !submissionUrl) {
     return {
       success: false,
-      error: 'Missing Supabase configuration'
+      error: 'Missing required fields for submission'
     };
   }
   
+  // ONLY use localStorage/sessionStorage - completely avoid supabase client
+  let authToken = null;
+  
+  // Try localStorage
+  try {
+    // Look through all localStorage items for Supabase auth
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('supabase.auth.token') || key.includes('sb-'))) {
+        try {
+          const value = localStorage.getItem(key);
+          if (value) {
+            // Parse the JSON
+            const parsed = JSON.parse(value);
+            
+            // Different storage formats to check
+            if (parsed?.currentSession?.access_token) {
+              authToken = parsed.currentSession.access_token;
+              console.log("Found token in localStorage format 1");
+              break;
+            } else if (parsed?.access_token) {
+              authToken = parsed.access_token;
+              console.log("Found token in localStorage format 2");
+              break;
+            } else if (parsed?.session?.access_token) {
+              authToken = parsed.session.access_token; 
+              console.log("Found token in localStorage format 3");
+              break;
+            }
+          }
+        } catch (e) {
+          // Skip any items that aren't valid JSON
+          console.log("Skipping non-JSON localStorage item:", key);
+        }
+      }
+    }
+    
+    // If nothing found in localStorage, try session storage
+    if (!authToken) {
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.includes('supabase.auth.token') || key.includes('sb-'))) {
+          try {
+            const value = sessionStorage.getItem(key);
+            if (value) {
+              const parsed = JSON.parse(value);
+              if (parsed?.currentSession?.access_token) {
+                authToken = parsed.currentSession.access_token;
+                console.log("Found token in sessionStorage format 1");
+                break;
+              } else if (parsed?.access_token) {
+                authToken = parsed.access_token;
+                console.log("Found token in sessionStorage format 2");
+                break;
+              } else if (parsed?.session?.access_token) {
+                authToken = parsed.session.access_token;
+                console.log("Found token in sessionStorage format 3");
+                break;
+              }
+            }
+          } catch (e) {
+            console.log("Skipping non-JSON sessionStorage item:", key);
+          }
+        }
+      }
+    }
+    
+    console.log("Auth token found:", !!authToken);
+  } catch (e) {
+    console.error("Error accessing storage:", e);
+  }
+  
+  if (!authToken) {
+    console.error("No authentication token found in storage");
+    return {
+      success: false,
+      error: 'No authentication token found. Please sign in again.'
+    };
+  }
+  
+  // Prepare submission data
   const submissionData = {
     bounty_id: bounty.id,
-    bounty_name: bounty.title,
-    sponsor_id: bounty.sponsor?.id,
-    sponsor_name: bounty.sponsor?.name,
+    bounty_name: bounty.title || "Untitled Bounty",
+    sponsor_id: bounty.sponsor?.id || null,
+    sponsor_name: bounty.sponsor?.name || "Unknown Sponsor",
     sponsor_logo_url: bounty.sponsor?.logo_url || "",
     user_id: userId,
     title: title,
@@ -47,19 +125,20 @@ export const handleBountySubmission = async (
     }
   };
   
+  // Submit using direct REST API only
   try {
-    console.log("Attempting direct fetch to Supabase REST API");
+    console.log("Attempting submission with token from storage");
     
-    // Using fetch API directly with timeout for submission
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
     
-    const response = await fetch(`${supabaseUrl}/rest/v1/bounty_submissions`, {
+    console.log("Making fetch request to REST API");
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/bounty_submissions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${authToken}`,
         'Prefer': 'return=representation'
       },
       body: JSON.stringify(submissionData),
@@ -67,10 +146,11 @@ export const handleBountySubmission = async (
     });
     
     clearTimeout(timeoutId);
+    console.log("Fetch request completed with status:", response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Error response from REST API:', errorText);
+      console.error('Submission failed:', errorText);
       return {
         success: false,
         error: `API error: ${response.status} - ${errorText}`
@@ -78,58 +158,33 @@ export const handleBountySubmission = async (
     }
     
     const data = await response.json();
-    console.log("Direct insert successful:", data);
+    console.log("Submission succeeded:", data);
     
-    // Update the bounty's submission count using direct fetch instead of Supabase client
-    try {
-      console.log("Updating bounty submission count using direct fetch...");
-      
-      // Create update data
-      const updateData = {
-        current_submissions: bounty.current_submissions + 1
-      };
-      
-      // Use another controller for the update request
-      const updateController = new AbortController();
-      const updateTimeoutId = setTimeout(() => updateController.abort(), 5000);
-      
-      // Perform the PATCH request to update the bounty
-      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/bounties?id=eq.${bounty.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(updateData),
-        signal: updateController.signal
-      });
-      
-      clearTimeout(updateTimeoutId);
-      
-      if (!updateResponse.ok) {
-        const updateErrorText = await updateResponse.text();
-        console.error('Error updating bounty count:', updateErrorText);
-      } else {
-        console.log("Bounty submission count updated successfully");
-      }
-    } catch (updateError) {
-      console.error('Exception during bounty count update:', updateError);
-      // Continue since the submission was successful
-    }
+    // Fire and forget the count update
+    fetch(`${SUPABASE_URL}/rest/v1/bounties?id=eq.${bounty.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${authToken}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        current_submissions: (bounty.current_submissions || 0) + 1
+      })
+    }).catch(e => console.log("Ignoring count update error:", e));
     
     return {
       success: true,
       data: data
     };
   } catch (error: any) {
-    console.error('Error with direct fetch approach:', error);
+    console.error('Submission error:', error);
     
     if (error.name === 'AbortError') {
       return {
         success: false,
-        error: 'The request was aborted due to timeout'
+        error: 'Request timed out. Please try again.'
       };
     }
     
