@@ -254,20 +254,6 @@ export function CreateSponsorProfile() {
         >
           {loading ? "Creating..." : "Create Sponsor Profile"}
         </Button>
-        
-        {useFallback && (
-          <div className="text-center">
-            <p className={`text-sm ${textColor}`}>Having trouble? Try our alternative method:</p>
-            <Button
-              variant="ghost"
-              className={`mt-2 ${textColor} hover:bg-[#C1A461]/10`}
-              onClick={createSponsorWithFetch}
-              disabled={loading}
-            >
-              Try Alternative Method
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

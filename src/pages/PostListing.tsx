@@ -15,13 +15,13 @@ import {
 } from "@/components/ui/select"
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { supabase } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
 import { toast } from 'sonner'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../config";
 import type { BountyInsert, ProjectInsert, Category, Status, Bounty, Project } from '@/types/supabase'
 
 interface FormData {
@@ -138,6 +138,35 @@ export function PostListing() {
     }))
   }
 
+  // Direct fetch function to use instead of Supabase client
+  const directFetch = async (url: string, method: string, body?: any) => {
+    // Get the current user's session
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    
+    if (!token) {
+      throw new Error('No active session found. Please log in again.');
+    }
+    
+    const response = await fetch(`${SUPABASE_URL}${url}`, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${token}`, // Use the user's access token
+        'Prefer': 'return=representation'
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API error: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
   const handleSubmit = async () => {
     try {
       setLoading(true)
@@ -146,6 +175,16 @@ export function PostListing() {
         toast.error("You must be logged in to post a listing")
         return
       }
+      
+      // Verify authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        toast.error("Your session has expired. Please log in again.")
+        navigate('/auth')
+        return
+      }
+      
+      console.log("Authenticated user ID:", user.id);
 
       // Validate required fields
       if (!formData.title.trim()) {
@@ -157,19 +196,22 @@ export function PostListing() {
         return
       }
 
-      // Check if the logged-in user has a sponsor profile
+      // Use the Supabase client for this query since it's more reliable for fetching
+      console.log("Fetching sponsor profile for user:", user.id);
       const { data: sponsorData, error: sponsorError } = await supabase
         .from('sponsors')
         .select('id, total_bounties_count, total_projects_count, total_reward_amount')
         .eq('user_id', user.id)
-        .single()
+        .single();
 
-      // If no sponsor profile exists
       if (sponsorError || !sponsorData) {
+        console.error("Error fetching sponsor profile:", sponsorError);
         toast.error("You need to create a sponsor profile before posting a listing")
         navigate('/sponsor')
         return
       }
+      
+      console.log("Found sponsor profile:", sponsorData.id);
 
       // Prepare base data
       const baseData = {
@@ -178,7 +220,7 @@ export function PostListing() {
         description: formData.description,
         category: formData.category,
         status: 'open' as Status,
-        requirements: formData.requirements, // Convert to array
+        requirements: formData.requirements,
         tags: formData.tags,
         is_featured: false,
       }
@@ -214,30 +256,49 @@ export function PostListing() {
         }
 
         if (isEditMode && id) {
-          // Update existing bounty
-          result = await supabase
+          // Update existing bounty using Supabase client
+          const { data, error } = await supabase
             .from('bounties')
             .update(bountyData)
             .eq('id', id)
-            .select()
-            .single()
+            .select();
+          
+          if (error) throw error;
+          result = data;
+          
         } else {
-          // Create new bounty
-          result = await supabase
+          // Create new bounty using Supabase client
+          console.log("Creating new bounty with data:", {
+            ...bountyData,
+            sponsor_id: sponsorData.id
+          });
+          
+          const { data, error } = await supabase
             .from('bounties')
             .insert([bountyData])
-            .select()
-            .single()
+            .select();
+          
+          if (error) {
+            console.error("Error inserting bounty:", error);
+            throw error;
+          }
+          
+          result = data;
+          console.log("Bounty created successfully:", result);
 
-          // Update sponsor's bounty statistics
-          await supabase
+          // Update sponsor statistics
+          const { error: updateError } = await supabase
             .from('sponsors')
             .update({
               total_bounties_count: sponsorData.total_bounties_count + 1,
               total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
               updated_at: new Date().toISOString()
             })
-            .eq('id', sponsorData.id)
+            .eq('id', sponsorData.id);
+            
+          if (updateError) {
+            console.error("Error updating sponsor stats:", updateError);
+          }
         }
       } else {
         const projectData: ProjectInsert = {
@@ -249,47 +310,75 @@ export function PostListing() {
         }
 
         if (isEditMode && id) {
-          // Update existing project
-          result = await supabase
+          // Update existing project using Supabase client
+          const { data, error } = await supabase
             .from('projects')
             .update(projectData)
             .eq('id', id)
-            .select()
-            .single()
+            .select();
+          
+          if (error) throw error;
+          result = data;
+          
         } else {
-          // Create new project
-          result = await supabase
+          // Create new project using Supabase client
+          console.log("Creating new project with data:", {
+            ...projectData,
+            sponsor_id: sponsorData.id
+          });
+          
+          const { data, error } = await supabase
             .from('projects')
             .insert([projectData])
-            .select()
-            .single()
+            .select();
+          
+          if (error) {
+            console.error("Error inserting project:", error);
+            throw error;
+          }
+          
+          result = data;
+          console.log("Project created successfully:", result);
 
-          // Update sponsor's project statistics
-          await supabase
+          // Update sponsor statistics
+          const { error: updateError } = await supabase
             .from('sponsors')
             .update({
               total_projects_count: sponsorData.total_projects_count + 1,
               updated_at: new Date().toISOString()
             })
-            .eq('id', sponsorData.id)
+            .eq('id', sponsorData.id);
+            
+          if (updateError) {
+            console.error("Error updating sponsor stats:", updateError);
+          }
         }
       }
 
-      if (result.error) {
-        throw result.error
-      }
+      const successMessage = isEditMode 
+        ? `${listingType === 'bounty' ? 'Bounty' : 'Project'} updated successfully!`
+        : `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`;
+      
+      console.log(successMessage, "Result:", result);
+      toast.success(successMessage);
 
-      toast.success(
-        isEditMode 
-          ? `${listingType === 'bounty' ? 'Bounty' : 'Project'} updated successfully!`
-          : `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`
-      )
+      // Wait a moment before navigating to ensure the toast is seen
+      setTimeout(() => {
+        navigate('/sponsor/dashboard');
+      }, 1000);
 
-      // Navigate to the listing details page
-      navigate(`/${listingType}/${result.data.id}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error posting/updating listing:', error)
-      toast.error("Failed to post/update listing. Please try again.")
+      
+      // More helpful error message
+      if (error.message && error.message.includes('row-level security policy')) {
+        toast.error("Permission denied: Your account doesn't have rights to create listings. Please contact an administrator.")
+      } else if (error.message && error.message.includes('No active session found')) {
+        toast.error("Your session has expired. Please log in again.")
+        navigate('/auth')
+      } else {
+        toast.error(`Failed to post/update listing: ${error.message || "Unknown error"}`)
+      }
     } finally {
       setLoading(false)
     }
