@@ -16,6 +16,7 @@ import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from '../types/supabase'
 import { Loader2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../contexts/UserContext'
 
 interface SubmissionDialogProps {
   bounty: Bounty
@@ -33,6 +34,7 @@ export function SubmissionDialog({
   onSubmissionComplete
 }: SubmissionDialogProps) {
   const navigate = useNavigate()
+  const { user } = useUser() // Add this to get current user data
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -92,7 +94,8 @@ export function SubmissionDialog({
         formData.submissionUrl + `?t=${timestamp}`, // Add timestamp to URL to make it unique
         formData.title,
         formData.tweetUrl || null,
-        formData.description
+        formData.description,
+        user // Pass the full user object to include user details
       )
       
       if (result.success) {
