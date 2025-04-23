@@ -7,7 +7,6 @@ import { Badge } from "../components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Clock, Globe, MessageSquare, AlertTriangle, Send } from 'lucide-react'
 import { Link } from "react-router-dom"
-// import Image from "next/image"
 
 export default function ProjectDetails() {
   return (
