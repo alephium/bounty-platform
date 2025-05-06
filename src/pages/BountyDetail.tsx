@@ -97,7 +97,16 @@ export default function BountyDetails() {
 
       if (error) throw error
       setBounty(data)
-      toast.success("Your submission has been received!")
+      // toast.success("Your submission has been received!")
+      toast.success("Your submission has been received!", {
+        duration: 4000,
+        icon: '🎉',
+        // Additional styling to make it even more beautiful
+        style: {
+          padding: '16px 24px',
+          fontWeight: '500',
+        },
+      })
     } catch (error) {
       console.error('Error refreshing bounty:', error)
     }
