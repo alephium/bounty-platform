@@ -141,9 +141,6 @@ export function UserSubmissions() {
                 All Status
               </TabsTrigger>
               <TabsTrigger value="submitted" className={`${textColor} data-[state=active]:${textColor}`}>
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value="in_review" className={`${textColor} data-[state=active]:${textColor}`}>
                 In Review
               </TabsTrigger>
               <TabsTrigger value="accepted" className={`${textColor} data-[state=active]:${textColor}`}>
@@ -189,10 +186,7 @@ export function UserSubmissions() {
                               {statusIcons[submission.status]}
                               <span className="capitalize">{submission.status.replace('_', ' ')}</span>
                             </div>
-                          </Badge>
-                          <Badge variant="outline" className={`${textColor}`}>
-                            Bounty
-                          </Badge>
+                          </Badge>      
                           {submission.bounty_name && (
                             <Badge variant="secondary" className="bg-[#C1A461]/10 text-[#C1A461]">
                               {submission.bounty_name}
@@ -204,6 +198,9 @@ export function UserSubmissions() {
                           <h3 className={`text-lg font-medium ${textColor}`}>
                             {submission.title}
                           </h3>
+                          <p className={`text-sm ${mutedTextColor} mt-1`}>
+                            {submission.description}
+                          </p>
                           <p className={`text-sm ${mutedTextColor} mt-1`}>
                             {submission.sponsor_name} • Submitted on {formatDate(submission.created_at)}
                           </p>
