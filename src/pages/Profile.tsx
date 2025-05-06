@@ -12,7 +12,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useUser } from '../contexts/UserContext'
 import { supabase } from '../lib/supabase'
 import { Project, User, ProofOfWork, ProofOfWorkInsert, ProjectCategory } from '../types/supabase'
-import { toast } from "sonner"
+import { toast } from 'react-hot-toast'
 import { Label } from "../components/ui/label"
 import { Textarea } from "../components/ui/textarea"
 import {

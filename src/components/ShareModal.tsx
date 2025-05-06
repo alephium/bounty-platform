@@ -3,7 +3,7 @@ import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Input } from "./ui/input"
 import { X, Copy, Send } from 'lucide-react'
-import { toast } from "sonner"
+import { toast } from 'react-hot-toast'
 
 export default function ShareModal() {
   const [copied, setCopied] = useState(false)

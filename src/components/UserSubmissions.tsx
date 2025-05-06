@@ -222,7 +222,7 @@ export function UserSubmissions() {
                             <div className="flex items-center gap-1">
                               <span className={textColor}>◈</span>
                               <span className={`font-medium ${textColor}`}>
-                                {submission.reward.amount} {submission.reward.token}
+                                ${submission.reward.amount}
                               </span>
                             </div>
                           </div>

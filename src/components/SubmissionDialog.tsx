@@ -11,7 +11,7 @@ import { Input } from "./ui/input"
 import { Textarea } from "./ui/textarea"
 import { Button } from "./ui/button"
 import { Label } from "./ui/label"
-import { toast } from "sonner"
+import { toast } from 'react-hot-toast'
 import { handleBountySubmission } from '../hooks/submissionHandlers'
 import { Bounty } from '../types/supabase'
 import { Loader2, X } from 'lucide-react'

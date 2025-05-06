@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 import { useUser } from "@/contexts/UserContext"
 import { useTheme } from "@/contexts/ThemeContext"
-import { toast } from "sonner"
+import { toast } from 'react-hot-toast'
 import { Category, Bounty } from "@/types/supabase"
 
 interface FormData {

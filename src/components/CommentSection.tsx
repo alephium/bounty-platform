@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { supabase } from "../lib/supabase";
-import { toast } from "sonner";
+import { toast } from 'react-hot-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Types for the comment section

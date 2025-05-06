@@ -43,6 +43,9 @@ export default function SponsorDashboard() {
   const [feedback, setFeedback] = useState('')
   const [transactionHash, setTransactionHash] = useState('')
   const [showWalletCopied, setShowWalletCopied] = useState(false)
+  const [rewardAmount, setRewardAmount] = useState<string>(
+    selectedSubmission?.reward?.amount?.toString() || ""
+  );
 
   // Theme-specific styles
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -310,6 +313,65 @@ export default function SponsorDashboard() {
     toast.success("Wallet address copied to clipboard")
   }
 
+// Function to save reward amount
+  const saveRewardAmount = async (submissionId: string): Promise<void> => {
+    if (!rewardAmount.trim()) {
+      toast.error("Please enter a reward amount");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .update({ 
+          reward: {
+            ...(selectedSubmission?.reward || {}),
+            amount: parseFloat(rewardAmount),
+            usd_equivalent: parseFloat(rewardAmount)
+          }
+        })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+      
+      toast.success("Reward amount saved successfully");
+      
+      // Update the local submission data
+      setSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId 
+            ? { 
+                ...sub, 
+                reward: {
+                  ...(sub.reward || {}),
+                  amount: parseFloat(rewardAmount),
+                  usd_equivalent: parseFloat(rewardAmount)
+                }
+              } 
+            : sub
+        )
+      );
+      
+      setAllSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId 
+            ? { 
+                ...sub, 
+                reward: {
+                  ...(sub.reward || {}),
+                  amount: parseFloat(rewardAmount),
+                  usd_equivalent: parseFloat(rewardAmount)
+                }
+              } 
+            : sub
+        )
+      );
+      
+    } catch (error: any) {
+      console.error('Error saving reward amount:', error);
+      toast.error(`Failed to save reward amount: ${error.message || 'Unknown error'}`);
+    }
+  };
   // Save transaction hash without changing status
   const saveTransactionHash = async (submissionId: string) => {
     if (!transactionHash.trim()) {
@@ -981,15 +1043,53 @@ export default function SponsorDashboard() {
                     )}
                   </div>
                 </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className={`font-medium ${textColor}`}>Reward Amount (USD)</h4>
+                    {selectedSubmission.status === 'accepted' && selectedSubmission.reward.amount > 0 && (
+                      <Badge variant="outline" className="bg-[#C1A461]/10 text-[#C1A461]">
+                        ${selectedSubmission.reward.amount}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={rewardAmount}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRewardAmount(e.target.value)}
+                      placeholder="Enter amount in USD"
+                      className={`${bgColor} border-${borderColor} ${textColor}`}
+                      // Remove any conditional disabling based on status
+                    />
+                    <Button
+                      variant="outline"
+                      className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
+                      onClick={() => saveRewardAmount(selectedSubmission.id)}
+                      // Only disable if empty, not based on status
+                      disabled={!rewardAmount.trim()}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                  <p className={`text-xs mt-2 ${mutedTextColor}`}>
+                    {selectedSubmission.reward.amount > 0 
+                      ? `Current reward: $${selectedSubmission.reward.amount} - You can update if needed`
+                      : "Payment will be made in $ALPH equivalent to the USD amount entered above"}
+                  </p>
+                </div>
                 
                 {/* Transaction Hash Section - NEW */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className={`font-medium ${textColor}`}>Transaction Hash</h4>
                     {selectedSubmission.status === 'accepted' && (
-                      <Badge variant={selectedSubmission.transaction_hash ? "outline" : "destructive"} className={selectedSubmission.transaction_hash ? "bg-green-500/10 text-green-500" : ""}>
-                        {selectedSubmission.transaction_hash ? "Payment Recorded" : "Payment Required"}
-                      </Badge>
+                      <Badge 
+                      variant={selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "outline" : "destructive"} 
+                      className={selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "bg-green-500/10 text-green-500" : ""}
+                    >
+                      {selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "Payment Recorded" : "Payment Required"}
+                    </Badge>
                     )}
                   </div>
                   <div className="flex gap-2">
