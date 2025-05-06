@@ -55,7 +55,9 @@ export default function Profile() {
   })
   const location = useLocation();
   // const shareUrl = `${import.meta.env.VITE_APP_URL}${location.pathname}`;
-  const shareUrl = `http://5173${location.pathname}`;
+  const shareUrl = `http://5173${location.pathname}`; //wait for deploy
+  const [submissionsCount, setSubmissionsCount] = useState(0);
+  const [submissionsLoading, setSubmissionsLoading] = useState(true);
   // console.log('user',currentUser, profileUser)
   // Theme-based styling
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -144,6 +146,33 @@ export default function Profile() {
   
     fetchProfileData()
   }, [username, currentUser, navigate])
+
+  // Add this as a separate useEffect - don't modify your existing one
+  useEffect(() => {
+    const fetchSubmissionsCount = async () => {
+      if (!profileUser?.id) return;
+      
+      try {
+        setSubmissionsLoading(true);
+        
+        // Fetch bounty submissions count
+        const { count: bountyCount, error: bountyError } = await supabase
+          .from('bounty_submissions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', profileUser.id);
+          
+        if (bountyError) throw bountyError;
+        
+        setSubmissionsCount(bountyCount || 0);
+      } catch (error) {
+        console.error('Error fetching submissions count:', error);
+      } finally {
+        setSubmissionsLoading(false);
+      }
+    };
+    
+    fetchSubmissionsCount();
+  }, [profileUser]);
 
   if (error || !profileUser) {
     return (
@@ -330,9 +359,15 @@ export default function Profile() {
                     </p>
                     <p className={`text-sm ${mutedTextColor}`}>Total Reward</p>
                   </div>
-                  <div className="text-center">
+                  {/* <div className="text-center">
                     <p className={`text-xl font-bold ${textColor}`}>
                       {profileUser.completed_bounties_count || 0}
+                    </p>
+                    <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
+                  </div> */}
+                  <div className="text-center">
+                    <p className={`text-xl font-bold ${textColor}`}>
+                      {submissionsLoading ? '...' : submissionsCount}
                     </p>
                     <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
                   </div>
@@ -357,12 +392,6 @@ export default function Profile() {
                       View My Submissions
                     </Button>
                   )}
-                  {/* <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
-                      {profileUser.completed_hackathons_count || 0}
-                    </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Hackathon Completed</p>
-                  </div> */}
                 </div>
                 <div className="flex gap-4">
                   {profileUser.twitter_url && (
