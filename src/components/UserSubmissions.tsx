@@ -17,9 +17,8 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
+import type { BountySubmission } from '@/types/supabase'
 
-type SubmissionType = 'all' | 'bounty' | 'project'
 type SubmissionStatus = 'all' | 'submitted' | 'in_review' | 'accepted' | 'rejected'
 
 export function UserSubmissions() {
@@ -29,8 +28,6 @@ export function UserSubmissions() {
   
   const [loading, setLoading] = useState(true)
   const [bountySubmissions, setBountySubmissions] = useState<BountySubmission[]>([])
-  const [projectSubmissions, setProjectSubmissions] = useState<ProjectSubmission[]>([])
-  const [activeType, setActiveType] = useState<SubmissionType>('all')
   const [activeStatus, setActiveStatus] = useState<SubmissionStatus>('all')
 
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -71,34 +68,15 @@ export function UserSubmissions() {
       try {
         setLoading(true)
         
-        // Fetch bounty submissions
-        const { data: bountyData, error: bountyError } = await supabase
+        // Fetch bounty submissions - we can now use the direct properties
+        const { data: submissions, error } = await supabase
           .from('bounty_submissions')
-          .select(`
-            *,
-            bounty:bounties(id, title, category, reward, sponsor_id),
-            sponsor:sponsors(name, logo_url)
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
 
-        if (bountyError) throw bountyError
-
-        // Fetch project submissions
-        const { data: projectData, error: projectError } = await supabase
-          .from('project_submissions')
-          .select(`
-            *,
-            project:projects(id, title, category, sponsor_id),
-            sponsor:sponsors(name, logo_url)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-
-        if (projectError) throw projectError
-
-        setBountySubmissions(bountyData || [])
-        setProjectSubmissions(projectData || [])
+        if (error) throw error
+        setBountySubmissions(submissions || [])
       } catch (error) {
         console.error('Error fetching submissions:', error)
         toast.error('Failed to load your submissions')
@@ -110,55 +88,13 @@ export function UserSubmissions() {
     fetchSubmissions()
   }, [user, navigate])
 
-  // Filter submissions based on active tabs
+  // Filter submissions based on active status
   const filteredSubmissions = () => {
-    let combined: (BountySubmission | ProjectSubmission)[] = []
-    
-    if (activeType === 'all' || activeType === 'bounty') {
-      combined = [...combined, ...bountySubmissions]
+    if (activeStatus === 'all') {
+      return bountySubmissions
+    } else {
+      return bountySubmissions.filter(sub => sub.status === activeStatus)
     }
-    
-    if (activeType === 'all' || activeType === 'project') {
-      combined = [...combined, ...projectSubmissions]
-    }
-    
-    if (activeStatus !== 'all') {
-      combined = combined.filter(sub => sub.status === activeStatus)
-    }
-    
-    return combined.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-  }
-
-  const getSubmissionType = (submission: BountySubmission): 'bounty' | 'project' => {
-    return 'bounty_id' in submission ? 'bounty' : 'project'
-  }
-
-  const getTitle = (submission: BountySubmission) => {
-    if ('bounty_id' in submission) {
-      return submission.title}
-    else return 'Untitled Submission'
-  }
-
-  // const getCategory = (submission: BountySubmission) => {
-  //   if ('bounty_id' in submission && submission.bounty) {
-  //     return submission.bounty.category
-  //   } else if ('project_id' in submission && submission.project) {
-  //     return submission.project.category
-  //   }
-  //   return null
-  // }
-
-  const getReward = (submission: BountySubmission) => {
-    if ('bounty_id' in submission && submission.bounty && submission.bounty.reward) {
-      return `${submission.bounty.reward.amount} ${submission.bounty.reward.token}`
-    }
-    return null
-  }
-
-  const getSponsorName = (submission: BountySubmission) => {
-    return submission.sponsor?.name || 'Unknown Sponsor'
   }
 
   const formatDate = (dateString: string) => {
@@ -170,12 +106,7 @@ export function UserSubmissions() {
   }
 
   const handleViewBounty = (submission: BountySubmission) => {
-    const type = getSubmissionType(submission)
-    if (type === 'bounty' && 'bounty_id' in submission) {
-      navigate(`/bounty/${submission.bounty_id}`)
-    } else if (type === 'project' && 'project_id' in submission) {
-      navigate(`/project/${submission.project_id}`)
-    }
+    navigate(`/bounty/${submission.bounty_id}`)
   }
 
   const handleOpenUrl = (url: string | null, e: React.MouseEvent) => {
@@ -187,7 +118,7 @@ export function UserSubmissions() {
 
   if (loading) {
     return (
-      <Card className="bg-background border-border">
+      <Card className={`${bgColor} ${borderColor}`}>
         <CardContent className="p-8 flex justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461] border-t-transparent" />
         </CardContent>
@@ -202,43 +133,27 @@ export function UserSubmissions() {
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <CardTitle className={textColor}>
-            Your Submissions ({submissions.length})
+            Your Bounty Submissions ({submissions.length})
           </CardTitle>
-          <div className="flex gap-4">
-            <Tabs value={activeType} onValueChange={(v) => setActiveType(v as SubmissionType)}>
-              <TabsList className={`${bgColor} border-${borderColor}`}>
-                <TabsTrigger value="all" className={`${textColor} data-[state=active]:${textColor}`}>
-                  All
-                </TabsTrigger>
-                <TabsTrigger value="bounty" className={`${textColor} data-[state=active]:${textColor}`}>
-                  Bounties
-                </TabsTrigger>
-                <TabsTrigger value="project" className={`${textColor} data-[state=active]:${textColor}`}>
-                  Projects
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            <Tabs value={activeStatus} onValueChange={(v) => setActiveStatus(v as SubmissionStatus)}>
-              <TabsList className={`${bgColor} border-${borderColor}`}>
-                <TabsTrigger value="all" className={`${textColor} data-[state=active]:${textColor}`}>
-                  All Status
-                </TabsTrigger>
-                <TabsTrigger value="submitted" className={`${textColor} data-[state=active]:${textColor}`}>
-                  Pending
-                </TabsTrigger>
-                <TabsTrigger value="in_review" className={`${textColor} data-[state=active]:${textColor}`}>
-                  In Review
-                </TabsTrigger>
-                <TabsTrigger value="accepted" className={`${textColor} data-[state=active]:${textColor}`}>
-                  Accepted
-                </TabsTrigger>
-                <TabsTrigger value="rejected" className={`${textColor} data-[state=active]:${textColor}`}>
-                  Rejected
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          <Tabs value={activeStatus} onValueChange={(v) => setActiveStatus(v as SubmissionStatus)}>
+            <TabsList className={`${bgColor} border-${borderColor}`}>
+              <TabsTrigger value="all" className={`${textColor} data-[state=active]:${textColor}`}>
+                All Status
+              </TabsTrigger>
+              <TabsTrigger value="submitted" className={`${textColor} data-[state=active]:${textColor}`}>
+                Pending
+              </TabsTrigger>
+              <TabsTrigger value="in_review" className={`${textColor} data-[state=active]:${textColor}`}>
+                In Review
+              </TabsTrigger>
+              <TabsTrigger value="accepted" className={`${textColor} data-[state=active]:${textColor}`}>
+                Accepted
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className={`${textColor} data-[state=active]:${textColor}`}>
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </CardHeader>
       <CardContent>
@@ -251,21 +166,18 @@ export function UserSubmissions() {
             <p className="max-w-md mx-auto">
               {activeStatus !== 'all' 
                 ? `You don't have any ${activeStatus} submissions yet.`
-                : activeType !== 'all'
-                  ? `You haven't submitted any ${activeType} entries yet.`
-                  : "You haven't submitted any entries yet. Start by exploring available bounties and projects!"}
+                : "You haven't submitted any bounties yet. Start by exploring available bounties!"}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             {submissions.map((submission) => {
-              const submissionType = getSubmissionType(submission)
-              const hasTweetUrl = 'tweet_url' in submission && submission.tweet_url
+              const hasTweetUrl = submission.tweet_url;
               
               return (
                 <Card 
                   key={submission.id} 
-                  className={`${bgColor} ${borderColor} ${hoverBorderColor} cursor-pointer`}
+                  className={`${bgColor} ${borderColor} cursor-pointer hover:${borderColor}`}
                   onClick={() => handleViewBounty(submission)}
                 >
                   <CardContent className="p-6">
@@ -278,22 +190,22 @@ export function UserSubmissions() {
                               <span className="capitalize">{submission.status.replace('_', ' ')}</span>
                             </div>
                           </Badge>
-                          <Badge variant="outline" className={`${textColor} capitalize`}>
-                            {submissionType}
+                          <Badge variant="outline" className={`${textColor}`}>
+                            Bounty
                           </Badge>
-                          {getCategory(submission) && (
+                          {submission.bounty_name && (
                             <Badge variant="secondary" className="bg-[#C1A461]/10 text-[#C1A461]">
-                              {getCategory(submission)}
+                              {submission.bounty_name}
                             </Badge>
                           )}
                         </div>
                         
                         <div>
                           <h3 className={`text-lg font-medium ${textColor}`}>
-                            {getTitle(submission)}
+                            {submission.title}
                           </h3>
                           <p className={`text-sm ${mutedTextColor} mt-1`}>
-                            {getSponsorName(submission)} • Submitted on {formatDate(submission.created_at)}
+                            {submission.sponsor_name} • Submitted on {formatDate(submission.created_at)}
                           </p>
                         </div>
                         
@@ -308,11 +220,13 @@ export function UserSubmissions() {
                       </div>
                       
                       <div className="flex items-center gap-4 self-end md:self-center">
-                        {getReward(submission) && (
+                        {submission.reward && (
                           <div className="text-right">
                             <div className="flex items-center gap-1">
                               <span className={textColor}>◈</span>
-                              <span className={`font-medium ${textColor}`}>{getReward(submission)}</span>
+                              <span className={`font-medium ${textColor}`}>
+                                {submission.reward.amount} {submission.reward.token}
+                              </span>
                             </div>
                           </div>
                         )}
