@@ -45,7 +45,7 @@ const INITIAL_FORM_DATA: FormData = {
   },
   reward: {
     amount: 0,
-    token: "ALPH"
+    token: "USDC"
   },
   due_date: "",
   status: 'open'
@@ -283,9 +283,8 @@ export default function EditBounty() {
                   <SelectValue placeholder="Select token" />
                 </SelectTrigger>
                 <SelectContent className={`${bgColor} ${borderColor}`}>
-                  <SelectItem value="ALPH">ALPH</SelectItem>
+                  {/* <SelectItem value="ALPH">ALPH</SelectItem> */}
                   <SelectItem value="USDC">USDC</SelectItem>
-                  <SelectItem value="ETH">ETH</SelectItem>
                 </SelectContent>
               </Select>
             </div>

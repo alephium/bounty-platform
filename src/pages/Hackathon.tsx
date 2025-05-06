@@ -34,7 +34,7 @@ export default function HackathonPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#C1A461]">
               <Trophy className="w-6 h-6" />
-              Prize Pool - 13000 $ALPH
+              Prize Pool - 13000 $
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

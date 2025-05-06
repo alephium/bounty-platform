@@ -18,10 +18,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import { Info } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useUser } from '@/contexts/UserContext'
 import { toast } from 'sonner'
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../config";
 import type { BountyInsert, ProjectInsert, Category, Status, Bounty, Project } from '@/types/supabase'
 
 interface FormData {
@@ -38,7 +38,6 @@ interface FormData {
   start_date?: string
   end_date?: string
   difficulty_level?: 'beginner' | 'intermediate' | 'advanced'
-  estimated_hours?: number
 }
 
 const CATEGORIES: Category[] = ['content', 'design', 'development', 'other']
@@ -91,7 +90,6 @@ export function PostListing() {
             start_date: bountyData.start_date.split('T')[0],
             end_date: bountyData.end_date.split('T')[0],
             difficulty_level: bountyData.difficulty_level,
-            estimated_hours: bountyData.estimated_hours || undefined
           })
           setIsEditMode(true)
           return
@@ -130,6 +128,7 @@ export function PostListing() {
   const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
   const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
   const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
+  const infoBgColor = theme === 'dark' ? 'bg-[#C1A461]/10' : 'bg-amber-50'
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -138,53 +137,20 @@ export function PostListing() {
     }))
   }
 
-  // Direct fetch function to use instead of Supabase client
-  const directFetch = async (url: string, method: string, body?: any) => {
-    // Get the current user's session
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
+  const handleSubmit = async (e: React.FormEvent) => {
+    // Add preventDefault to ensure the form doesn't reload the page
+    e.preventDefault()
     
-    if (!token) {
-      throw new Error('No active session found. Please log in again.');
-    }
+    if (loading) return // Prevent double submissions
     
-    const response = await fetch(`${SUPABASE_URL}${url}`, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${token}`, // Use the user's access token
-        'Prefer': 'return=representation'
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
-    }
-
-    return await response.json();
-  }
-
-  const handleSubmit = async () => {
     try {
       setLoading(true)
 
       if (!user?.id) {
         toast.error("You must be logged in to post a listing")
-        return
-      }
-      
-      // Verify authentication
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
-        toast.error("Your session has expired. Please log in again.")
         navigate('/auth')
         return
       }
-      
-      console.log("Authenticated user ID:", user.id);
 
       // Validate required fields
       if (!formData.title.trim()) {
@@ -196,22 +162,46 @@ export function PostListing() {
         return
       }
 
-      // Use the Supabase client for this query since it's more reliable for fetching
-      console.log("Fetching sponsor profile for user:", user.id);
-      const { data: sponsorData, error: sponsorError } = await supabase
-        .from('sponsors')
-        .select('id, total_bounties_count, total_projects_count, total_reward_amount')
-        .eq('user_id', user.id)
-        .single();
+      // Validate dates for bounties
+      if (listingType === 'bounty') {
+        if (!formData.start_date) {
+          toast.error("Start date is required")
+          return
+        }
+        if (!formData.end_date) {
+          toast.error("End date is required")
+          return
+        }
+        if (new Date(formData.end_date) < new Date(formData.start_date)) {
+          toast.error("End date cannot be before start date")
+          return
+        }
+      }
 
-      if (sponsorError || !sponsorData) {
-        console.error("Error fetching sponsor profile:", sponsorError);
+      // Check if the logged-in user has a sponsor profile using a try-catch to handle potential errors
+      let sponsorData;
+      try {
+        const { data, error } = await supabase
+          .from('sponsors')
+          .select('id, total_bounties_count, total_projects_count, total_reward_amount')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (error) throw error
+        sponsorData = data
+      } catch (error) {
+        console.error("Sponsor profile error:", error)
         toast.error("You need to create a sponsor profile before posting a listing")
         navigate('/sponsor')
         return
       }
-      
-      console.log("Found sponsor profile:", sponsorData.id);
+
+      // If no sponsor profile exists
+      if (!sponsorData) {
+        toast.error("You need to create a sponsor profile before posting a listing")
+        navigate('/sponsor')
+        return
+      }
 
       // Prepare base data
       const baseData = {
@@ -220,8 +210,8 @@ export function PostListing() {
         description: formData.description,
         category: formData.category,
         status: 'open' as Status,
-        requirements: formData.requirements,
-        tags: formData.tags,
+        requirements: formData.requirements, 
+        tags: formData.tags || [], // Ensure tags is always an array
         is_featured: false,
       }
 
@@ -241,14 +231,14 @@ export function PostListing() {
           ...baseData,
           reward: {
             amount: formData.reward?.amount || 0,
-            token: formData.reward?.token || 'ALPH',
+            token: 'USDC',
             usd_equivalent: usdEquivalent
           },
           start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
           end_date: formData.end_date ? new Date(formData.end_date).toISOString() : new Date().toISOString(),
           review_timeframe: 7,
           difficulty_level: formData.difficulty_level || 'beginner',
-          estimated_hours: formData.estimated_hours || 0,
+          estimated_hours: 0, // Set to 0 as we're not using this field
           submission_guidelines: '',
           max_submissions: 10,
           current_submissions: 0,
@@ -256,51 +246,52 @@ export function PostListing() {
         }
 
         if (isEditMode && id) {
-          // Update existing bounty using Supabase client
-          const { data, error } = await supabase
-            .from('bounties')
-            .update(bountyData)
-            .eq('id', id)
-            .select();
-          
-          if (error) throw error;
-          result = data;
-          
-        } else {
-          // Create new bounty using Supabase client
-          console.log("Creating new bounty with data:", {
-            ...bountyData,
-            sponsor_id: sponsorData.id
-          });
-          
-          const { data, error } = await supabase
-            .from('bounties')
-            .insert([bountyData])
-            .select();
-          
-          if (error) {
-            console.error("Error inserting bounty:", error);
-            throw error;
+          try {
+            // Update existing bounty
+            const { data, error } = await supabase
+              .from('bounties')
+              .update(bountyData)
+              .eq('id', id)
+              .select()
+              
+            if (error) throw error
+            result = Array.isArray(data) ? data[0] : data
+          } catch (err) {
+            console.error('Error updating bounty:', err)
+            throw new Error('Failed to update bounty')
           }
-          
-          result = data;
-          console.log("Bounty created successfully:", result);
-
-          // Update sponsor statistics
-          const { error: updateError } = await supabase
-            .from('sponsors')
-            .update({
-              total_bounties_count: sponsorData.total_bounties_count + 1,
-              total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', sponsorData.id);
+        } else {
+          try {
+            // Create new bounty - add error handling
+            const { data, error } = await supabase
+              .from('bounties')
+              .insert([bountyData])
+              .select()
+              
+            if (error) throw error
+            result = Array.isArray(data) ? data[0] : data
             
-          if (updateError) {
-            console.error("Error updating sponsor stats:", updateError);
+            // Update sponsor's bounty statistics
+            const { error: updateError } = await supabase
+              .from('sponsors')
+              .update({
+                total_bounties_count: sponsorData.total_bounties_count + 1,
+                total_reward_amount: sponsorData.total_reward_amount + usdEquivalent,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', sponsorData.id)
+            
+            if (updateError) {
+              console.error('Error updating sponsor stats:', updateError)
+              // Continue anyway as the bounty was created
+            }
+          } catch (err) {
+            console.error('Error creating bounty:', err)
+            throw new Error('Failed to create bounty')
           }
         }
       } else {
+        // Project logic
         const projectData: ProjectInsert = {
           ...baseData,
           repository_url: null,
@@ -310,74 +301,78 @@ export function PostListing() {
         }
 
         if (isEditMode && id) {
-          // Update existing project using Supabase client
-          const { data, error } = await supabase
-            .from('projects')
-            .update(projectData)
-            .eq('id', id)
-            .select();
-          
-          if (error) throw error;
-          result = data;
-          
-        } else {
-          // Create new project using Supabase client
-          console.log("Creating new project with data:", {
-            ...projectData,
-            sponsor_id: sponsorData.id
-          });
-          
-          const { data, error } = await supabase
-            .from('projects')
-            .insert([projectData])
-            .select();
-          
-          if (error) {
-            console.error("Error inserting project:", error);
-            throw error;
+          try {
+            // Update existing project
+            const { data, error } = await supabase
+              .from('projects')
+              .update(projectData)
+              .eq('id', id)
+              .select()
+              
+            if (error) throw error
+            result = Array.isArray(data) ? data[0] : data
+          } catch (err) {
+            console.error('Error updating project:', err)
+            throw new Error('Failed to update project')
           }
-          
-          result = data;
-          console.log("Project created successfully:", result);
-
-          // Update sponsor statistics
-          const { error: updateError } = await supabase
-            .from('sponsors')
-            .update({
-              total_projects_count: sponsorData.total_projects_count + 1,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', sponsorData.id);
+        } else {
+          try {
+            // Create new project
+            const { data, error } = await supabase
+              .from('projects')
+              .insert([projectData])
+              .select()
+              
+            if (error) throw error
+            result = Array.isArray(data) ? data[0] : data
             
-          if (updateError) {
-            console.error("Error updating sponsor stats:", updateError);
+            // Update sponsor's project statistics
+            const { error: updateError } = await supabase
+              .from('sponsors')
+              .update({
+                total_projects_count: sponsorData.total_projects_count + 1,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', sponsorData.id)
+            
+            if (updateError) {
+              console.error('Error updating sponsor stats:', updateError)
+              // Continue anyway as the project was created
+            }
+          } catch (err) {
+            console.error('Error creating project:', err)
+            throw new Error('Failed to create project')
           }
         }
       }
 
-      const successMessage = isEditMode 
-        ? `${listingType === 'bounty' ? 'Bounty' : 'Project'} updated successfully!`
-        : `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`;
+      // Ensure we have a result before proceeding
+      if (!result || !result.id) {
+        throw new Error('Operation completed but no result returned')
+      }
       
-      console.log(successMessage, "Result:", result);
-      toast.success(successMessage);
+      toast.success(
+        isEditMode 
+          ? `${listingType === 'bounty' ? 'Bounty' : 'Project'} updated successfully!`
+          : `${listingType === 'bounty' ? 'Bounty' : 'Project'} posted successfully!`
+      )
 
-      // Wait a moment before navigating to ensure the toast is seen
+      // Add a small delay before navigation to ensure the toast is seen
       setTimeout(() => {
-        navigate('/sponsor/dashboard');
-      }, 1000);
-
+        navigate(`/${listingType === 'bounty' ? 'bounty' : 'projects'}/${result.id}`)
+      }, 1000)
+      
     } catch (error: any) {
       console.error('Error posting/updating listing:', error)
       
-      // More helpful error message
-      if (error.message && error.message.includes('row-level security policy')) {
-        toast.error("Permission denied: Your account doesn't have rights to create listings. Please contact an administrator.")
-      } else if (error.message && error.message.includes('No active session found')) {
-        toast.error("Your session has expired. Please log in again.")
+      // More detailed error message
+      if (error.message?.includes('JWTExpired')) {
+        toast.error('Your session has expired. Please log in again.')
         navigate('/auth')
+      } else if (error.message?.includes('duplicate key')) {
+        toast.error('A listing with similar details already exists.')
       } else {
-        toast.error(`Failed to post/update listing: ${error.message || "Unknown error"}`)
+        toast.error(`Failed to save: ${error.message || 'Unknown error'}`)
       }
     } finally {
       setLoading(false)
@@ -413,138 +408,134 @@ export function PostListing() {
                 : `Post a New ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label className={textColor}>Title</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                placeholder="Enter a descriptive title"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-              />
-            </div>
+          <CardContent>
+            {/* Wrap in a form element to handle submissions better */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title" className={textColor}>Title</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="Enter a descriptive title"
+                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label className={textColor}>Description</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Describe the requirements and expectations"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="description" className={textColor}>Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Describe the requirements and expectations"
+                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label className={textColor}>Requirements</Label>
-              <Textarea
-                value={formData.requirements}
-                onChange={(e) => handleInputChange('requirements', e.target.value)}
-                placeholder="Add requirements"
-                className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="requirements" className={textColor}>Requirements</Label>
+                <Textarea
+                  id="requirements"
+                  value={formData.requirements}
+                  onChange={(e) => handleInputChange('requirements', e.target.value)}
+                  placeholder="Add requirements"
+                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label className={textColor}>Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => handleInputChange('category', value)}
-              >
-                <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent className={`${bgColor} border-${borderColor}`}>
-                  {CATEGORIES.map((category) => (
-                    <SelectItem 
-                      key={category} 
-                      value={category}
-                      className={textColor}
-                    >
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="category" className={textColor}>Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => handleInputChange('category', value)}
+                  name="category"
+                >
+                  <SelectTrigger id="category" className={`${bgColor} border-${borderColor} ${textColor}`}>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent className={`${bgColor} border-${borderColor}`}>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem 
+                        key={category} 
+                        value={category}
+                        className={textColor}
+                      >
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {listingType === 'bounty' && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
+              {listingType === 'bounty' && (
+                <>
+                  {/* Redesigned Reward Section */}
                   <div className="space-y-2">
-                    <Label className={textColor}>Reward Amount ($USD)</Label>
+                    <Label htmlFor="reward" className={textColor}>Reward Amount (USD)</Label>
                     <Input
+                      id="reward"
                       type="number"
                       value={formData.reward?.amount || ''}
                       onChange={(e) => handleInputChange('reward', {
-                        amount: parseFloat(e.target.value),
-                        token: formData.reward?.token || TOKENS[0],
-                        usd_equivalent: parseFloat(e.target.value)
+                        amount: parseFloat(e.target.value) || 0,
+                        token: 'USDC',
+                        usd_equivalent: parseFloat(e.target.value) || 0
                       })}
                       placeholder="1000"
                       className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
+                      required={listingType === 'bounty'}
+                      min="1"
+                      step="1"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>Token</Label>
-                    <Select
-                      value={formData.reward?.token || TOKENS[0]}
-                      onValueChange={(value) => handleInputChange('reward', {
-                        ...formData.reward,
-                        token: value
-                      })}
-                    >
-                      <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
-                        <SelectValue placeholder="Select token" />
-                      </SelectTrigger>
-                      <SelectContent className={`${bgColor} border-${borderColor}`}>
-                        {TOKENS.map((token) => (
-                          <SelectItem 
-                            key={token} 
-                            value={token}
-                            className={textColor}
-                          >
-                            {token}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className={textColor}>Start Date</Label>
-                    <div className="relative">
-                      <Input
-                        type="date"
-                        value={formData.start_date || ''}
-                        onChange={(e) => handleInputChange('start_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
-                      />
+                    <div className={`flex items-center gap-2 p-3 rounded ${infoBgColor}`}>
+                      <Info className={`h-4 w-4 ${textColor}`} />
+                      <p className={`text-sm ${textColor}`}>
+                        Payment will be made in $ALPH at the USD-equivalent value
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>End Date</Label>
-                    <div className="relative">
-                      <Input
-                        type="date"
-                        value={formData.end_date || ''}
-                        onChange={(e) => handleInputChange('end_date', e.target.value)}
-                        className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
-                      />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date" className={textColor}>Start Date</Label>
+                      <div className="relative">
+                        <Input
+                          id="start_date"
+                          type="date"
+                          value={formData.start_date || ''}
+                          onChange={(e) => handleInputChange('start_date', e.target.value)}
+                          className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                          required={listingType === 'bounty'}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end_date" className={textColor}>End Date</Label>
+                      <div className="relative">
+                        <Input
+                          id="end_date"
+                          type="date"
+                          value={formData.end_date || ''}
+                          onChange={(e) => handleInputChange('end_date', e.target.value)}
+                          className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                          required={listingType === 'bounty'}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className={textColor}>Difficulty Level</Label>
+                    <Label htmlFor="difficulty" className={textColor}>Difficulty Level</Label>
                     <Select
-                      value={formData.difficulty_level}
+                      value={formData.difficulty_level || 'beginner'}
                       onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') => 
                         handleInputChange('difficulty_level', value)}
+                      name="difficulty"
                     >
-                      <SelectTrigger className={`${bgColor} border-${borderColor} ${textColor}`}>
+                      <SelectTrigger id="difficulty" className={`${bgColor} border-${borderColor} ${textColor}`}>
                         <SelectValue placeholder="Select difficulty" />
                       </SelectTrigger>
                       <SelectContent className={`${bgColor} border-${borderColor}`}>
@@ -554,29 +545,19 @@ export function PostListing() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className={textColor}>Estimated Hours</Label>
-                    <Input
-                      type="number"
-                      value={formData.estimated_hours || ''}
-                      onChange={(e) => handleInputChange('estimated_hours', parseInt(e.target.value))}
-                      placeholder="40"
-                      className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            <Button 
-              className={theme === 'dark' ? 
-                "w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                "w-full bg-amber-500 hover:bg-amber-600 text-white"}
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Posting...' : `${isEditMode ? 'Update' : 'Post'} ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
-            </Button>
+              <Button 
+                type="submit"
+                className={theme === 'dark' ? 
+                  "w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
+                  "w-full bg-amber-500 hover:bg-amber-600 text-white"}
+                disabled={loading}
+              >
+                {loading ? 'Posting...' : `${isEditMode ? 'Update' : 'Post'} ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </Tabs>
