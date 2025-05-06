@@ -10,11 +10,11 @@ import { useTheme } from "@/contexts/ThemeContext"
 import { useUser } from "@/contexts/UserContext"
 import { supabase } from "@/lib/supabase"
 import { Bounty } from "@/types/supabase"
-import { toast } from "sonner"
 import { SubmissionDialog } from '../components/SubmissionDialog'
 import CommentSection from '../components/CommentSection'
 import LoadingPage from "./LoadingPage"
 import { Link } from "react-router-dom";
+import { toast } from 'react-hot-toast';
 
 export default function BountyDetails() {
   const { id } = useParams()

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster, toast } from 'react-hot-toast';
 import { UserService } from './services/user.service'
 import { User } from './types/supabase'
 import { UserProvider } from './contexts/UserContext'
@@ -42,6 +43,7 @@ export default function App() {
     <UserProvider initialUser={initialUser}>
       <ThemeProvider>
         <BrowserRouter>
+          <Toaster position='top-right' />
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
