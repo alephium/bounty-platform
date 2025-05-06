@@ -7,7 +7,7 @@ import { CircleDollarSign, Plus, BarChart3, Edit, ExternalLink, ArrowLeft, Eye, 
 import { useTheme } from '@/contexts/ThemeContext'
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { toast } from 'react-hot-toast';
 import type { Bounty, Sponsor, BountySubmission } from '@/types/supabase'
 import LoadingPage from '../pages/LoadingPage'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -206,30 +206,42 @@ export default function SponsorDashboard() {
       setFeedback('');
       setTransactionHash('');
 
-      // Update the local submission lists
-      const updatedSubmission = { 
-        ...submissions.find(s => s.id === submissionId), 
-        status: newStatus, 
-        feedback: feedback || null,
-        transaction_hash: newStatus === 'accepted' ? transactionHash.trim() : null
-      } as BountySubmission;
-      
-      setSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId ? updatedSubmission : sub
-        )
-      );
-      
-      setAllSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId ? updatedSubmission : sub
-        )
-      );
+      // Refresh the submission data
+      const { data: refreshedData, error: refreshError } = await supabase
+        .from('bounty_submissions')
+        .select(`
+          *,
+          user:users(id, username, full_name, avatar_url, wallet_address)
+        `)
+        .eq('id', submissionId)
+        .single();
+
+      if (!refreshError && refreshedData) {
+        const updatedSubmission = {
+          ...refreshedData,
+          user_username: refreshedData.user?.username || '',
+          user_full_name: refreshedData.user?.full_name || '',
+          user_avatar_url: refreshedData.user?.avatar_url || '',
+          user_wallet_address: refreshedData.user?.wallet_address || ''
+        };
+        
+        setSubmissions(prev => 
+          prev.map(sub => 
+            sub.id === submissionId ? updatedSubmission : sub
+          )
+        );
+        
+        setAllSubmissions(prev => 
+          prev.map(sub => 
+            sub.id === submissionId ? updatedSubmission : sub
+          )
+        );
+      }
 
       // Show success message
       toast.success(`Submission ${newStatus} successfully`);
       
-      // Refresh submissions after a short delay to ensure we have the latest data
+      // Refresh submissions after a short delay
       setTimeout(() => {
         if (selectedBounty) {
           fetchSubmissions(selectedBounty.id);
@@ -360,11 +372,19 @@ export default function SponsorDashboard() {
 
   // Format date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
   }
 
   // Get initials for avatar
