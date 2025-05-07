@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, Sun, Moon, Plus } from 'lucide-react'
 import { Card, CardContent } from "./ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Button } from "./ui/button"
 import { useUser } from '../contexts/UserContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { AvatarDropdown } from './ui/AvatarDropdown'
-import { SessionProvider } from "../contexts/SessionContext"
+import { SessionProvider } from "../contexts/SessionContext";
 import { ThemeToggle } from './ThemeToggle'
 import { useRewards } from '../hooks/useRewards'
 import { supabase } from '../lib/supabase'
@@ -13,6 +15,7 @@ import { Sponsor } from '../types/supabase'
 
 const Layout = () => {
   const { user } = useUser()
+  const { theme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [showAuthPrompt, setShowAuthPrompt] = useState(false)
@@ -76,18 +79,17 @@ const Layout = () => {
 
   const getInitials = (name: string | null) => {
     if (!name) return 'GU'
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    return name.split(' ').map(part => part[0]).join('').toUpperCase().slice(0, 2)
   }
 
   const renderAvatar = () => {
     if (!user) return null
     return <AvatarDropdown user={user} getInitials={getInitials} />
   }
+
+  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
+  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
+  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   return (
     <>
@@ -188,52 +190,52 @@ const Layout = () => {
             </CardContent>
           </Card>
 
-              <Card>
-                <CardContent className="p-4">
-                  <h2 className="font-bold text-primary mb-4">NAVIGATION GUIDE</h2>
-                  <div className="space-y-6">
-                    {[
-                      {
-                        icon: "🏴‍☠️",
-                        title: "Join the Crew",
-                        description: "Create your sailor's profile",
-                      },
-                      {
-                        icon: "⚓",
-                        title: "Embark on Quests",
-                        description: "Build your reputation",
-                      },
-                      {
-                        icon: "💎",
-                        title: "Claim Your Treasure",
-                        description: "Get rewarded for your valor",
-                      },
-                    ].map((step) => (
-                      <div key={step.title} className="flex gap-4">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          {step.icon}
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-primary">{step.title}</h3>
-                          <p className="text-sm text-primary">{step.description}</p>
-                        </div>
+            <Card className={`${bgColor} ${borderColor}`}>
+              <CardContent className="p-4">
+                <h2 className="font-bold text-[#C1A461] mb-4">NAVIGATION GUIDE</h2>
+                <div className="space-y-6">
+                  {[
+                    {
+                      icon: "🏴‍☠️",
+                      title: "Join the Crew",
+                      description: "Create your sailor's profile"
+                    },
+                    {
+                      icon: "⚓",
+                      title: "Embark on Quests",
+                      description: "Build your reputation"
+                    },
+                    {
+                      icon: "💎",
+                      title: "Claim Your Treasure",
+                      description: "Get rewarded for your valor"
+                    }
+                  ].map((step) => (
+                    <div key={step.title} className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                        {step.icon}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      <div>
+                        <h3 className="font-medium text-[#C1A461]">{step.title}</h3>
+                        <p className="text-sm text-[#C1A461]">{step.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className={`bg-background border-border`}>
-                <CardContent className="p-4">
-                  <h2 className="font-bold text-primary mb-4">RECENT EARNERS</h2>
-                  <div>
-                    <h3 className="font-medium text-primary">Coming Soon</h3>
-                  </div>
-                </CardContent>
-              </Card>
-            </aside>
-          </div>
+            <Card className={`${bgColor} ${borderColor}`}>
+              <CardContent className="p-4">
+                <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
+                <div>
+                  <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
         </div>
+      </div>
       </SessionProvider>
     </>
   )
