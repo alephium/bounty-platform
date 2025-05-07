@@ -1,15 +1,12 @@
-import { useTheme } from '@/contexts/ThemeContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function Terms() {
-  const { theme } = useTheme()
 
-  // Theme-specific styles
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-gray-50'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-500'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const bgColor = 'bg-background'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const borderColor = 'border-border'
 
   return (
     <div className={`min-h-screen ${bgColor} p-4 md:p-8`}>

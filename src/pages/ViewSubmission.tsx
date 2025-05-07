@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
@@ -45,21 +44,14 @@ function getInitials(name: string | null) {
 }
 
 export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
-  const { user } = useUser()
-  const { theme } = useTheme()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [bountySubmissions, setBountySubmissions] = useState<BountySubmission[]>([])
   const [projectSubmissions, setProjectSubmissions] = useState<ProjectSubmission[]>([])
-  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
-
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const hoverBorderColor = theme === 'dark' ? 'hover:border-[#C1A461]/40' : 'hover:border-amber-300'
-  const avatarBg = theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'
-
+  const [activeTab, setActiveTab] = useState<'all' | 'submitted' | 'accepted' | 'rejected'>('all')
+  const mutedTextColor = "text-muted"
+  const hoverBorderColor = "hover:border-border"
+  const avatarBg = "bg-primary/20"
   const statusColors = {
     submitted: theme === 'dark' 
       ? "bg-yellow-500/20 text-yellow-400" 
@@ -82,7 +74,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     submissionType?: 'bounty' | 'project';
   }>({ isOpen: false });
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -123,7 +115,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [bountyId, projectId, toast])
 
   useEffect(() => {
 
@@ -174,7 +166,7 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
     return () => {
       subscriptions.forEach(subscription => subscription.unsubscribe())
     }
-  }, [bountyId, projectId])
+  }, [bountyId, fetchSubmissions, projectId])
 
   const handleStatusUpdate = async (
     submissionId: string, 
@@ -285,24 +277,24 @@ export function ViewSubmissions({ bountyId, projectId }: SubmissionProps) {
   }
 
 return (
-    <Card className={`${bgColor} border-${borderColor}`}>
+  <Card className="bg-background border-border">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className={textColor}>
+          <CardTitle className="text-foreground">
             Submissions ({filteredSubmissions.length})
           </CardTitle>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-            <TabsList className={`${bgColor} border-${borderColor}`}>
-              <TabsTrigger value="all" className={`${textColor} data-[state=active]:${textColor}`}>
+          <Tabs value={activeTab} onValueChange={v => setActiveTab(v as typeof activeTab)}>
+            <TabsList className="bg-background border-border">
+              <TabsTrigger value="all" className="text-foreground data-[state=active]:text-foreground">
                 All
               </TabsTrigger>
-              <TabsTrigger value="submitted" className={`${textColor} data-[state=active]:${textColor}`}>
+              <TabsTrigger value="submitted" className="text-foreground data-[state=active]:text-foreground">
                 Pending
               </TabsTrigger>
-              <TabsTrigger value="accepted" className={`${textColor} data-[state=active]:${textColor}`}>
+              <TabsTrigger value="accepted" className="text-foreground data-[state=active]:text-foreground">
                 Accepted
               </TabsTrigger>
-              <TabsTrigger value="rejected" className={`${textColor} data-[state=active]:${textColor}`}>
+              <TabsTrigger value="rejected" className="text-foreground data-[state=active]:text-foreground">
                 Rejected
               </TabsTrigger>
             </TabsList>
@@ -311,14 +303,12 @@ return (
       </CardHeader>
       <CardContent className="space-y-4">
         {filteredSubmissions.length === 0 ? (
-          <div className={`text-center py-8 ${mutedTextColor}`}>
-            No submissions found
-          </div>
+          <div className="text-center py-8 text-muted">No submissions found</div>
         ) : (
-          filteredSubmissions.map((submission) => (
+          filteredSubmissions.map(submission => (
             <div
               key={submission.id}
-              className={`flex items-center justify-between p-4 rounded-lg border ${borderColor} ${hoverBorderColor} transition-colors`}
+              className={`flex items-center justify-between p-4 rounded-lg border ${hoverBorderColor} transition-colors`}
             >
               <div className="flex items-center gap-4">
                 <Avatar>
@@ -328,7 +318,7 @@ return (
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className={`font-medium ${textColor}`}>
+                  <h3 className="font-medium text-foreground">
                     {submission.user?.full_name}'s Submission
                   </h3>
                   <div className="flex items-center gap-4 mt-1">
@@ -339,18 +329,17 @@ return (
                       {submission.status}
                     </Badge>
                   </div>
-                  <div className={`flex items-center gap-2 mt-2 text-xs ${mutedTextColor}`}>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted">
                     <Calendar className="w-3 h-3" />
                     <span>Submitted {formatDate(submission.created_at)}</span>
                   </div>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`${textColor} hover:${bgColor} hover:${textColor}`}
+                  className="text-foreground hover:bg-background hover:text-foreground"
                   onClick={() => window.open(submission.submission_url, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4" />

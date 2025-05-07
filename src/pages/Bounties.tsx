@@ -5,7 +5,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, Compass, Search, Anchor, MapPin, Ship, Filter } from 'lucide-react'
-import { useTheme } from '@/contexts/ThemeContext'
 import { Bounty, Status } from '@/types/supabase'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -14,7 +13,6 @@ import { Link } from 'react-router-dom';
 
 export function Bounties() {
   const navigate = useNavigate()
-  const { theme } = useTheme()
   
   const [bounties, setBounties] = useState<Bounty[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,11 +20,12 @@ export function Bounties() {
   const [selectedStatus, setSelectedStatus] = useState<Status>('open')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+  const bgColor = 'bg-background'
+  const cardBg = 'bg-card'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const borderColor = 'border-border'
+  const buttonClass = 'bg-primary hover:bg-primary/90 text-primary-foreground'
 
   useEffect(() => {
     const fetchBounties = async () => {
@@ -101,13 +100,7 @@ export function Bounties() {
                 <Button 
                   key={filter}
                   variant="outline" 
-                  className={`rounded-full ${borderColor} bg-transparent ${textColor} 
-                    ${theme === 'dark' ? 
-                      'hover:bg-amber-500/20 hover:text-amber-400' : 
-                      'hover:bg-amber-100 hover:text-amber-700'}
-                    ${selectedCategory === filter ? 
-                      theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700' 
-                      : ''}`}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={() => setSelectedCategory(filter)}
                 >
                   {filter}
@@ -122,19 +115,19 @@ export function Bounties() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Compass className={`w-6 h-6 ${textColor}`} />
-                <h2 className={`font-bold ${textColor}`}>Available Bounties</h2>
+                <Compass className={`w-6 h-6 text-primary`} />
+                <h2 className={`font-medium text-primary`}>Available Bounties</h2>
               </div>
               <span className={mutedTextColor}>{filteredBounties.length} bounties</span>
             </div>
 
             <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
-              <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-gray-800">
+              <TabsList className="grid w-full max-w-[400px] grid-cols-3 mb-4 bg-secondary rounded-full">
                 {["open", "in review", "completed"].map((tab) => (
                   <TabsTrigger 
                     key={tab}
                     value={tab as Status}
-                    className="data-[state=active]:bg-amber-500 data-[state=active]:text-gray-900"
+                    className="data-[state=active]:text-primary-foreground data-[state=active]:bg-primary rounded-full"
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </TabsTrigger>
@@ -148,7 +141,7 @@ export function Bounties() {
               ) : (
                 <div className="space-y-4">
                   {filteredBounties.length === 0 ? (
-                    <div className={`text-center py-8 ${mutedTextColor}`}>
+                    <div className={`text-center py-8 text-primary`}>
                       No bounties found
                     </div>
                   ) : (
@@ -156,8 +149,7 @@ export function Bounties() {
                       <Card key={bounty.id} className={`${cardBg} ${borderColor}`}>
                         <CardContent className="flex items-center justify-between p-4">
                           <div className="flex gap-4">
-                            <div className={`w-12 h-12 ${theme === 'dark' ? 
-                              'bg-amber-500/10' : 'bg-amber-100'} rounded-lg flex items-center justify-center`}>
+                            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
                               <Ship className={textColor} />
                             </div>
                             <div>
@@ -211,8 +203,7 @@ export function Bounties() {
                             </div>
                             <Button 
                               variant="outline"
-                              className={`${borderColor} bg-transparent ${textColor} 
-                                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                              className="border-primary text-primary hover:bg-secondary"
                               onClick={() => navigate(`/bounty/${bounty.id}`)}
                             >
                               View Details

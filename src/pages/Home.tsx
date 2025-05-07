@@ -7,7 +7,6 @@ import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-react'
-import { useTheme } from '../contexts/ThemeContext'
 import { Bounty, Status } from '@/types/supabase'
 // import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
@@ -28,11 +27,11 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All Quests")
   const [selectedStatus, setSelectedStatus] = useState<Status>('open')
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
+  const bgColor = 'bg-background'
+  const cardBg = 'bg-card'
+  const textColor = 'text-foreground'
+  const mutedTextColor = 'text-muted'
+  const borderColor = 'border-border'
 
   // Fetch bounties
   useEffect(() => {
@@ -105,10 +104,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <main>
           {/* Welcome Card */}
-          <Card className={`${theme === 'dark' ? 
-            'bg-gradient-to-br from-amber-500/20 to-amber-500/5' : 
-            'bg-gradient-to-br from-amber-100 to-amber-50'} 
-            ${borderColor} mb-6`}>
+          <Card className={`bg-background ${borderColor} mb-6`}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">

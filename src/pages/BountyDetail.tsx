@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Clock, Globe, MessageSquare, AlertTriangle, Send } from 'lucide-react'
-import { useTheme } from "@/contexts/ThemeContext"
 import { useUser } from "@/contexts/UserContext"
 import { supabase } from "@/lib/supabase"
 import { Bounty } from "@/types/supabase"
@@ -18,16 +16,14 @@ import { toast } from 'react-hot-toast';
 
 export default function BountyDetails() {
   const { id } = useParams()
-  const navigate = useNavigate()
-  const { theme } = useTheme()
   const { user } = useUser()
   const [bounty, setBounty] = useState<Bounty | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false)
 
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const bgColor = 'bg-background'
+  const textColor = 'text-foreground'
+  const borderColor = 'border-border'
 
   // Fetch bounty data including sponsor details
   useEffect(() => {

@@ -55,14 +55,12 @@ export default function EditBounty() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useUser()
-  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(false)
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA)
 
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
+  const textColor = 'text-foreground'
+  const borderColor = 'border-border'
 
   // Fetch existing bounty data if editing
   useEffect(() => {
@@ -185,15 +183,15 @@ export default function EditBounty() {
 
   if (initialLoading) {
     return (
-      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
+      <div className={`min-h-screen bg-background flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} p-4 flex items-center justify-center`}>
-      <Card className={`w-full max-w-2xl ${bgColor} ${borderColor}`}>
+    <div className={`min-h-screen bg-background p-4 flex items-center justify-center`}>
+      <Card className={`w-full max-w-2xl bg-background ${borderColor}`}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className={`${textColor} text-2xl font-semibold`}>
             {id ? 'Edit Bounty' : 'Publish Bounty'}
@@ -217,7 +215,7 @@ export default function EditBounty() {
               placeholder="Bounty Title"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`bg-background ${borderColor} ${textColor}`}
             />
           </div>
 
@@ -230,7 +228,7 @@ export default function EditBounty() {
               placeholder="Describe the bounty requirements and deliverables"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor} min-h-[120px]`}
+              className={`bg-background ${borderColor} ${textColor} min-h-[120px]`}
             />
           </div>
 
@@ -243,10 +241,10 @@ export default function EditBounty() {
               value={formData.category}
               onValueChange={(value: Category) => handleChange('category', value)}
             >
-              <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+              <SelectTrigger className={`bg-background ${borderColor} ${textColor}`}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent className={`${bgColor} ${borderColor}`}>
+              <SelectContent className={`bg-background ${borderColor}`}>
                 <SelectItem value="development">Development</SelectItem>
                 <SelectItem value="design">Design</SelectItem>
                 <SelectItem value="content">Content</SelectItem>
@@ -268,7 +266,7 @@ export default function EditBounty() {
                 placeholder="Amount"
                 value={formData.reward.amount}
                 onChange={(e) => handleChange('reward.amount', e.target.value)}
-                className={`${bgColor} ${borderColor} ${textColor}`}
+                className={`bg-background ${borderColor} ${textColor}`}
               />
             </div>
             <div className="space-y-2">
@@ -279,7 +277,7 @@ export default function EditBounty() {
                 value={formData.reward.token}
                 onValueChange={(value) => handleChange('reward.token', value)}
               >
-                <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+                <SelectTrigger className={`bg-background ${borderColor} ${textColor}`}>
                   <SelectValue placeholder="Select token" />
                 </SelectTrigger>
                 <SelectContent className={`${bgColor} ${borderColor}`}>
@@ -300,7 +298,7 @@ export default function EditBounty() {
               value={formData.due_date}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => handleChange('due_date', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`bg-background ${borderColor} ${textColor}`}
             />
           </div>
 
@@ -314,10 +312,10 @@ export default function EditBounty() {
                   handleChange('status', value)
                 }
               >
-                <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+                <SelectTrigger className={`bg-background ${borderColor} ${textColor}`}>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent className={`${bgColor} ${borderColor}`}>
+                <SelectContent className={`bg-background ${borderColor}`}>
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="in review">In Review</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
