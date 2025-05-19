@@ -23,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SponsorSubmissionDialog } from '../components/SponsorSubmissionDialog'
 
 export default function SponsorDashboard() {
   const navigate = useNavigate()
@@ -42,10 +43,10 @@ export default function SponsorDashboard() {
   const [showSubmissionDetails, setShowSubmissionDetails] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [transactionHash, setTransactionHash] = useState('')
-  const [showWalletCopied, setShowWalletCopied] = useState(false)
-  const [rewardAmount, setRewardAmount] = useState<string>(
-    selectedSubmission?.reward?.amount?.toString() || ""
-  );
+  // const [showWalletCopied, setShowWalletCopied] = useState(false)
+  // const [rewardAmount, setRewardAmount] = useState<string>(
+    // selectedSubmission?.reward?.amount?.toString() || ""
+  // );
 
   // Theme-specific styles
   const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
@@ -302,113 +303,130 @@ export default function SponsorDashboard() {
   }
 
   // Copy wallet address to clipboard
-  const copyWalletAddress = (address: string) => {
-    navigator.clipboard.writeText(address)
-    setShowWalletCopied(true)
+  // const copyWalletAddress = (address: string) => {
+  //   navigator.clipboard.writeText(address)
+  //   setShowWalletCopied(true)
     
-    setTimeout(() => {
-      setShowWalletCopied(false)
-    }, 2000)
+  //   setTimeout(() => {
+  //     setShowWalletCopied(false)
+  //   }, 2000)
     
-    toast.success("Wallet address copied to clipboard")
-  }
+  //   toast.success("Wallet address copied to clipboard")
+  // }
 
 // Function to save reward amount
-  const saveRewardAmount = async (submissionId: string): Promise<void> => {
-    if (!rewardAmount.trim()) {
-      toast.error("Please enter a reward amount");
-      return;
-    }
+  // const saveRewardAmount = async (submissionId: string): Promise<void> => {
+  //   if (!rewardAmount.trim()) {
+  //     toast.error("Please enter a reward amount");
+  //     return;
+  //   }
     
-    try {
-      const { error } = await supabase
-        .from('bounty_submissions')
-        .update({ 
-          reward: {
-            ...(selectedSubmission?.reward || {}),
-            amount: parseFloat(rewardAmount),
-            usd_equivalent: parseFloat(rewardAmount)
-          }
-        })
-        .eq('id', submissionId);
+  //   try {
+  //     const { error } = await supabase
+  //       .from('bounty_submissions')
+  //       .update({ 
+  //         reward: {
+  //           ...(selectedSubmission?.reward || {}),
+  //           amount: parseFloat(rewardAmount),
+  //           usd_equivalent: parseFloat(rewardAmount)
+  //         }
+  //       })
+  //       .eq('id', submissionId);
 
-      if (error) throw error;
+  //     if (error) throw error;
       
-      toast.success("Reward amount saved successfully");
+  //     toast.success("Reward amount saved successfully");
       
-      // Update the local submission data
-      setSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId 
-            ? { 
-                ...sub, 
-                reward: {
-                  ...(sub.reward || {}),
-                  amount: parseFloat(rewardAmount),
-                  usd_equivalent: parseFloat(rewardAmount)
-                }
-              } 
-            : sub
-        )
-      );
+  //     // Update the local submission data
+  //     setSubmissions(prev => 
+  //       prev.map(sub => 
+  //         sub.id === submissionId 
+  //           ? { 
+  //               ...sub, 
+  //               reward: {
+  //                 ...(sub.reward || {}),
+  //                 amount: parseFloat(rewardAmount),
+  //                 usd_equivalent: parseFloat(rewardAmount)
+  //               }
+  //             } 
+  //           : sub
+  //       )
+  //     );
       
-      setAllSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId 
-            ? { 
-                ...sub, 
-                reward: {
-                  ...(sub.reward || {}),
-                  amount: parseFloat(rewardAmount),
-                  usd_equivalent: parseFloat(rewardAmount)
-                }
-              } 
-            : sub
-        )
-      );
+  //     setAllSubmissions(prev => 
+  //       prev.map(sub => 
+  //         sub.id === submissionId 
+  //           ? { 
+  //               ...sub, 
+  //               reward: {
+  //                 ...(sub.reward || {}),
+  //                 amount: parseFloat(rewardAmount),
+  //                 usd_equivalent: parseFloat(rewardAmount)
+  //               }
+  //             } 
+  //           : sub
+  //       )
+  //     );
       
-    } catch (error: any) {
-      console.error('Error saving reward amount:', error);
-      toast.error(`Failed to save reward amount: ${error.message || 'Unknown error'}`);
-    }
-  };
+  //   } catch (error: any) {
+  //     console.error('Error saving reward amount:', error);
+  //     toast.error(`Failed to save reward amount: ${error.message || 'Unknown error'}`);
+  //   }
+  // };
   // Save transaction hash without changing status
-  const saveTransactionHash = async (submissionId: string) => {
-    if (!transactionHash.trim()) {
-      toast.error("Please enter a transaction hash")
-      return
-    }
+  // const saveTransactionHash = async (submissionId: string) => {
+  //   if (!transactionHash.trim()) {
+  //     toast.error("Please enter a transaction hash")
+  //     return
+  //   }
     
+  //   try {
+  //     const { error } = await supabase
+  //       .from('bounty_submissions')
+  //       .update({ transaction_hash: transactionHash.trim() })
+  //       .eq('id', submissionId)
+
+  //     if (error) throw error
+      
+  //     toast.success("Transaction hash saved successfully")
+      
+  //     // Update the local submission lists
+  //     setSubmissions(prev => 
+  //       prev.map(sub => 
+  //         sub.id === submissionId 
+  //           ? { ...sub, transaction_hash: transactionHash.trim() } 
+  //           : sub
+  //       )
+  //     )
+      
+  //     setAllSubmissions(prev => 
+  //       prev.map(sub => 
+  //         sub.id === submissionId 
+  //           ? { ...sub, transaction_hash: transactionHash.trim() } 
+  //           : sub
+  //       )
+  //     )
+      
+  //   } catch (error: any) {
+  //     console.error('Error saving transaction hash:', error)
+  //     toast.error(`Failed to save transaction hash: ${error.message || 'Unknown error'}`)
+  //   }
+  // }
+
+  const refreshSubmissions = async () => {
+    if (!sponsor) return
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('bounty_submissions')
-        .update({ transaction_hash: transactionHash.trim() })
-        .eq('id', submissionId)
+        .select('*')
+        .eq('sponsor_id', sponsor.id)
+        .order('created_at', { ascending: false })
 
       if (error) throw error
-      
-      toast.success("Transaction hash saved successfully")
-      
-      // Update the local submission lists
-      setSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId 
-            ? { ...sub, transaction_hash: transactionHash.trim() } 
-            : sub
-        )
-      )
-      
-      setAllSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === submissionId 
-            ? { ...sub, transaction_hash: transactionHash.trim() } 
-            : sub
-        )
-      )
-      
-    } catch (error: any) {
-      console.error('Error saving transaction hash:', error)
-      toast.error(`Failed to save transaction hash: ${error.message || 'Unknown error'}`)
+      setSubmissions(data || [])
+    } catch (error) {
+      console.error('Error refreshing submissions:', error)
     }
   }
 
@@ -966,228 +984,13 @@ export default function SponsorDashboard() {
       </div>
 
       {/* Submission Detail Dialog */}
-      {selectedSubmission && (
-        <Dialog open={showSubmissionDetails} onOpenChange={setShowSubmissionDetails}>
-          <DialogContent className={`sm:max-w-[600px] ${bgColor} border-${borderColor}`}>
-            <DialogHeader>
-              <DialogTitle className={textColor}>Submission Details</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6 mt-2">
-              <div className="flex items-center gap-4">
-                <Link to={`/profile/${selectedSubmission.user_username}`}>
-                  <Avatar>
-                    <AvatarImage src={selectedSubmission.user_avatar_url || undefined} />
-                    <AvatarFallback className="bg-[#C1A461]/20 text-[#C1A461]">
-                      {getInitials(selectedSubmission.user_username || "?")}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                <div>
-                  <h3 className={`font-medium ${textColor}`}>
-                    {selectedSubmission.title || 'No Title'}
-                  </h3>
-                  <p className={`text-sm ${mutedTextColor}`}>
-                    Submitted on {formatDate(selectedSubmission.created_at)}
-                  </p>
-                </div>
-                <Badge 
-                  variant="outline" 
-                  className={
-                    selectedSubmission.status === 'accepted' ? 'ml-auto bg-green-500/20 text-green-500' :
-                    selectedSubmission.status === 'rejected' ? 'ml-auto bg-red-500/20 text-red-500' :
-                    selectedSubmission.status === 'in_review' ? 'ml-auto bg-blue-500/20 text-blue-500' :
-                    'ml-auto bg-yellow-500/20 text-yellow-500'
-                  }
-                >
-                  {selectedSubmission.status}
-                </Badge>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className={`font-medium ${textColor}`}>Bounty</h4>
-                  <p className={textColor}>{selectedSubmission.bounty_name || "Unknown Bounty"}</p>
-                </div>
-                
-                <div>
-                  <h4 className={`font-medium ${textColor}`}>Title</h4>
-                  <p className={textColor}>{selectedSubmission.title}</p>
-                </div>
-                
-                <div>
-                  <h4 className={`font-medium ${textColor}`}>Description</h4>
-                  <p className={`whitespace-pre-wrap ${textColor}`}>{selectedSubmission.description}</p>
-                </div>
-                
-                {/* Wallet Address Section - NEW */}
-                <div>
-                  <h4 className={`font-medium ${textColor} mb-2`}>User Wallet Address</h4>
-                  <div className="flex items-center gap-2">
-                    <div className={`flex-1 p-2 rounded border ${borderColor} bg-[#1B2228]/80 font-mono text-sm ${textColor}`}>
-                      {selectedSubmission.user_wallet_address || "No wallet address provided"}
-                    </div>
-                    {selectedSubmission.user_wallet_address && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
-                        onClick={() => copyWalletAddress(selectedSubmission.user_wallet_address)}
-                      >
-                        {showWalletCopied ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className={`font-medium ${textColor}`}>Reward Amount (USD)</h4>
-                    {selectedSubmission.status === 'accepted' && selectedSubmission.reward.amount > 0 && (
-                      <Badge variant="outline" className="bg-[#C1A461]/10 text-[#C1A461]">
-                        ${selectedSubmission.reward.amount}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      value={rewardAmount}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRewardAmount(e.target.value)}
-                      placeholder="Enter amount in USD"
-                      className={`${bgColor} border-${borderColor} ${textColor}`}
-                      // Remove any conditional disabling based on status
-                    />
-                    <Button
-                      variant="outline"
-                      className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
-                      onClick={() => saveRewardAmount(selectedSubmission.id)}
-                      // Only disable if empty, not based on status
-                      disabled={!rewardAmount.trim()}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                  <p className={`text-xs mt-2 ${mutedTextColor}`}>
-                    {selectedSubmission.reward.amount > 0 
-                      ? `Current reward: $${selectedSubmission.reward.amount} - You can update if needed`
-                      : "Payment will be made in $ALPH equivalent to the USD amount entered above"}
-                  </p>
-                </div>
-                
-                {/* Transaction Hash Section - NEW */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className={`font-medium ${textColor}`}>Transaction Hash</h4>
-                    {selectedSubmission.status === 'accepted' && (
-                      <Badge 
-                      variant={selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "outline" : "destructive"} 
-                      className={selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "bg-green-500/10 text-green-500" : ""}
-                    >
-                      {selectedSubmission.transaction_hash && selectedSubmission.transaction_hash !== "NULL" ? "Payment Recorded" : "Payment Required"}
-                    </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={transactionHash}
-                      onChange={(e) => setTransactionHash(e.target.value)}
-                      placeholder="Enter transaction hash after payment"
-                      className={`${bgColor} border-${borderColor} ${textColor}`}
-                      disabled={selectedSubmission.status !== 'accepted' && !selectedSubmission.transaction_hash}
-                    />
-                    <Button
-                      variant="outline"
-                      className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/10`}
-                      onClick={() => saveTransactionHash(selectedSubmission.id)}
-                      disabled={!transactionHash.trim() || (selectedSubmission.status !== 'accepted' && !selectedSubmission.transaction_hash)}
-                    >
-                      Save
-                    </Button>
-                  </div>
-                  {selectedSubmission.status === 'accepted' && !selectedSubmission.transaction_hash && (
-                    <p className={`text-xs mt-2 ${mutedTextColor}`}>
-                      Please record the transaction hash after you've paid the contributor
-                    </p>
-                  )}
-                </div>
-                
-                <div>
-                  <h4 className={`font-medium ${textColor}`}>Submission URL</h4>
-                  <a 
-                    href={selectedSubmission.submission_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    {selectedSubmission.submission_url}
-                  </a>
-                </div>
-                
-                {selectedSubmission.tweet_url && (
-                  <div>
-                    <h4 className={`font-medium ${textColor}`}>Tweet URL</h4>
-                    <a 
-                      href={selectedSubmission.tweet_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      {selectedSubmission.tweet_url}
-                    </a>
-                  </div>
-                )}
-                
-                {selectedSubmission.feedback && (
-                  <div>
-                    <h4 className={`font-medium ${textColor}`}>Feedback</h4>
-                    <p className={`whitespace-pre-wrap ${textColor}`}>{selectedSubmission.feedback}</p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Only show feedback field and approve/reject buttons if the submission is not already processed */}
-              {selectedSubmission.status === 'submitted' && (
-                <>
-                  <div className="space-y-2">
-                    <h4 className={`font-medium ${textColor}`}>Feedback (Optional)</h4>
-                    <Textarea
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      placeholder="Add feedback for the submitter..."
-                      className={`${bgColor} border-${borderColor} ${textColor}`}
-                    />
-                  </div>
-                  
-                  <DialogFooter className="flex justify-end gap-3 pt-4">
-                    <Button
-                      variant="outline" 
-                      className="border-red-500 text-red-500 hover:bg-red-500/10"
-                      onClick={() => handleStatusUpdate(selectedSubmission.id, 'rejected')}
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Reject
-                    </Button>
-                    <Button
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => handleStatusUpdate(selectedSubmission.id, 'accepted')}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Accept
-                    </Button>
-                  </DialogFooter>
-                </>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <SponsorSubmissionDialog
+        isOpen={showSubmissionDetails}
+        onClose={() => setShowSubmissionDetails(false)}
+        submission={selectedSubmission}
+        onStatusUpdate={handleStatusUpdate}
+        onRefresh={refreshSubmissions}
+      />
     </div>
   )
 }

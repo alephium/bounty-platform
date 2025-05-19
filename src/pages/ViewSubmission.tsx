@@ -19,7 +19,7 @@ import { Calendar, MoreVertical, ExternalLink, CheckCircle, XCircle, MessageSqua
 import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from "@/components/ui/use-toast"
-import type { BountySubmission, ProjectSubmission } from '@/types/supabase'
+import type { BountySubmission, ProjectSubmission, User } from '@/types/supabase'
 import { useTheme } from '@/contexts/ThemeContext'
 import { FeedbackDialog } from "../components/FeedbackDialog"
 import LoadingPage from './LoadingPage'
@@ -324,12 +324,12 @@ return (
                 <Avatar>
                   <AvatarImage src={submission.user?.avatar_url || undefined} />
                   <AvatarFallback className={avatarBg}>
-                    {getInitials(submission.user?.full_name || null)}
+                    {getInitials((submission.user as User)?.full_name || null)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className={`font-medium ${textColor}`}>
-                    {submission.user?.full_name}'s Submission
+                    {(submission.user as User)?.full_name ? `${(submission.user as User).full_name}'s Submission` : 'Unknown User\'s Submission'}
                   </h3>
                   <div className="flex items-center gap-4 mt-1">
                     <p className={`text-sm ${mutedTextColor}`}>

@@ -99,7 +99,7 @@ export function SubmissionDialog({
       )
       
       if (result.success) {
-        toast.success("Submission successful!")
+        // toast.success("Submission successful!")
         onSubmissionComplete()
         onClose()
       } else {

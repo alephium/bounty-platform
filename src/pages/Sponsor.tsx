@@ -133,7 +133,7 @@ export default function OnboardingSteps() {
               {
                 question: "I need help with my listing. How can I get in touch?",
                 answer:
-                  "Our support team is available to help. You can reach out through our support channels or contact yuanying.li@alephium.org.",
+                  "Our support team is available to help. You can reach out through our support channels or contact yy@alephium.org.",
               },
             ].map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`} className={borderColor}>
