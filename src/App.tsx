@@ -24,6 +24,7 @@ import SponsorDashboard from './pages/SponsorDashboard'
 import OnboardingSteps from './pages/Sponsor'
 import MySubmission from './pages/MySubmission'
 import SponsorProfile from './pages/SponsorProfile'
+import Leaderboard from './pages/Leaderboard'
 export default function App() {
   const [initialUser, setInitialUser] = useState<User | null>(null)
   const [initializing, setInitializing] = useState(true)
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/postlisting" element={<PostListing />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/grants" element={<Grants />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/mysubmission" element={<MySubmission />} />
               <Route path="/editprofile" element={<EditProfile />} />
               <Route path="/profile/:username" element={<Profile />} />

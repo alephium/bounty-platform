@@ -12,6 +12,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { useRewards } from '../hooks/useRewards'
 import { supabase } from '../lib/supabase'
 import { Sponsor } from '../types/supabase'
+import { LeaderboardService, LeaderboardEntry } from '../services/leaderboard.service'
 
 const Layout = () => {
   const { user } = useUser()
@@ -23,6 +24,8 @@ const Layout = () => {
   const { metrics, loading } = useRewards()
   const [isSponsor, setIsSponsor] = useState(false)
   const [checkingSponsor, setCheckingSponsor] = useState(false)
+  const [topEarners, setTopEarners] = useState<LeaderboardEntry[]>([])
+  const [loadingEarners, setLoadingEarners] = useState(false)
 
   // Check if the current user is a sponsor
   useEffect(() => {
@@ -51,6 +54,23 @@ const Layout = () => {
     
     checkSponsorStatus()
   }, [user])
+
+  // Fetch top earners for the sidebar
+  useEffect(() => {
+    const fetchTopEarners = async () => {
+      try {
+        setLoadingEarners(true)
+        const leaderboard = await LeaderboardService.getLeaderboard(3) // Get top 3
+        setTopEarners(leaderboard)
+      } catch (error) {
+        console.error('Error fetching top earners:', error)
+      } finally {
+        setLoadingEarners(false)
+      }
+    }
+
+    fetchTopEarners()
+  }, [])
 
   useEffect(() => {
     if (user && location.pathname.includes('/auth')) {
@@ -103,7 +123,7 @@ const Layout = () => {
               <img src="/logo_small.jpg" alt="Logo" className="h-10 w-auto" />
             </Link>
             <div className="hidden md:flex items-center gap-6">
-              {["Bounties", "Projects", "Grants"].map((item) => (
+              {["Bounties", "Projects", "Grants", "Leaderboard"].map((item) => (
                 <Link 
                   key={item}
                   to={`/${item.toLowerCase()}`}
@@ -227,9 +247,46 @@ const Layout = () => {
 
             <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
-                <h2 className="font-bold text-[#C1A461] mb-4">RECENT EARNERS</h2>
-                <div>
-                  <h3 className="font-medium text-[#C1A461]">Coming Soon</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold text-[#C1A461]">TOP EARNERS</h2>
+                  <Link 
+                    to="/leaderboard"
+                    className="text-sm text-[#C1A461] hover:underline"
+                  >
+                    View All
+                  </Link>
+                </div>
+                <div className="space-y-3">
+                  {loadingEarners ? (
+                    <div className="text-[#C1A461] text-sm">Loading...</div>
+                  ) : topEarners.length > 0 ? (
+                    topEarners.map((earner) => (
+                      <div key={earner.user.id} className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-[#C1A461]">#{earner.rank}</span>
+                        </div>
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={earner.user.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(earner.user.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <Link 
+                            to={`/profile/${earner.user.username}`}
+                            className="text-sm font-medium text-[#C1A461] hover:underline truncate block"
+                          >
+                            {earner.user.full_name || earner.user.username}
+                          </Link>
+                          <p className="text-xs text-[#C1A461]/60">
+                            ${earner.totalEarnings.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-[#C1A461]/60 text-sm">No data yet</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
