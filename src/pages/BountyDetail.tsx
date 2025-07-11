@@ -169,10 +169,10 @@ export default function BountyDetails() {
                 <div>
                   <div className="flex items-center gap-2 text-2xl font-bold">
                     <span className={textColor}>◈</span>
-                    <span className={textColor}>{bounty.reward.token}</span>
+                    <span className={textColor}>{bounty.reward.amount} {bounty.reward.token}</span>
                   </div>
                   <div className={`text-sm ${textColor}/60`}>
-                    {bounty.reward.amount} {bounty.reward.token}
+                    ${bounty.reward.usd_equivalent} USD
                   </div>
                 </div>
                 <div className="space-y-2">

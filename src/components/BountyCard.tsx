@@ -26,6 +26,7 @@ export const BountyCard = ({ bounty }: BountyCardProps) => {
         </div>
         <div className="text-right">
           <div className="font-medium">{bounty.reward.amount} {bounty.reward.token}</div>
+          <div className="text-sm text-gray-500">${bounty.reward.usd_equivalent}</div>
         </div>
       </div>
     );

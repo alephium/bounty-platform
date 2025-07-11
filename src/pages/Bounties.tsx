@@ -205,9 +205,9 @@ export function Bounties() {
                             <div className="text-right">
                               <div className="flex items-center gap-1">
                                 <span className={textColor}>◈</span>
-                                <span className={`font-medium ${textColor}`}>{bounty.reward.amount}</span>
+                                <span className={`font-medium ${textColor}`}>{bounty.reward.amount} {bounty.reward.token}</span>
                               </div>
-                              <span className={`text-sm ${mutedTextColor}`}>{bounty.reward.token}</span>
+                              <span className={`text-sm ${mutedTextColor}`}>${bounty.reward.usd_equivalent}</span>
                             </div>
                             <Button 
                               variant="outline"

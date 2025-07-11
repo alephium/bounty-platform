@@ -1,6 +1,7 @@
 import { Bounty, User } from '../types/supabase'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../config";
 import { supabase } from '../lib/supabase';
+import { BountyService } from '../services/bounty.service';
 
 interface SubmissionResult {
   success: boolean
@@ -129,19 +130,12 @@ export const handleBountySubmission = async (
     const data = await response.json();
     console.log("Submission succeeded:", data);
     
-    // Fire and forget the count update
-    fetch(`${SUPABASE_URL}/rest/v1/bounties?id=eq.${bounty.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${authToken}`,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        current_submissions: (bounty.current_submissions || 0) + 1
-      })
-    }).catch(e => console.log("Ignoring count update error:", e));
+    // Update submission count using the service method
+    try {
+      await BountyService.updateSubmissionCount(bounty.id);
+    } catch (e) {
+      console.error("Error updating submission count:", e);
+    }
     
     return {
       success: true,

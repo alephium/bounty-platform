@@ -98,4 +98,23 @@ export class BountyService {
     if (error) throw error
     return data
   }
+
+  static async updateSubmissionCount(bountyId: string) {
+    const { count, error: countError } = await supabase
+      .from('bounty_submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('bounty_id', bountyId)
+
+    if (countError) throw countError
+
+    const { data, error } = await supabase
+      .from('bounties')
+      .update({ current_submissions: count || 0 })
+      .eq('id', bountyId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
 }
