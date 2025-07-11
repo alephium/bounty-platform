@@ -25,9 +25,6 @@ export default function BountyDetails() {
   const [loading, setLoading] = useState(true)
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false)
 
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   // Fetch bounty data including sponsor details
   useEffect(() => {
@@ -152,39 +149,39 @@ export default function BountyDetails() {
 
   if (!bounty) {
     return (
-      <div className={`min-h-screen ${bgColor} flex items-center justify-center ${textColor}`}>
+      <div className={`min-h-screen bg-theme-primary flex items-center justify-center text-theme-primary`}>
         Bounty not found
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen ${bgColor}`}>
+    <div className={`min-h-screen bg-theme-primary`}>
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-[300px,1fr] gap-8">
           {/* Sidebar */}
           <aside className="space-y-6">
-            <Card className={`${bgColor} ${borderColor}`}>
+            <Card className={`bg-theme-primary border-theme-primary`}>
               <CardContent className="p-4 space-y-4">
                 <div>
                   <div className="flex items-center gap-2 text-2xl font-bold">
-                    <span className={textColor}>◈</span>
-                    <span className={textColor}>{bounty.reward.amount} {bounty.reward.token}</span>
+                    <span className="text-theme-primary">◈</span>
+                    <span className="text-theme-primary">{bounty.reward.amount} {bounty.reward.token}</span>
                   </div>
-                  <div className={`text-sm ${textColor}/60`}>
+                  <div className={`text-sm text-theme-muted`}>
                     ${bounty.reward.usd_equivalent} USD
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className={`${textColor}/60`}>Submissions</span>
-                    <span className={`${textColor} font-bold`}>
+                    <span className={`text-theme-muted`}>Submissions</span>
+                    <span className={`text-theme-primary font-bold`}>
                       {bounty.current_submissions}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className={`${textColor}/60`}>Remaining</span>
-                    <div className={`flex items-center gap-2 ${textColor}`}>
+                    <span className={`text-theme-muted`}>Remaining</span>
+                    <div className={`flex items-center gap-2 text-theme-primary`}>
                       <Clock className="w-4 h-4" />
                       <span>{timeRemaining()}</span>
                     </div>
@@ -208,9 +205,9 @@ export default function BountyDetails() {
               </CardContent>
             </Card>
 
-            <Card className={`${bgColor} ${borderColor}`}>
+            <Card className={`bg-theme-primary border-theme-primary`}>
               <CardContent className="p-4">
-                <h3 className={`font-bold ${textColor} mb-3`}>SKILLS NEEDED</h3>
+                <h3 className={`font-bold text-theme-primary mb-3`}>SKILLS NEEDED</h3>
                 <div className="flex flex-wrap gap-2">
                   {[bounty.category].map((skill) => (
                     <Badge 
@@ -225,9 +222,9 @@ export default function BountyDetails() {
               </CardContent>
             </Card>
 
-            <Card className={`${bgColor} ${borderColor}`}>
+            <Card className={`bg-theme-primary border-theme-primary`}>
               <CardContent className="p-4">
-                <h3 className={`font-bold ${textColor} mb-3`}>CONTACT</h3>
+                <h3 className={`font-bold text-theme-primary mb-3`}>CONTACT</h3>
                 <Button 
                   className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
                   onClick={handleContactClick}
@@ -243,10 +240,10 @@ export default function BountyDetails() {
           <div className="space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className={`text-2xl font-bold ${textColor} mb-2 font-sentient`}>
+                <h1 className={`text-2xl font-bold text-theme-primary mb-2 font-sentient`}>
                   {bounty.title}
                 </h1>
-                <div className={`flex items-center gap-4 ${textColor}/60`}>
+                <div className={`flex items-center gap-4 text-theme-muted`}>
                   {bounty.sponsor && bounty.sponsor.id ? (
                     <Link to={`/sponsor/${bounty.sponsor.id}`}>
                       <span className="hover:underline transition-all">
@@ -272,12 +269,12 @@ export default function BountyDetails() {
             </div>
 
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className={`${bgColor} border-b ${borderColor} w-full justify-start rounded-none p-0 h-auto`}>
+              <TabsList className={`bg-theme-primary border-b border-theme-primary w-full justify-start rounded-none p-0 h-auto`}>
                 {["Details"].map((tab) => (
                   <TabsTrigger
                     key={tab}
                     value={tab.toLowerCase()}
-                    className={`rounded-none border-b-2 border-transparent data-[state=active]:border-[#C1A461] data-[state=active]:bg-transparent ${textColor}/60 data-[state=active]:${textColor} px-4 py-2`}
+                    className={`rounded-none border-b-2 border-transparent data-[state=active]:border-[#C1A461] data-[state=active]:bg-transparent text-theme-muted data-[state=active]:text-theme-primary px-4 py-2`}
                   >
                     {tab}
                   </TabsTrigger>
@@ -286,18 +283,18 @@ export default function BountyDetails() {
 
               <div className="py-6 space-y-8">
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>About The Bounty</h2>
-                  <p className={`${textColor}/80`}>
+                  <h2 className={`text-lg font-bold text-theme-primary mb-4 font-sentient`}>About The Bounty</h2>
+                  <p className={`text-theme-secondary`}>
                     {bounty.description}
                   </p>
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Requirements</h2>
+                  <h2 className={`text-lg font-bold text-theme-primary mb-4 font-sentient`}>Requirements</h2>
                   {typeof bounty.requirements === 'string' ? (
-                    <p className={`${textColor}/80`}>{bounty.requirements}</p>
+                    <p className={`text-theme-secondary`}>{bounty.requirements}</p>
                   ) : (
-                    <ul className={`space-y-2 ${textColor}/80`}>
+                    <ul className={`space-y-2 text-theme-secondary`}>
                       {Array.isArray(bounty.requirements) ? 
                         (bounty.requirements as string[]).map((req, index) => (
                           <li key={index}>{req}</li>
@@ -309,21 +306,21 @@ export default function BountyDetails() {
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Reward</h2>
-                  <p className={`${textColor}/80`}>
+                  <h2 className={`text-lg font-bold text-theme-primary mb-4 font-sentient`}>Reward</h2>
+                  <p className={`text-theme-secondary`}>
                     {bounty.reward.amount} {bounty.reward.token}
                   </p>
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Timeline</h2>
-                  <p className={`${textColor}/80`}>
+                  <h2 className={`text-lg font-bold text-theme-primary mb-4 font-sentient`}>Timeline</h2>
+                  <p className={`text-theme-secondary`}>
                     End Date: {new Date(bounty.end_date).toLocaleDateString()}
                   </p>
                 </section>
 
                 <section>
-                  <div className={`flex items-center gap-2 mb-4 ${textColor}`}>
+                  <div className={`flex items-center gap-2 mb-4 text-theme-primary`}>
                     <div className="flex-1">
                     <CommentSection
                       bountyId={bounty.id}

@@ -1,0 +1,235 @@
+/* Theme-based utility classes following Tailwind CSS conventions */
+
+/* Background Colors */
+.bg-theme-primary {
+  @apply bg-white dark:bg-[#1B2228];
+}
+
+.bg-theme-card {
+  @apply bg-white dark:bg-gray-800/50;
+}
+
+.bg-theme-secondary {
+  @apply bg-gray-50 dark:bg-gray-700/50;
+}
+
+.bg-theme-accent {
+  @apply bg-amber-50 dark:bg-[#C1A461]/10;
+}
+
+.bg-theme-hover {
+  @apply hover:bg-amber-50 dark:hover:bg-[#C1A461]/10;
+}
+
+/* Text Colors */
+.text-theme-primary {
+  @apply text-gray-900 dark:text-[#C1A461];
+}
+
+.text-theme-secondary {
+  @apply text-gray-700 dark:text-[#C1A461]/80;
+}
+
+.text-theme-muted {
+  @apply text-gray-600 dark:text-[#C1A461]/60;
+}
+
+.text-theme-accent {
+  @apply text-amber-700 dark:text-[#C1A461];
+}
+
+.text-theme-inverse {
+  @apply text-white dark:text-[#1B2228];
+}
+
+/* Border Colors */
+.border-theme-primary {
+  @apply border-amber-200 dark:border-[#C1A461]/20;
+}
+
+.border-theme-secondary {
+  @apply border-gray-200 dark:border-[#C1A461]/10;
+}
+
+.border-theme-accent {
+  @apply border-amber-300 dark:border-[#C1A461]/30;
+}
+
+/* Button Variants */
+.btn-theme-primary {
+  @apply bg-amber-500 hover:bg-amber-600 text-white dark:bg-[#C1A461] dark:hover:bg-[#C1A461]/90 dark:text-[#1B2228];
+}
+
+.btn-theme-secondary {
+  @apply bg-transparent border border-amber-500 text-amber-500 hover:bg-amber-50 dark:border-[#C1A461] dark:text-[#C1A461] dark:hover:bg-[#C1A461]/10;
+}
+
+.btn-theme-ghost {
+  @apply bg-transparent text-amber-500 hover:bg-amber-50 dark:text-[#C1A461] dark:hover:bg-[#C1A461]/10;
+}
+
+/* Input Variants */
+.input-theme {
+  @apply bg-white border-amber-200 text-gray-900 dark:bg-[#1B2228] dark:border-[#C1A461]/20 dark:text-[#C1A461];
+}
+
+.input-theme-focus {
+  @apply focus:border-amber-500 focus:ring-amber-500 dark:focus:border-[#C1A461] dark:focus:ring-[#C1A461];
+}
+
+/* Card Variants */
+.card-theme {
+  @apply bg-white border-amber-200 dark:bg-[#1B2228] dark:border-[#C1A461]/20;
+}
+
+.card-theme-secondary {
+  @apply bg-white border-gray-200 dark:bg-gray-800/50 dark:border-[#C1A461]/20;
+}
+
+.card-theme-accent {
+  @apply bg-amber-50 border-amber-200 dark:bg-[#C1A461]/10 dark:border-[#C1A461]/20;
+}
+
+/* Badge Variants */
+.badge-theme-primary {
+  @apply bg-amber-100 text-amber-700 border-amber-200 dark:bg-[#C1A461]/20 dark:text-[#C1A461] dark:border-[#C1A461]/20;
+}
+
+.badge-theme-secondary {
+  @apply bg-gray-100 text-gray-700 border-gray-200 dark:bg-[#C1A461]/10 dark:text-[#C1A461]/80 dark:border-[#C1A461]/10;
+}
+
+/* Navigation Variants */
+.nav-link-theme {
+  @apply text-gray-900 hover:text-amber-600 dark:text-[#C1A461] dark:hover:text-[#C1A461]/80;
+}
+
+.nav-link-active {
+  @apply text-amber-600 dark:text-[#C1A461] border-b-2 border-amber-600 dark:border-[#C1A461];
+}
+
+/* Sidebar Variants */
+.sidebar-theme {
+  @apply bg-white border-amber-200 dark:bg-[#1B2228] dark:border-[#C1A461]/20;
+}
+
+.sidebar-text-theme {
+  @apply text-[#C1A461] dark:text-[#C1A461];
+}
+
+/* Special rank colors for leaderboard */
+.rank-gold {
+  @apply bg-yellow-500/20 text-yellow-500 border-yellow-500/20;
+}
+
+.rank-silver {
+  @apply bg-gray-400/20 text-gray-400 border-gray-400/20;
+}
+
+.rank-bronze {
+  @apply bg-amber-600/20 text-amber-600 border-amber-600/20;
+}
+
+/* Toast/Notification Variants */
+.toast-theme {
+  @apply bg-white border-amber-200 text-gray-900 dark:bg-[#1B2228] dark:border-[#C1A461]/20 dark:text-[#C1A461];
+}
+
+/* Form Variants */
+.form-label-theme {
+  @apply text-gray-700 dark:text-[#C1A461];
+}
+
+.form-error-theme {
+  @apply text-red-600 dark:text-red-400;
+}
+
+/* Loading Variants */
+.loading-theme {
+  @apply border-amber-500 dark:border-[#C1A461];
+}
+
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-amber-500 dark:border-[#C1A461];
+}
+
+/* Divider Variants */
+.divider-theme {
+  @apply border-gray-200 dark:border-[#C1A461]/20;
+}
+
+/* Hover Effects */
+.hover-theme {
+  @apply hover:bg-amber-50 dark:hover:bg-[#C1A461]/5;
+}
+
+.hover-theme-strong {
+  @apply hover:bg-amber-100 dark:hover:bg-[#C1A461]/10;
+}
+
+/* Focus Effects */
+.focus-theme {
+  @apply focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-[#C1A461];
+}
+
+/* Transition Effects */
+.transition-theme {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* Utility Classes */
+.glass-theme {
+  @apply backdrop-blur-sm bg-white/90 border-amber-200/50 dark:bg-[#1B2228]/90 dark:border-[#C1A461]/10;
+}
+
+.gradient-theme {
+  @apply bg-gradient-to-r from-amber-500 to-amber-600 dark:from-[#C1A461] dark:to-[#C1A461]/80;
+}
+
+.shadow-theme {
+  @apply shadow-lg shadow-amber-500/10 dark:shadow-[#C1A461]/10;
+}
+
+/* Status Colors */
+.status-success {
+  @apply bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800;
+}
+
+.status-warning {
+  @apply bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800;
+}
+
+.status-error {
+  @apply bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800;
+}
+
+.status-info {
+  @apply bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800;
+}
+
+/* Skeleton Loading */
+.skeleton-theme {
+  @apply bg-gray-200 dark:bg-[#C1A461]/10 animate-pulse;
+}
+
+/* Scrollbar Styling */
+.scrollbar-theme {
+  scrollbar-width: thin;
+  scrollbar-color: #C1A461 transparent;
+}
+
+.scrollbar-theme::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-theme::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb {
+  @apply bg-amber-300 dark:bg-[#C1A461]/50 rounded-full;
+}
+
+.scrollbar-theme::-webkit-scrollbar-thumb:hover {
+  @apply bg-amber-400 dark:bg-[#C1A461]/70;
+}

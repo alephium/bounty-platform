@@ -124,11 +124,6 @@ export function PostListing() {
     fetchListing()
   }, [id])
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const infoBgColor = theme === 'dark' ? 'bg-[#C1A461]/10' : 'bg-amber-50'
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -380,7 +375,7 @@ export function PostListing() {
   }
 
   return (
-    <div className={`max-w-4xl mx-auto p-4 ${bgColor}`}>
+    <div className={`max-w-4xl mx-auto p-4 bg-theme-primary`}>
       <Tabs 
         value={listingType} 
         onValueChange={(v) => !isEditMode && setListingType(v as 'bounty' | 'project')}
@@ -388,21 +383,21 @@ export function PostListing() {
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger
             value="bounty"
-            className={`${textColor} data-[state=active]:${textColor}`}
+            className={`text-theme-primary data-[state=active]:text-theme-primary`}
           >
             Bounty
           </TabsTrigger>
           <TabsTrigger
             value="project"
-            className={`${textColor} data-[state=active]:${textColor}`}
+            className={`text-theme-primary data-[state=active]:text-theme-primary`}
           >
             Project
           </TabsTrigger>
         </TabsList>
 
-        <Card className={`${bgColor} border-${borderColor}`}>
+        <Card className={`card-theme`}>
           <CardHeader>
-            <CardTitle className={textColor}>
+            <CardTitle className="text-theme-primary">
               {isEditMode 
                 ? `Edit ${listingType === 'bounty' ? 'Bounty' : 'Project'}` 
                 : `Post a New ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}
@@ -412,56 +407,56 @@ export function PostListing() {
             {/* Wrap in a form element to handle submissions better */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="title" className={textColor}>Title</Label>
+                <Label htmlFor="title" className="text-theme-primary">Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="Enter a descriptive title"
-                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
+                  className={`input-theme input-theme-focus`}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className={textColor}>Description</Label>
+                <Label htmlFor="description" className="text-theme-primary">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Describe the requirements and expectations"
-                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
+                  className={`input-theme input-theme-focus min-h-[120px]`}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="requirements" className={textColor}>Requirements</Label>
+                <Label htmlFor="requirements" className="text-theme-primary">Requirements</Label>
                 <Textarea
                   id="requirements"
                   value={formData.requirements}
                   onChange={(e) => handleInputChange('requirements', e.target.value)}
                   placeholder="Add requirements"
-                  className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor} min-h-[120px]`}
+                  className={`input-theme input-theme-focus min-h-[120px]`}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category" className={textColor}>Category</Label>
+                <Label htmlFor="category" className="text-theme-primary">Category</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => handleInputChange('category', value)}
                   name="category"
                 >
-                  <SelectTrigger id="category" className={`${bgColor} border-${borderColor} ${textColor}`}>
+                  <SelectTrigger id="category" className={`input-theme`}>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent className={`${bgColor} border-${borderColor}`}>
+                  <SelectContent className={`card-theme`}>
                     {CATEGORIES.map((category) => (
                       <SelectItem 
                         key={category} 
                         value={category}
-                        className={textColor}
+                        className="text-theme-primary"
                       >
                         {category.charAt(0).toUpperCase() + category.slice(1)}
                       </SelectItem>
@@ -474,7 +469,7 @@ export function PostListing() {
                 <>
                   {/* Redesigned Reward Section */}
                   <div className="space-y-2">
-                    <Label htmlFor="reward" className={textColor}>Reward Amount (USD)</Label>
+                    <Label htmlFor="reward" className="text-theme-primary">Reward Amount (USD)</Label>
                     <Input
                       id="reward"
                       type="number"
@@ -485,14 +480,14 @@ export function PostListing() {
                         usd_equivalent: parseFloat(e.target.value) || 0
                       })}
                       placeholder="1000"
-                      className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461] placeholder:${mutedTextColor}`}
+                      className={`input-theme input-theme-focus`}
                       required={listingType === 'bounty'}
                       min="1"
                       step="1"
                     />
-                    <div className={`flex items-center gap-2 p-3 rounded ${infoBgColor}`}>
-                      <Info className={`h-4 w-4 ${textColor}`} />
-                      <p className={`text-sm ${textColor}`}>
+                    <div className={`flex items-center gap-2 p-3 rounded bg-theme-accent`}>
+                      <Info className={`h-4 w-4 text-theme-primary`} />
+                      <p className={`text-sm text-theme-primary`}>
                         Payment will be made in $ALPH at the USD-equivalent value
                       </p>
                     </div>
@@ -500,27 +495,27 @@ export function PostListing() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="start_date" className={textColor}>Start Date</Label>
+                      <Label htmlFor="start_date" className="text-theme-primary">Start Date</Label>
                       <div className="relative">
                         <Input
                           id="start_date"
                           type="date"
                           value={formData.start_date || ''}
                           onChange={(e) => handleInputChange('start_date', e.target.value)}
-                          className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                          className={`input-theme input-theme-focus`}
                           required={listingType === 'bounty'}
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="end_date" className={textColor}>End Date</Label>
+                      <Label htmlFor="end_date" className="text-theme-primary">End Date</Label>
                       <div className="relative">
                         <Input
                           id="end_date"
                           type="date"
                           value={formData.end_date || ''}
                           onChange={(e) => handleInputChange('end_date', e.target.value)}
-                          className={`${bgColor} border-${borderColor} ${textColor} focus-visible:ring-[#C1A461]`}
+                          className={`input-theme input-theme-focus`}
                           required={listingType === 'bounty'}
                         />
                       </div>
@@ -528,20 +523,20 @@ export function PostListing() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="difficulty" className={textColor}>Difficulty Level</Label>
+                    <Label htmlFor="difficulty" className="text-theme-primary">Difficulty Level</Label>
                     <Select
                       value={formData.difficulty_level || 'beginner'}
                       onValueChange={(value: 'beginner' | 'intermediate' | 'advanced') => 
                         handleInputChange('difficulty_level', value)}
                       name="difficulty"
                     >
-                      <SelectTrigger id="difficulty" className={`${bgColor} border-${borderColor} ${textColor}`}>
+                      <SelectTrigger id="difficulty" className={`input-theme`}>
                         <SelectValue placeholder="Select difficulty" />
                       </SelectTrigger>
-                      <SelectContent className={`${bgColor} border-${borderColor}`}>
-                        <SelectItem value="beginner" className={textColor}>Beginner</SelectItem>
-                        <SelectItem value="intermediate" className={textColor}>Intermediate</SelectItem>
-                        <SelectItem value="advanced" className={textColor}>Advanced</SelectItem>
+                      <SelectContent className={`card-theme`}>
+                        <SelectItem value="beginner" className="text-theme-primary">Beginner</SelectItem>
+                        <SelectItem value="intermediate" className="text-theme-primary">Intermediate</SelectItem>
+                        <SelectItem value="advanced" className="text-theme-primary">Advanced</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -550,9 +545,7 @@ export function PostListing() {
 
               <Button 
                 type="submit"
-                className={theme === 'dark' ? 
-                  "w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                  "w-full bg-amber-500 hover:bg-amber-600 text-white"}
+                className="w-full btn-theme-primary"
                 disabled={loading}
               >
                 {loading ? 'Posting...' : `${isEditMode ? 'Update' : 'Post'} ${listingType === 'bounty' ? 'Bounty' : 'Project'}`}

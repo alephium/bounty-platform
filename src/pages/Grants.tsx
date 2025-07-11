@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge"
 
 export default function GrantsPage() {
   return (
-    <div className="min-h-screen bg-[#1B2228] py-16 px-4">
+    <div className="min-h-screen bg-theme-primary py-16 px-4">
       <div className="max-w-6xl mx-auto space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#C1A461] font-sentient">Need funds to build out your idea?</h1>
-          <p className="text-[#C1A461]/80 text-lg max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-theme-primary font-sentient">Need funds to build out your idea?</h1>
+          <p className="text-theme-secondary text-lg max-w-2xl mx-auto">
             Discover the complete list of crypto grants available to support your project. Fast, equity-free funding
             without the hassle.
           </p>
@@ -16,7 +16,7 @@ export default function GrantsPage() {
             {["Equity-Free", "No Bullshit", "Fast AF"].map((tag) => (
               <Badge
                 key={tag}
-                className="bg-[#C1A461]/10 hover:bg-[#C1A461]/20 text-[#C1A461] border border-[#C1A461]/20"
+                className="badge-theme-primary"
               >
                 {tag}
               </Badge>
@@ -26,7 +26,7 @@ export default function GrantsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {grants.map((grant) => (
-            <Card key={grant.id} className="bg-[#1B2228] border-[#C1A461]/20 overflow-hidden">
+            <Card key={grant.id} className="card-theme overflow-hidden">
               <CardHeader className="p-0">
               <div className="h-48 relative">
                 <img
@@ -37,14 +37,14 @@ export default function GrantsPage() {
               </div>
               </CardHeader>
               <CardContent className="pt-4">
-                <h3 className="text-lg font-bold text-[#C1A461]">{grant.name}</h3>
+                <h3 className="text-lg font-bold text-theme-primary">{grant.name}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[#C1A461] text-sm">◈</span>
-                  <span className="text-[#C1A461]/80 text-sm">{grant.amount}</span>
+                  <span className="text-theme-primary text-sm">◈</span>
+                  <span className="text-theme-secondary text-sm">{grant.amount}</span>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-[#C1A461]/10 hover:bg-[#C1A461]/20 text-[#C1A461] border border-[#C1A461]/20">
+                <Button className="w-full btn-theme-secondary">
                   Apply Now
                 </Button>
               </CardFooter>

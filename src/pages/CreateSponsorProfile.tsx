@@ -30,9 +30,6 @@ export function CreateSponsorProfile() {
     twitter_handle: ""
   })
 
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   // Check if user already has a sponsor profile
   useEffect(() => {
@@ -171,7 +168,7 @@ export function CreateSponsorProfile() {
 
   if (checking) {
     return (
-      <Card className={`${bgColor} ${borderColor}`}>
+      <Card className={`card-theme`}>
         <CardContent className="p-12 flex justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461] border-t-transparent" />
         </CardContent>
@@ -182,12 +179,12 @@ export function CreateSponsorProfile() {
   // Add a check for when the user isn't logged in
   if (!user) {
     return (
-      <Card className={`${bgColor} ${borderColor}`}>
+      <Card className={`card-theme`}>
         <CardHeader>
-          <CardTitle className={textColor}>Create Sponsor Profile</CardTitle>
+          <CardTitle className="text-theme-primary">Create Sponsor Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <p className={textColor}>Please sign in to create a sponsor profile.</p>
+          <p className="text-theme-primary">Please sign in to create a sponsor profile.</p>
           <Button 
             className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
             onClick={() => navigate('/auth')}
@@ -200,48 +197,48 @@ export function CreateSponsorProfile() {
   }
 
   return (
-    <Card className={`${bgColor} ${borderColor}`}>
+    <Card className={`card-theme`}>
       <CardHeader>
-        <CardTitle className={textColor}>Create Sponsor Profile</CardTitle>
+        <CardTitle className="text-theme-primary">Create Sponsor Profile</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className={textColor}>Organization Name *</Label>
+            <Label className="text-theme-primary">Organization Name *</Label>
             <Input
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
               placeholder="Your organization or project name"
             />
           </div>
           
           <div className="space-y-2">
-            <Label className={textColor}>Description</Label>
+            <Label className="text-theme-primary">Description</Label>
             <Input
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
               placeholder="Brief description of your organization or project"
             />
           </div>
           
           <div className="space-y-2">
-            <Label className={textColor}>Website URL</Label>
+            <Label className="text-theme-primary">Website URL</Label>
             <Input
               value={formData.website_url}
               onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
               placeholder="https://example.com"
             />
           </div>
           
           <div className="space-y-2">
-            <Label className={textColor}>Twitter Handle</Label>
+            <Label className="text-theme-primary">Twitter Handle</Label>
             <Input
               value={formData.twitter_handle}
               onChange={(e) => setFormData(prev => ({ ...prev, twitter_handle: e.target.value }))}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
               placeholder="@username"
             />
           </div>

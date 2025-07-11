@@ -25,11 +25,6 @@ export default function Leaderboard() {
   const [userRank, setUserRank] = useState(0)
   const [selectedPeriod, setSelectedPeriod] = useState('all')
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,22 +74,20 @@ export default function Leaderboard() {
       case 3:
         return <Award className="w-5 h-5 text-amber-600" />
       default:
-        return <span className={`font-bold ${textColor}`}>#{rank}</span>
+        return <span className="font-bold text-theme-primary">#{rank}</span>
     }
   }
 
   const getRankBadgeColor = (rank: number) => {
     switch (rank) {
       case 1:
-        return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/20'
+        return 'rank-gold'
       case 2:
-        return 'bg-gray-400/20 text-gray-400 border-gray-400/20'
+        return 'rank-silver'
       case 3:
-        return 'bg-amber-600/20 text-amber-600 border-amber-600/20'
+        return 'rank-bronze'
       default:
-        return theme === 'dark' ? 
-          'bg-[#C1A461]/20 text-[#C1A461] border-[#C1A461]/20' : 
-          'bg-amber-100 text-amber-700 border-amber-200'
+        return 'badge-theme-primary'
     }
   }
 
@@ -103,16 +96,16 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} w-full px-4`}>
+    <div className="min-h-screen bg-theme-primary w-full px-4">
       <div className="max-w-7xl mx-auto py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className={`text-3xl font-bold ${textColor} flex items-center gap-2 font-sentient`}>
+            <h1 className="text-3xl font-bold text-theme-primary flex items-center gap-2 font-sentient">
               <Trophy className="w-8 h-8" />
               Leaderboard
             </h1>
-            <p className={`${mutedTextColor} mt-2`}>
+            <p className="text-theme-muted mt-2">
               Top performers in the Contribium community
             </p>
           </div>
@@ -120,65 +113,65 @@ export default function Leaderboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className={`${cardBg} ${borderColor}`}>
+          <Card className="card-theme-secondary">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'}`}>
-                  <Users className={`w-5 h-5 ${textColor}`} />
+                <div className="p-2 rounded-full bg-theme-accent">
+                  <Users className="w-5 h-5 text-theme-primary" />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${textColor}`}>
+                  <p className="text-2xl font-bold text-theme-primary">
                     {stats.totalUsers.toLocaleString()}
                   </p>
-                  <p className={`text-sm ${mutedTextColor}`}>Total Users</p>
+                  <p className="text-sm text-theme-muted">Total Users</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={`${cardBg} ${borderColor}`}>
+          <Card className="card-theme-secondary">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'}`}>
-                  <Target className={`w-5 h-5 ${textColor}`} />
+                <div className="p-2 rounded-full bg-theme-accent">
+                  <Target className="w-5 h-5 text-theme-primary" />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${textColor}`}>
+                  <p className="text-2xl font-bold text-theme-primary">
                     {stats.totalSubmissions.toLocaleString()}
                   </p>
-                  <p className={`text-sm ${mutedTextColor}`}>Total Submissions</p>
+                  <p className="text-sm text-theme-muted">Total Submissions</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={`${cardBg} ${borderColor}`}>
+          <Card className="card-theme-secondary">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'}`}>
-                  <DollarSign className={`w-5 h-5 ${textColor}`} />
+                <div className="p-2 rounded-full bg-theme-accent">
+                  <DollarSign className="w-5 h-5 text-theme-primary" />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${textColor}`}>
+                  <p className="text-2xl font-bold text-theme-primary">
                     ${stats.totalEarnings.toLocaleString()}
                   </p>
-                  <p className={`text-sm ${mutedTextColor}`}>Total Earnings</p>
+                  <p className="text-sm text-theme-muted">Total Earnings</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className={`${cardBg} ${borderColor}`}>
+          <Card className="card-theme-secondary">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${theme === 'dark' ? 'bg-[#C1A461]/20' : 'bg-amber-100'}`}>
-                  <TrendingUp className={`w-5 h-5 ${textColor}`} />
+                <div className="p-2 rounded-full bg-theme-accent">
+                  <TrendingUp className="w-5 h-5 text-theme-primary" />
                 </div>
                 <div>
-                  <p className={`text-2xl font-bold ${textColor}`}>
+                  <p className="text-2xl font-bold text-theme-primary">
                     {stats.activeUsers.toLocaleString()}
                   </p>
-                  <p className={`text-sm ${mutedTextColor}`}>Active Users</p>
+                  <p className="text-sm text-theme-muted">Active Users</p>
                 </div>
               </div>
             </CardContent>
@@ -187,7 +180,7 @@ export default function Leaderboard() {
 
         {/* User's Rank (if logged in) */}
         {user && userRank > 0 && (
-          <Card className={`${cardBg} ${borderColor} mb-6`}>
+          <Card className="card-theme-secondary mb-6">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -196,8 +189,8 @@ export default function Leaderboard() {
                     <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className={`font-semibold ${textColor}`}>Your Rank</h3>
-                    <p className={`text-sm ${mutedTextColor}`}>{user.full_name || user.username}</p>
+                    <h3 className="font-semibold text-theme-primary">Your Rank</h3>
+                    <p className="text-sm text-theme-muted">{user.full_name || user.username}</p>
                   </div>
                 </div>
                 <Badge variant="outline" className={getRankBadgeColor(userRank)}>
@@ -209,9 +202,9 @@ export default function Leaderboard() {
         )}
 
         {/* Leaderboard */}
-        <Card className={`${cardBg} ${borderColor}`}>
+        <Card className="card-theme-secondary">
           <CardHeader>
-            <CardTitle className={`${textColor} flex items-center gap-2`}>
+            <CardTitle className="text-theme-primary flex items-center gap-2">
               <Trophy className="w-5 h-5" />
               Top Contributors
             </CardTitle>
@@ -221,9 +214,8 @@ export default function Leaderboard() {
               {leaderboard.map((entry, index) => (
                 <div
                   key={entry.user.id}
-                  className={`flex items-center justify-between p-4 hover:bg-opacity-50 transition-colors
-                    ${index < 3 ? 'bg-gradient-to-r from-amber-500/5 to-transparent' : ''}
-                    ${theme === 'dark' ? 'hover:bg-[#C1A461]/5' : 'hover:bg-amber-50'}`}
+                  className={`flex items-center justify-between p-4 hover-theme transition-theme
+                    ${index < 3 ? 'bg-gradient-to-r from-amber-500/5 to-transparent' : ''}`}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-8 flex justify-center">
@@ -237,34 +229,34 @@ export default function Leaderboard() {
                       <div className="flex items-center gap-2">
                         <Link 
                           to={`/profile/${entry.user.username}`}
-                          className={`font-semibold ${textColor} hover:underline`}
+                          className="font-semibold text-theme-primary hover:underline"
                         >
                           {entry.user.full_name || entry.user.username}
                         </Link>
                         {entry.user.username && (
-                          <span className={`text-sm ${mutedTextColor}`}>
+                          <span className="text-sm text-theme-muted">
                             @{entry.user.username}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className={mutedTextColor}>
+                        <span className="text-theme-muted">
                           {entry.totalSubmissions} submissions
                         </span>
-                        <span className={mutedTextColor}>
+                        <span className="text-theme-muted">
                           {entry.completionRate.toFixed(1)}% success rate
                         </span>
-                        <span className={mutedTextColor}>
+                        <span className="text-theme-muted">
                           Last active: {formatDate(entry.recentActivity)}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`font-bold ${textColor}`}>
+                    <div className="font-bold text-theme-primary">
                       ${entry.totalEarnings.toLocaleString()}
                     </div>
-                    <div className={`text-sm ${mutedTextColor}`}>
+                    <div className="text-sm text-theme-muted">
                       {entry.acceptedSubmissions} accepted
                     </div>
                   </div>
@@ -275,20 +267,18 @@ export default function Leaderboard() {
         </Card>
 
         {leaderboard.length === 0 && (
-          <Card className={`${cardBg} ${borderColor} mt-8`}>
+          <Card className="card-theme-secondary mt-8">
             <CardContent className="p-8 text-center">
-              <Trophy className={`w-16 h-16 ${mutedTextColor} mx-auto mb-4`} />
-              <h3 className={`text-lg font-semibold ${textColor} mb-2`}>
+              <Trophy className="w-16 h-16 text-theme-muted mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-theme-primary mb-2">
                 No Data Yet
               </h3>
-              <p className={`${mutedTextColor} mb-4`}>
+              <p className="text-theme-muted mb-4">
                 The leaderboard will populate as users complete bounties and earn rewards.
               </p>
               <Button 
                 asChild 
-                className={theme === 'dark' ? 
-                  'bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]' : 
-                  'bg-amber-500 hover:bg-amber-600 text-white'}
+                className="btn-theme-primary"
               >
                 <Link to="/bounties">View Bounties</Link>
               </Button>

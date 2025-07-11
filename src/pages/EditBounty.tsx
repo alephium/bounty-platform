@@ -60,9 +60,6 @@ export default function EditBounty() {
   const [initialLoading, setInitialLoading] = useState(false)
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA)
 
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   // Fetch existing bounty data if editing
   useEffect(() => {
@@ -185,23 +182,23 @@ export default function EditBounty() {
 
   if (initialLoading) {
     return (
-      <div className={`min-h-screen ${bgColor} flex items-center justify-center`}>
+      <div className={`min-h-screen bg-theme-primary flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} p-4 flex items-center justify-center`}>
-      <Card className={`w-full max-w-2xl ${bgColor} ${borderColor}`}>
+    <div className={`min-h-screen bg-theme-primary p-4 flex items-center justify-center`}>
+      <Card className={`w-full max-w-2xl card-theme`}>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className={`${textColor} text-2xl font-semibold`}>
+          <CardTitle className={`text-theme-primary text-2xl font-semibold`}>
             {id ? 'Edit Bounty' : 'Publish Bounty'}
           </CardTitle>
           <Button
             variant="ghost"
             size="icon"
-            className={`${textColor}/60 hover:${textColor} hover:bg-[#C1A461]/10`}
+            className={`text-theme-muted hover:text-theme-primary hover:bg-[#C1A461]/10`}
             onClick={() => navigate('/bounties')}
           >
             <X className="h-5 w-5" />
@@ -210,43 +207,43 @@ export default function EditBounty() {
         <CardContent className="space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label className={textColor}>
+            <Label className="text-theme-primary">
               Title <span className="text-red-500">*</span>
             </Label>
             <Input 
               placeholder="Bounty Title"
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label className={textColor}>
+            <Label className="text-theme-primary">
               Description <span className="text-red-500">*</span>
             </Label>
             <Textarea
               placeholder="Describe the bounty requirements and deliverables"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor} min-h-[120px]`}
+              className={`input-theme min-h-[120px]`}
             />
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <Label className={textColor}>
+            <Label className="text-theme-primary">
               Category <span className="text-red-500">*</span>
             </Label>
             <Select
               value={formData.category}
               onValueChange={(value: Category) => handleChange('category', value)}
             >
-              <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+              <SelectTrigger className={`input-theme`}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent className={`${bgColor} ${borderColor}`}>
+              <SelectContent className={`card-theme`}>
                 <SelectItem value="development">Development</SelectItem>
                 <SelectItem value="design">Design</SelectItem>
                 <SelectItem value="content">Content</SelectItem>
@@ -258,7 +255,7 @@ export default function EditBounty() {
           {/* Reward */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className={textColor}>
+              <Label className="text-theme-primary">
                 Reward Amount <span className="text-red-500">*</span>
               </Label>
               <Input 
@@ -268,21 +265,21 @@ export default function EditBounty() {
                 placeholder="Amount"
                 value={formData.reward.amount}
                 onChange={(e) => handleChange('reward.amount', e.target.value)}
-                className={`${bgColor} ${borderColor} ${textColor}`}
+                className={`input-theme`}
               />
             </div>
             <div className="space-y-2">
-              <Label className={textColor}>
+              <Label className="text-theme-primary">
                 Token <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={formData.reward.token}
                 onValueChange={(value) => handleChange('reward.token', value)}
               >
-                <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+                <SelectTrigger className={`input-theme`}>
                   <SelectValue placeholder="Select token" />
                 </SelectTrigger>
-                <SelectContent className={`${bgColor} ${borderColor}`}>
+                <SelectContent className={`card-theme`}>
                   {/* <SelectItem value="ALPH">ALPH</SelectItem> */}
                   <SelectItem value="USDC">USDC</SelectItem>
                 </SelectContent>
@@ -292,7 +289,7 @@ export default function EditBounty() {
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label className={textColor}>
+            <Label className="text-theme-primary">
               Due Date <span className="text-red-500">*</span>
             </Label>
             <Input 
@@ -300,24 +297,24 @@ export default function EditBounty() {
               value={formData.due_date}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => handleChange('due_date', e.target.value)}
-              className={`${bgColor} ${borderColor} ${textColor}`}
+              className={`input-theme`}
             />
           </div>
 
           {/* Status (only for editing) */}
           {id && (
             <div className="space-y-2">
-              <Label className={textColor}>Status</Label>
+              <Label className="text-theme-primary">Status</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value: 'open' | 'in review' | 'completed') => 
                   handleChange('status', value)
                 }
               >
-                <SelectTrigger className={`${bgColor} ${borderColor} ${textColor}`}>
+                <SelectTrigger className={`input-theme`}>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent className={`${bgColor} ${borderColor}`}>
+                <SelectContent className={`card-theme`}>
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="in review">In Review</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>

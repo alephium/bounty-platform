@@ -10,15 +10,6 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { theme } = useTheme()
 
-  // Theme-specific styles
-  const bgColor = theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-500'
-  const borderColor = theme === 'dark' ? 'border-amber-500/20' : 'border-amber-200'
-  const buttonClass = theme === 'dark' 
-    ? 'bg-amber-500 hover:bg-amber-600 text-gray-900' 
-    : 'bg-amber-500 hover:bg-amber-600 text-white'
 
   const handleAuthProvider = async (provider: 'google' | 'github') => {
     try {
@@ -39,14 +30,14 @@ export default function AuthPage() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-4`}>
-      <Card className={`w-full max-w-md ${cardBg} ${borderColor}`}>
+    <div className="min-h-screen bg-theme-primary flex flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-md card-theme">
         <CardContent className="p-8 space-y-6">
           <div className="text-center space-y-2">
-            <h1 className={`text-2xl font-bold ${textColor}`}>
+            <h1 className="text-2xl font-bold text-theme-primary font-sentient">
               Set Sail on Your Journey
             </h1>
-            <p className={mutedTextColor}>
+            <p className="text-theme-muted">
               Your treasure awaits in global $ALPH bounty lands
             </p>
           </div>
@@ -54,7 +45,7 @@ export default function AuthPage() {
           <div className="space-y-4">
             {/* Google Login */}
             <Button 
-              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
+              className="w-full btn-theme-primary flex items-center justify-center gap-2"
               size="lg"
               onClick={() => handleAuthProvider('google')}
               disabled={isLoading}
@@ -82,7 +73,7 @@ export default function AuthPage() {
 
             {/* GitHub Login */}
             <Button 
-              className={`w-full ${buttonClass} flex items-center justify-center gap-2`}
+              className="w-full btn-theme-primary flex items-center justify-center gap-2"
               size="lg"
               onClick={() => handleAuthProvider('github')}
               disabled={isLoading}
@@ -96,13 +87,13 @@ export default function AuthPage() {
               {isLoading ? 'Loading...' : 'Continue with GitHub'}
             </Button>
 
-            <p className={`text-center text-sm ${mutedTextColor}`}>
+            <p className="text-center text-sm text-theme-muted">
               By continuing, you agree to our{' '}
-              <Link to="/terms" className={`${textColor} hover:underline`}>
+              <Link to="/terms" className="text-theme-primary hover:underline">
                 Terms of Service
               </Link>
               {' '}and{' '}
-              <Link to="/privacy" className={`${textColor} hover:underline`}>
+              <Link to="/privacy" className="text-theme-primary hover:underline">
                 Privacy Policy
               </Link>
             </p>

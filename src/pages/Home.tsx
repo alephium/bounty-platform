@@ -6,12 +6,11 @@ import { Card, CardContent } from "../components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
-import { MessageSquare, Compass, Search, Anchor, MapPin, Ship } from 'lucide-react'
+import { MessageSquare, Compass, Anchor, MapPin, Ship } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { Bounty, Status } from '@/types/supabase'
 // import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
-import { useSession } from "../contexts/SessionContext";
 import supabase from "../supabase";
 import { Link } from "react-router-dom";
 
@@ -24,15 +23,10 @@ export default function Home() {
   const navigate = useNavigate()
   
   const [bounties, setBounties] = useState<Bounty[]>([])
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>("All Quests")
   const [selectedStatus, setSelectedStatus] = useState<Status>('open')
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
   // Fetch bounties
   useEffect(() => {
@@ -101,14 +95,14 @@ export default function Home() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} w-full px-4`}>
+    <div className={`min-h-screen bg-theme-primary w-full px-4`}>
       <div className="max-w-7xl mx-auto">
         <main>
           {/* Welcome Card */}
           <Card className={`${theme === 'dark' ? 
             'bg-gradient-to-br from-amber-500/20 to-amber-500/5' : 
             'bg-gradient-to-br from-amber-100 to-amber-50'} 
-            ${borderColor} mb-6`}>
+            border-theme-primary mb-6`}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <Avatar className="w-12 h-12 border-2 border-[#c3a95a]">
@@ -121,16 +115,16 @@ export default function Home() {
                       }}
                     />
                   ) : (
-                    <AvatarFallback className="bg-amber-500/20 text-[#C1A461]">
+                    <AvatarFallback className="bg-theme-accent text-theme-primary">
                       {getInitials(user?.full_name || null)}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div>
-                  <h1 className={`text-2xl font-bold ${textColor} font-sentient`}>
+                  <h1 className={`text-2xl font-bold text-theme-primary font-sentient`}>
                     Welcome aboard, Captain {user?.full_name || 'Guest'}
                   </h1>
-                  <p className={textColor}>Your next adventure awaits on $ALPH Bounty Lands</p>
+                  <p className="text-theme-primary">Your next adventure awaits on $ALPH Bounty Lands</p>
                 </div>
               </div>
             </CardContent>
@@ -144,12 +138,9 @@ export default function Home() {
                 <Button 
                   key={filter}
                   variant="outline" 
-                  className={`rounded-full ${borderColor} bg-transparent ${textColor} 
-                    ${theme === 'dark' ? 
-                      'hover:bg-amber-500/20 hover:text-amber-400' : 
-                      'hover:bg-amber-100 hover:text-amber-700'}
+                  className={`rounded-full btn-theme-secondary 
                     ${selectedCategory === filter ? 
-                      theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700' 
+                      theme === 'dark' ? 'bg-theme-accent text-theme-primary' : 'bg-amber-100 text-amber-700' 
                       : ''}`}
                   onClick={() => setSelectedCategory(filter)}
                 >
@@ -159,11 +150,11 @@ export default function Home() {
             </div>
 
             {/* Quests Card */}
-            <Card className={`${cardBg} ${borderColor}`}>
+            <Card className={`card-theme-secondary`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Compass className={`w-6 h-6 ${textColor}`} />
-                  <h2 className={`font-bold ${textColor}`}>Available Quests</h2>
+                  <Compass className={`w-6 h-6 text-theme-primary`} />
+                  <h2 className={`font-bold text-theme-primary`}>Available Quests</h2>
                 </div>
 
                 <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
@@ -181,18 +172,17 @@ export default function Home() {
 
                   { <div className="space-y-4">
                       {filteredBounties.map((bounty) => (
-                        <Card key={bounty.id} className={`${cardBg} ${borderColor}`}>
+                        <Card key={bounty.id} className={`card-theme-secondary`}>
                           <CardContent className="flex items-center justify-between p-4">
                             <div className="flex gap-4">
-                              <div className={`w-12 h-12 ${theme === 'dark' ? 
-                                'bg-amber-500/10' : 'bg-amber-100'} rounded-lg flex items-center justify-center`}>
-                                <Ship className={textColor} />
+                              <div className={`w-12 h-12 bg-theme-accent rounded-lg flex items-center justify-center`}>
+                                <Ship className="text-theme-primary" />
                               </div>
                               <div>
-                                <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                                <h3 className={`font-medium text-theme-primary`}>{bounty.title}</h3>
                                   {bounty.sponsor?.id ? (
                                     <Link to={`/sponsor/${bounty.sponsor.id}`}>
-                                      <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                      <div className={`flex items-center gap-1 text-sm text-theme-primary`}>
                                         {/* Use a simplified hover approach */}
                                         <span className="hover:underline transition-all">
                                           {bounty.sponsor?.name || 'Unknown Sponsor'}
@@ -200,8 +190,7 @@ export default function Home() {
                                         {bounty.sponsor?.is_verified && (
                                           <Badge 
                                             variant="secondary" 
-                                            className={`${theme === 'dark' ? 
-                                              'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                            className={`bg-theme-accent text-theme-primary`}
                                           >
                                             <Anchor className="w-3 h-3 mr-1" />
                                             Verified
@@ -210,11 +199,11 @@ export default function Home() {
                                       </div>
                                     </Link>
                                   ) : (
-                                    <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                    <div className={`flex items-center gap-1 text-sm text-theme-primary`}>
                                       Unknown Sponsor
                                     </div>
                                   )}
-                                <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
+                                <div className={`flex items-center gap-4 text-sm text-theme-primary mt-1`}>
                                   <div className="flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
                                     <span>{bounty.category}</span>
@@ -232,15 +221,14 @@ export default function Home() {
                             <div className="flex items-center gap-4">
                               <div className="text-right">
                                 <div className="flex items-center gap-1">
-                                  <span className={textColor}>◈</span>
-                                  <span className={`font-medium ${textColor}`}>{bounty.reward.amount}</span>
+                                  <span className="text-theme-primary">◈</span>
+                                  <span className={`font-medium text-theme-primary`}>{bounty.reward.amount}</span>
                                 </div>
-                                <span className={`text-sm ${mutedTextColor}`}>{bounty.reward.token}</span>
+                                <span className={`text-sm text-theme-muted`}>{bounty.reward.token}</span>
                               </div>
                               <Button 
                                 variant="outline"
-                                className={`${borderColor} bg-transparent ${textColor} 
-                                  ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                                className={`btn-theme-secondary`}
                                 onClick={() => navigate(`/bounty/${bounty.id}`)}
                               >
                                 View Details

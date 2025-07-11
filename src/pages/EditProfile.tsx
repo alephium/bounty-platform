@@ -168,7 +168,6 @@ export const EditProfile = () => {
   const [errors, setErrors] = useState<FormErrors>({})
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
   
   const [selectedSkills, setSelectedSkills] = useState<SelectedSkills>({
     frontend: user?.frontend_skills || [],
@@ -448,16 +447,16 @@ export const EditProfile = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`min-h-screen ${bgColor} w-full px-4`}>
+    <form onSubmit={handleSubmit} className={`min-h-screen bg-theme-primary w-full px-4`}>
       <div className="max-w-3xl mx-auto">
-        <Card className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+        <Card className="card-theme">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-[#C1A461]">Edit Profile</CardTitle>
+            <CardTitle className="text-2xl font-bold text-theme-primary font-sentient">Edit Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-8">
             {/* Personal Info */}
             <section className="space-y-6">
-              <h2 className="text-lg font-semibold text-[#C1A461]">PERSONAL INFO</h2>
+              <h2 className="text-lg font-semibold text-theme-primary">PERSONAL INFO</h2>
               
               <div className="space-y-4">
                 <Label>Profile Picture</Label>
@@ -470,15 +469,15 @@ export const EditProfile = () => {
                     {...getRootProps()} 
                     className={`flex-1 border-2 border-dashed rounded-lg p-4 text-center transition-colors
                       ${isDragActive 
-                        ? 'border-[#C1A461] bg-[#C1A461]/10' 
-                        : 'border-[#C1A461]/20'} 
-                      hover:border-[#C1A461]/40 cursor-pointer`}
+                        ? 'border-theme-primary bg-theme-accent' 
+                        : 'border-theme-secondary'} 
+                      hover:border-theme-accent cursor-pointer`}
                   >
                     <input {...getInputProps()} />
                     <Button 
                       type="button" 
                       variant="outline"
-                      className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/20"
+                      className="btn-theme-secondary"
                       onClick={(e) => e.preventDefault()}
                     >
                       <Upload className="w-4 h-4 mr-2" />
@@ -487,11 +486,11 @@ export const EditProfile = () => {
                         : 'Choose or drag and drop image'
                       }
                     </Button>
-                    <p className="text-sm text-[#C1A461]/60 mt-2">
+                    <p className="text-sm text-theme-muted mt-2">
                       Maximum size 5 MB - PNG, JPG, GIF
                     </p>
                     {avatarFile && (
-                      <p className="text-sm text-[#C1A461] mt-2">
+                      <p className="text-sm text-theme-primary mt-2">
                         Selected: {avatarFile.name}
                       </p>
                     )}
@@ -506,8 +505,7 @@ export const EditProfile = () => {
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                      text-gray-900 dark:text-[#C1A461] ${errors.username ? 'border-red-500' : ''}`}
+                    className={`input-theme ${errors.username ? 'border-red-500' : ''}`}
                     required
                   />
                   {errors.username && (
@@ -524,8 +522,7 @@ export const EditProfile = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                        text-gray-900 dark:text-[#C1A461] ${errors.firstName ? 'border-red-500' : ''}`}
+                      className={`input-theme ${errors.firstName ? 'border-red-500' : ''}`}
                       required
                     />
                     {errors.firstName && (
@@ -539,8 +536,7 @@ export const EditProfile = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                        text-gray-900 dark:text-[#C1A461] ${errors.lastName ? 'border-red-500' : ''}`}
+                      className={`input-theme ${errors.lastName ? 'border-red-500' : ''}`}
                       required
                     />
                     {errors.lastName && (
@@ -557,8 +553,7 @@ export const EditProfile = () => {
                     name="bio"
                     value={formData.bio}
                     onChange={handleInputChange}
-                    className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                      text-gray-900 dark:text-[#C1A461]"
+                    className="input-theme"
                   />
                 </div>
 
@@ -570,8 +565,7 @@ export const EditProfile = () => {
                     name="walletAddress"
                     value={formData.walletAddress}
                     onChange={handleInputChange}
-                    className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                      text-gray-900 dark:text-[#C1A461] ${errors.walletAddress ? 'border-red-500' : ''}`}
+                    className={`input-theme ${errors.walletAddress ? 'border-red-500' : ''}`}
                     required
                   />
                   {errors.walletAddress && (
@@ -581,7 +575,7 @@ export const EditProfile = () => {
 
                 {/* Social Links */}
                 <section className="space-y-6">
-                  <h2 className="text-lg font-semibold text-[#C1A461]">SOCIALS</h2>
+                  <h2 className="text-lg font-semibold text-theme-primary">SOCIALS</h2>
                   <div className="space-y-4">
                     {[
                       { icon: Github, name: "githubUrl", placeholder: "github.com/", value: formData.githubUrl },
@@ -592,13 +586,12 @@ export const EditProfile = () => {
                     ].map((social) => (
                       <div key={social.name} className="space-y-1">
                         <div className="relative">
-                          <social.icon className="w-5 h-5 absolute left-3 top-2.5 text-[#C1A461]/60" />
+                          <social.icon className="w-5 h-5 absolute left-3 top-2.5 text-theme-muted" />
                           <Input 
                             name={social.name}
                             value={social.value}
                             onChange={handleInputChange}
-                            className={`bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 
-                              text-gray-900 dark:text-[#C1A461] pl-10 ${errors[social.name] ? 'border-red-500' : ''}`}
+                            className={`input-theme pl-10 ${errors[social.name] ? 'border-red-500' : ''}`}
                             placeholder={social.placeholder}
                           />
                         </div>
@@ -612,16 +605,16 @@ export const EditProfile = () => {
 
                 {/* Work Section */}
                 <section className="space-y-6">
-                  <h2 className="text-lg font-semibold text-[#C1A461]">WORK</h2>
+                  <h2 className="text-lg font-semibold text-theme-primary">WORK</h2>
                   <div className="space-y-4">
                     {/* Web3 Interests */}
                     <div>
                       <Label>What areas of Web3 are you most interested in?</Label>
                       <Select value={formData.web3Interests.join(',')} onValueChange={(value) => handleSelectChange('web3Interests', value)}>
-                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                        <SelectTrigger className="input-theme">
                           <SelectValue placeholder="Select areas" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                        <SelectContent className="card-theme">
                           {WEB3_INTERESTS.map((interest) => (
                             <SelectItem key={interest} value={interest}>{interest}</SelectItem>
                           ))}
@@ -633,10 +626,10 @@ export const EditProfile = () => {
                     <div>
                       <Label>Work Experience</Label>
                       <Select value={formData.workExperience} onValueChange={(value) => handleSelectChange('workExperience', value)}>
-                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                        <SelectTrigger className="input-theme">
                           <SelectValue placeholder="Select experience" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20">
+                        <SelectContent className="card-theme">
                           <SelectItem value="0-1">0 to 1 Year</SelectItem>
                           <SelectItem value="2-5">2 to 5 Years</SelectItem>
                           <SelectItem value="5+">more than 5 Years</SelectItem>
@@ -648,10 +641,10 @@ export const EditProfile = () => {
                     <div>
                       <Label>Location</Label>
                       <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
-                        <SelectTrigger className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]">
+                        <SelectTrigger className="input-theme">
                           <SelectValue placeholder="Select location" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 h-48 overflow-y-auto">
+                        <SelectContent className="card-theme h-48 overflow-y-auto">
                           {getAllCountries().map((country) => (
                             <SelectItem key={country.value} value={country.value}>
                               {country.label}
@@ -668,7 +661,7 @@ export const EditProfile = () => {
                         name="currentEmployer"
                         value={formData.currentEmployer}
                         onChange={handleInputChange}
-                        className="bg-white dark:bg-[#1B2228] border-amber-200 dark:border-[#C1A461]/20 text-gray-900 dark:text-[#C1A461]"
+                        className="input-theme"
                       />
                     </div>
 
@@ -676,14 +669,14 @@ export const EditProfile = () => {
                     <div>
                       <Label className="flex items-center gap-2">
                         Skills
-                        <span className="text-[#C1A461]/60 text-sm">
+                        <span className="text-theme-muted text-sm">
                           Select your skills to receive relevant opportunities
                         </span>
                       </Label>
                       <div className="space-y-4 mt-4">
                         {(Object.entries(SKILLS_BY_CATEGORY) as [SkillCategory, SkillOption[]][]).map(([category, options]) => (
                           <div key={category}>
-                            <h3 className="text-sm font-medium text-[#C1A461] mb-2">
+                            <h3 className="text-sm font-medium text-theme-primary mb-2">
                               {category.charAt(0).toUpperCase() + category.slice(1)}
                             </h3>
                             <div className="flex flex-wrap gap-2">
@@ -693,8 +686,8 @@ export const EditProfile = () => {
                                   <Badge
                                     key={skill.value}
                                     variant="outline"
-                                    className={`cursor-pointer border-[#C1A461]/20 hover:border-[#C1A461]/40
-                                      ${isSelected ? 'bg-[#C1A461]/20' : ''}`}
+                                    className={`cursor-pointer border-theme-primary hover:border-theme-accent
+                                      ${isSelected ? 'bg-theme-accent' : ''}`}
                                     onClick={() => {
                                       setSelectedSkills(prev => ({
                                         ...prev,
@@ -720,7 +713,7 @@ export const EditProfile = () => {
                 <Button 
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                  className="w-full btn-theme-primary"
                 >
                   {isLoading ? (
                     <>

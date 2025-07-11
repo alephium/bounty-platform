@@ -59,12 +59,6 @@ export default function Profile() {
   const [submissionsCount, setSubmissionsCount] = useState(0);
   const [submissionsLoading, setSubmissionsLoading] = useState(true);
   // console.log('user',currentUser, profileUser)
-  // Theme-based styling
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
   // Share functionality
   const getShareUrl = (platform: string) => {
@@ -176,11 +170,11 @@ export default function Profile() {
 
   if (error || !profileUser) {
     return (
-      <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center gap-4`}>
-        <div className="text-[#C1A461]">{error || 'Profile not found'}</div>
+      <div className={`min-h-screen bg-theme-primary flex flex-col items-center justify-center gap-4`}>
+        <div className="text-theme-primary">{error || 'Profile not found'}</div>
         <Button 
           onClick={() => navigate('/')}
-          className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+          className="btn-theme-primary"
         >
           Go Home
         </Button>
@@ -191,7 +185,7 @@ export default function Profile() {
   const isOwnProfile = currentUser?.id === profileUser.id
   return (
     <>
-      <div className={`min-h-screen ${bgColor}`}>
+      <div className={`min-h-screen bg-theme-primary`}>
         {/* Header with gradient */}
         <div className="h-48 bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400" />
           <div className="max-w-4xl mx-auto px-4 -mt-24">
@@ -207,17 +201,17 @@ export default function Profile() {
                 </Avatar>
                 
                 <div className="mb-4">
-                  <h1 className={`text-2xl font-bold ${textColor}`}>
+                  <h1 className={`text-2xl font-bold text-theme-primary font-sentient`}>
                     {profileUser.full_name || profileUser.username}
                   </h1>
-                  <p className={mutedTextColor}>@{profileUser.username}</p>
+                  <p className="text-theme-muted">@{profileUser.username}</p>
                 </div>
               </div>
               <div className="flex gap-2 mt-4">
                 {isOwnProfile && (
                   <Button 
                     variant="outline" 
-                    className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/20`}
+                    className={`btn-theme-secondary`}
                     onClick={() => navigate('/editprofile')}
                   >
                     <Edit className="w-4 h-4 mr-2" />
@@ -226,7 +220,7 @@ export default function Profile() {
                 )}
                 <Button 
                   variant="outline" 
-                  className={`border-${borderColor} ${textColor} hover:bg-[#C1A461]/20`}
+                  className="btn-theme-secondary"
                   onClick={() => setIsShareModalOpen(true)}
                 >
                   <Share className="w-4 h-4 mr-2" />
@@ -238,10 +232,10 @@ export default function Profile() {
 
               {/* Details and Skills */}
               <div className="grid md:grid-cols-2 gap-6">
-                <Card className={`${cardBg} border-${borderColor}`}>
+                <Card className={`card-theme-secondary`}>
                   <CardContent className="p-6">
-                    <h2 className={`text-lg font-bold ${textColor} mb-4`}>Details</h2>
-                    <div className={`space-y-3 ${mutedTextColor}`}>
+                    <h2 className={`text-lg font-bold text-theme-primary mb-4`}>Details</h2>
+                    <div className={`space-y-3 text-theme-muted`}>
                       {profileUser.work_experience && (
                         <p>{profileUser.work_experience} years of experience</p>
                       )}
@@ -258,18 +252,18 @@ export default function Profile() {
                   </CardContent>
                 </Card>
 
-                <Card className={`${cardBg} border-${borderColor}`}>
+                <Card className={`card-theme-secondary`}>
                   <CardContent className="p-6">
-                    <h2 className={`text-lg font-bold ${textColor} mb-4`}>Skills</h2>
+                    <h2 className={`text-lg font-bold text-theme-primary mb-4`}>Skills</h2>
                     <div className="space-y-4">
                       {(profileUser?.frontend_skills || []).length > 0 && (
                         <div>
-                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>FRONTEND</h3>
+                          <h3 className={`text-sm text-theme-muted mb-2`}>FRONTEND</h3>
                           <div className="flex flex-wrap gap-2">
                             {(profileUser.frontend_skills??[]).map((skill) => (
                               <Badge 
                                 key={skill}
-                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                                className="badge-theme-primary"
                               >
                                 {skill}
                               </Badge>
@@ -280,12 +274,12 @@ export default function Profile() {
                       
                       {(profileUser.backend_skills || []).length > 0 && (
                         <div>
-                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>BACKEND</h3>
+                          <h3 className={`text-sm text-theme-muted mb-2`}>BACKEND</h3>
                           <div className="flex flex-wrap gap-2">
                             {(profileUser.backend_skills??[]).map((skill) => (
                               <Badge 
                                 key={skill}
-                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                                className="badge-theme-primary"
                               >
                                 {skill}
                               </Badge>
@@ -296,12 +290,12 @@ export default function Profile() {
                       
                       {(profileUser.blockchain_skills|| []).length > 0 && (
                         <div>
-                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>BLOCKCHAIN</h3>
+                          <h3 className={`text-sm text-theme-muted mb-2`}>BLOCKCHAIN</h3>
                           <div className="flex flex-wrap gap-2">
                             {(profileUser.blockchain_skills?? []).map((skill) => (
                               <Badge 
                                 key={skill}
-                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                                className="badge-theme-primary"
                               >
                                 {skill}
                               </Badge>
@@ -312,12 +306,12 @@ export default function Profile() {
 
                       {(profileUser.design_skills || []).length > 0 && (
                         <div>
-                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>DESIGN</h3>
+                          <h3 className={`text-sm text-theme-muted mb-2`}>DESIGN</h3>
                           <div className="flex flex-wrap gap-2">
                             {(profileUser.design_skills ?? []).map((skill) => (
                               <Badge 
                                 key={skill}
-                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                                className="badge-theme-primary"
                               >
                                 {skill}
                               </Badge>
@@ -328,12 +322,12 @@ export default function Profile() {
 
                       {(profileUser.content_skills || []).length > 0 && (
                         <div>
-                          <h3 className={`text-sm ${mutedTextColor} mb-2`}>CONTENT</h3>
+                          <h3 className={`text-sm text-theme-muted mb-2`}>CONTENT</h3>
                           <div className="flex flex-wrap gap-2">
                             {(profileUser.content_skills ?? []).map((skill) => (
                               <Badge 
                                 key={skill}
-                                className="bg-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/30"
+                                className="badge-theme-primary"
                               >
                                 {skill}
                               </Badge>
@@ -347,45 +341,45 @@ export default function Profile() {
               </div>
 
               {/* Achievements Section */}
-              <div className={`flex flex-wrap items-center justify-between gap-4 py-4 border-y border-${borderColor}`}>
+              <div className={`flex flex-wrap items-center justify-between gap-4 py-4 border-y border-theme-primary`}>
                 <div className="flex gap-8">
                   <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
+                    <p className={`text-xl font-bold text-theme-primary`}>
                       {Object.entries(profileUser.total_earnings || {}).map(([token, amount]) => (
                         <span key={token} className="mr-2">
                           {amount.toLocaleString()} {token}
                         </span>
                       ))}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Total Reward</p>
+                    <p className={`text-sm text-theme-muted`}>Total Reward</p>
                   </div>
                   {/* <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
+                    <p className={`text-xl font-bold text-theme-primary`}>
                       {profileUser.completed_bounties_count || 0}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
+                    <p className={`text-sm text-theme-muted`}>Bounties Completed</p>
                   </div> */}
                   <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
+                    <p className={`text-xl font-bold text-theme-primary`}>
                       {submissionsLoading ? '...' : submissionsCount}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Bounties Completed</p>
+                    <p className={`text-sm text-theme-muted`}>Bounties Completed</p>
                   </div>
                   <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
+                    <p className={`text-xl font-bold text-theme-primary`}>
                       {profileUser.completed_projects_count || 0}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Projects Completed</p>
+                    <p className={`text-sm text-theme-muted`}>Projects Completed</p>
                   </div>
                   <div className="text-center">
-                    <p className={`text-xl font-bold ${textColor}`}>
+                    <p className={`text-xl font-bold text-theme-primary`}>
                       {profileUser.completed_grants_count || 0}
                     </p>
-                    <p className={`text-sm ${mutedTextColor}`}>Grant Completed</p>
+                    <p className={`text-sm text-theme-muted`}>Grant Completed</p>
                   </div>
                   {isOwnProfile && (
                     <Button 
-                      className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center gap-2"
+                      className="btn-theme-primary flex items-center gap-2"
                       onClick={() => navigate('/mysubmission')}
                     >
                       <MessageSquare className="w-4 h-4" />
@@ -399,7 +393,7 @@ export default function Profile() {
                       href={profileUser.twitter_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
+                      className={`text-theme-muted hover:text-theme-primary hover-theme`}
                     >
                       <Button variant="ghost" size="icon">
                         <Twitter className="w-5 h-5" />
@@ -411,7 +405,7 @@ export default function Profile() {
                       href={profileUser.linkedin_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
+                      className={`text-theme-muted hover:text-theme-primary hover-theme`}
                     >
                       <Button variant="ghost" size="icon">
                         <Linkedin className="w-5 h-5" />
@@ -423,7 +417,7 @@ export default function Profile() {
                       href={profileUser.github_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
+                      className={`text-theme-muted hover:text-theme-primary hover-theme`}
                     >
                       <Button variant="ghost" size="icon">
                         <Github className="w-5 h-5" />
@@ -435,7 +429,7 @@ export default function Profile() {
                       href={profileUser.website_url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`${mutedTextColor} hover:${textColor} hover:bg-[#C1A461]/20`}
+                      className={`text-theme-muted hover:text-theme-primary hover-theme`}
                     >
                       <Button variant="ghost" size="icon">
                         <Globe className="w-5 h-5" />
@@ -448,18 +442,18 @@ export default function Profile() {
               <div className="space-y-6">
                 <Tabs defaultValue="personal-projects" className="w-full">
                   <div className="flex justify-between items-center">
-                    <TabsList className={`${bgColor} border-${borderColor} justify-start rounded-none p-0 h-auto`}>
+                    <TabsList className={`bg-theme-primary border-theme-primary justify-start rounded-none p-0 h-auto`}>
                       <TabsTrigger
                         value="personal-projects"
                         className={`rounded-none border-b-2 border-transparent data-[state=active]:border-[#C1A461] 
-                          data-[state=active]:bg-transparent ${mutedTextColor} data-[state=active]:${textColor} px-4 py-2`}
+                          data-[state=active]:bg-transparent text-theme-muted data-[state=active]:text-theme-primary px-4 py-2`}
                       >
                         Personal Projects
                       </TabsTrigger>
                     </TabsList>
                     
                     <Button 
-                      className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228] flex items-center gap-2"
+                      className="btn-theme-primary flex items-center gap-2"
                       onClick={() => setIsAddProjectModalOpen(true)}
                     >
                       <Plus className="w-4 h-4" />
@@ -497,7 +491,7 @@ export default function Profile() {
                         <div className="w-20 h-20 bg-[#C1A461]/10 rounded-full flex items-center justify-center mx-auto">
                           <div className="w-8 h-8 bg-[#C1A461]/20 rounded" />
                         </div>
-                        <h3 className={textColor}>No projects yet</h3>
+                        <h3 className="text-theme-primary">No projects yet</h3>
                       </div>
                     )}
                   </TabsContent>
@@ -506,13 +500,13 @@ export default function Profile() {
 
               {isAddProjectModalOpen && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                <Card className="w-full max-w-2xl bg-[#1B2228] border-[#C1A461]/20">
+                <Card className="w-full max-w-2xl card-theme">
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-[#C1A461] text-2xl font-semibold">Add Project</CardTitle>
+                    <CardTitle className="text-theme-primary text-2xl font-semibold">Add Project</CardTitle>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
+                      className="text-theme-muted hover:text-theme-primary hover-theme"
                       onClick={() => setIsAddProjectModalOpen(false)}
                     >
                       <X className="h-5 w-5" />
@@ -520,38 +514,38 @@ export default function Profile() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[#C1A461]">
+                      <Label className="text-theme-primary">
                         Project Title <span className="text-red-500">*</span>
                       </Label>
                       <Input 
                         placeholder="Project Title"
                         value={projectTitle}
                         onChange={(e) => setProjectTitle(e.target.value)}
-                        className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40"
+                        className="input-theme input-theme-focus"
                       />
                     </div>
 
 
                     <div className="space-y-2">
-                      <Label className="text-[#C1A461]">
+                      <Label className="text-theme-primary">
                         Description <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
                         <Textarea
                           placeholder="Project Description"
-                          className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40 min-h-[120px]"
+                          className="input-theme input-theme-focus min-h-[120px]"
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
                           maxLength={maxLength}
                         />
-                        <span className="absolute bottom-2 right-2 text-sm text-[#C1A461]/60">
+                        <span className="absolute bottom-2 right-2 text-sm text-theme-muted">
                           {maxLength - description.length} characters left
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#C1A461]">
+                      <Label className="text-theme-primary">
                         Skills <span className="text-red-500">*</span>
                       </Label>
                       {/* <Select onValueChange={setSelectedCategory} value={selectedCategory}> */}
@@ -559,10 +553,10 @@ export default function Profile() {
                         onValueChange={(value) => setSelectedCategory(value as SkillCategory | "")} 
                         value={selectedCategory}
                       >
-                        <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus:ring-[#C1A461]">
+                        <SelectTrigger className="input-theme input-theme-focus">
                           <SelectValue placeholder="Select..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                        <SelectContent className="card-theme">
                           <SelectItem value="frontend">Frontend Development</SelectItem>
                           <SelectItem value="backend">Backend Development</SelectItem>
                           <SelectItem value="blockchain">Blockchain Development</SelectItem>
@@ -573,7 +567,7 @@ export default function Profile() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#C1A461]">
+                      <Label className="text-theme-primary">
                         Sub Skills <span className="text-red-500">*</span>
                       </Label>
                       <Select 
@@ -581,10 +575,10 @@ export default function Profile() {
                         value={selectedSubSkill}
                         disabled={!selectedCategory}
                       >
-                        <SelectTrigger className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus:ring-[#C1A461]">
+                        <SelectTrigger className="input-theme input-theme-focus">
                           <SelectValue placeholder={selectedCategory ? "Select sub-skill..." : "Select a skill first"} />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1B2228] border-[#C1A461]/20">
+                        <SelectContent className="card-theme">
                           {selectedCategory && SKILLS_BY_CATEGORY[selectedCategory].map(skill => (
                             <SelectItem key={skill.value} value={skill.value}>
                               {skill.label}
@@ -595,19 +589,19 @@ export default function Profile() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#C1A461]">
+                      <Label className="text-theme-primary">
                         Link <span className="text-red-500">*</span>
                       </Label>
                       <Input 
                         placeholder="https://example.com"
                         value={projectUrl}
                         onChange={(e) => setProjectUrl(e.target.value)}
-                        className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461] placeholder:text-[#C1A461]/40"
+                        className="input-theme input-theme-focus"
                       />
                     </div>
 
                     <Button 
-                      className="w-full bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                      className="w-full btn-theme-primary"
                       onClick={async () => {
                         // Validate all fields
                         if (!projectTitle || !description || !selectedCategory || !selectedSubSkill || !projectUrl) {
@@ -678,20 +672,20 @@ export default function Profile() {
       </div>
       {isShareModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-lg bg-[#1B2228] border-[#C1A461]/20">
+          <Card className="w-full max-w-lg card-theme">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-[#C1A461] text-2xl font-semibold">Share Profile</CardTitle>
+              <CardTitle className="text-theme-primary text-2xl font-semibold">Share Profile</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-[#C1A461]/60 hover:text-[#C1A461] hover:bg-[#C1A461]/10"
+                className="text-theme-muted hover:text-theme-primary hover-theme"
                 onClick={() => setIsShareModalOpen(false)}
               >
                 <X className="h-5 w-5" />
               </Button>
             </CardHeader>
             <CardContent className="space-y-6">
-              <p className="text-[#C1A461]/60 text-lg">
+              <p className="text-theme-muted text-lg">
                 Share your profile with friends or on social media to showcase your proof of work, all in one place
               </p>
 
@@ -699,11 +693,11 @@ export default function Profile() {
                 <Input
                   readOnly
                   value={shareUrl}
-                  className="bg-[#1B2228] border-[#C1A461]/20 text-[#C1A461] focus-visible:ring-[#C1A461]"
+                  className="input-theme input-theme-focus"
                 />
                 <Button
                   variant="outline"
-                  className="border-[#C1A461]/20 text-[#C1A461] hover:bg-[#C1A461]/10"
+                  className="btn-theme-secondary"
                   onClick={handleCopy}
                 >
                   <Copy className="h-4 w-4" />
@@ -711,7 +705,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-[#C1A461]/60 uppercase text-sm font-medium">Share to</h3>
+                <h3 className="text-theme-muted uppercase text-sm font-medium">Share to</h3>
                 <div className="flex gap-4">
                   <a
                     href={getShareUrl("twitter")}

@@ -22,11 +22,6 @@ export function Bounties() {
   const [selectedStatus, setSelectedStatus] = useState<Status>('open')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
-  const mutedTextColor = theme === 'dark' ? 'text-[#C1A461]/60' : 'text-gray-600'
-  const cardBg = theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'
 
   useEffect(() => {
     const fetchBounties = async () => {
@@ -74,13 +69,13 @@ export function Bounties() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} w-full px-4`}>
+    <div className="min-h-screen bg-theme-primary w-full px-4">
       <div className="max-w-7xl mx-auto py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className={`text-2xl font-bold ${textColor} font-sentient`}>Bounty Board</h1>
-            <p className={`${mutedTextColor}`}>Discover and complete bounties to earn rewards</p>
+            <h1 className="text-2xl font-bold text-theme-primary font-sentient">Bounty Board</h1>
+            <p className="text-theme-muted">Discover and complete bounties to earn rewards</p>
           </div>
         </div>
 
@@ -88,10 +83,10 @@ export function Bounties() {
         <div className="space-y-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className={`absolute left-3 top-3 h-4 w-4 ${mutedTextColor}`} />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-theme-muted" />
               <Input
                 placeholder="Search bounties..."
-                className={`pl-9 ${bgColor} border-${borderColor} ${textColor}`}
+                className="pl-9 input-theme"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -101,13 +96,8 @@ export function Bounties() {
                 <Button 
                   key={filter}
                   variant="outline" 
-                  className={`rounded-full ${borderColor} bg-transparent ${textColor} 
-                    ${theme === 'dark' ? 
-                      'hover:bg-amber-500/20 hover:text-amber-400' : 
-                      'hover:bg-amber-100 hover:text-amber-700'}
-                    ${selectedCategory === filter ? 
-                      theme === 'dark' ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700' 
-                      : ''}`}
+                  className={`rounded-full btn-theme-secondary
+                    ${selectedCategory === filter ? 'bg-theme-accent text-theme-accent' : ''}`}
                   onClick={() => setSelectedCategory(filter)}
                 >
                   {filter}
@@ -118,14 +108,14 @@ export function Bounties() {
         </div>
 
         {/* Bounties List */}
-        <Card className={`${cardBg} ${borderColor}`}>
+        <Card className="card-theme-secondary">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Compass className={`w-6 h-6 ${textColor}`} />
-                <h2 className={`font-bold ${textColor}`}>Available Bounties</h2>
+                <Compass className="w-6 h-6 text-theme-primary" />
+                <h2 className="font-bold text-theme-primary">Available Bounties</h2>
               </div>
-              <span className={mutedTextColor}>{filteredBounties.length} bounties</span>
+              <span className="text-theme-muted">{filteredBounties.length} bounties</span>
             </div>
 
             <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as Status)} className="w-full">
@@ -143,37 +133,34 @@ export function Bounties() {
 
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#C1A461]" />
+                  <div className="h-8 w-8 loading-spinner" />
                 </div>
               ) : (
                 <div className="space-y-4">
                   {filteredBounties.length === 0 ? (
-                    <div className={`text-center py-8 ${mutedTextColor}`}>
+                    <div className="text-center py-8 text-theme-muted">
                       No bounties found
                     </div>
                   ) : (
                     filteredBounties.map((bounty) => (
-                      <Card key={bounty.id} className={`${cardBg} ${borderColor}`}>
+                      <Card key={bounty.id} className="card-theme-secondary">
                         <CardContent className="flex items-center justify-between p-4">
                           <div className="flex gap-4">
-                            <div className={`w-12 h-12 ${theme === 'dark' ? 
-                              'bg-amber-500/10' : 'bg-amber-100'} rounded-lg flex items-center justify-center`}>
-                              <Ship className={textColor} />
+                            <div className="w-12 h-12 bg-theme-accent rounded-lg flex items-center justify-center">
+                              <Ship className="text-theme-primary" />
                             </div>
                             <div>
-                              <h3 className={`font-medium ${textColor}`}>{bounty.title}</h3>
+                              <h3 className="font-medium text-theme-primary">{bounty.title}</h3>
                               {bounty.sponsor?.id ? (
                                     <Link to={`/sponsor/${bounty.sponsor.id}`}>
-                                      <div className={`flex items-center gap-1 text-sm ${textColor}`}>
-                                        {/* Use a simplified hover approach */}
+                                      <div className="flex items-center gap-1 text-sm text-theme-secondary">
                                         <span className="hover:underline transition-all">
                                           {bounty.sponsor?.name || 'Unknown Sponsor'}
                                         </span>
                                         {bounty.sponsor?.is_verified && (
                                           <Badge 
                                             variant="secondary" 
-                                            className={`${theme === 'dark' ? 
-                                              'bg-amber-500/20' : 'bg-amber-100'} ${textColor}`}
+                                            className="badge-theme-primary"
                                           >
                                             <Anchor className="w-3 h-3 mr-1" />
                                             Verified
@@ -182,11 +169,11 @@ export function Bounties() {
                                       </div>
                                     </Link>
                                   ) : (
-                                    <div className={`flex items-center gap-1 text-sm ${textColor}`}>
+                                    <div className="flex items-center gap-1 text-sm text-theme-secondary">
                                       Unknown Sponsor
                                     </div>
                                   )}
-                              <div className={`flex items-center gap-4 text-sm ${textColor} mt-1`}>
+                              <div className="flex items-center gap-4 text-sm text-theme-muted mt-1">
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-4 h-4" />
                                   <span>{bounty.category}</span>
@@ -204,15 +191,14 @@ export function Bounties() {
                           <div className="flex items-center gap-4">
                             <div className="text-right">
                               <div className="flex items-center gap-1">
-                                <span className={textColor}>◈</span>
-                                <span className={`font-medium ${textColor}`}>{bounty.reward.amount} {bounty.reward.token}</span>
+                                <span className="text-theme-primary">◈</span>
+                                <span className="font-medium text-theme-primary">{bounty.reward.amount} {bounty.reward.token}</span>
                               </div>
-                              <span className={`text-sm ${mutedTextColor}`}>${bounty.reward.usd_equivalent}</span>
+                              <span className="text-sm text-theme-muted">${bounty.reward.usd_equivalent}</span>
                             </div>
                             <Button 
                               variant="outline"
-                              className={`${borderColor} bg-transparent ${textColor} 
-                                ${theme === 'dark' ? 'hover:bg-amber-500/20' : 'hover:bg-amber-100'}`}
+                              className="btn-theme-secondary"
                               onClick={() => navigate(`/bounty/${bounty.id}`)}
                             >
                               View Details

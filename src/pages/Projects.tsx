@@ -8,9 +8,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function Project() {
   const { theme } = useTheme();
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900';
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white';
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200';
 
   const severityLevels = [
     {
@@ -62,38 +59,38 @@ export default function Project() {
   ];
 
   return (
-    <div className={`min-h-screen ${bgColor}`}>
+    <div className={`min-h-screen bg-theme-primary`}>
       <div className="max-w-4xl mx-auto px-4">
         <div className="grid gap-12">
           {/* Hero Section */}
           <section className="pt-12">
-            <h1 className={`text-4xl font-bold mb-6 ${textColor} font-sentient`}>
+            <h1 className={`text-4xl font-bold mb-6 text-theme-primary font-sentient`}>
               Bug Find
             </h1>
-            <p className={`text-lg mb-8 ${textColor} opacity-90`}>
+            <p className={`text-lg mb-8 text-theme-secondary`}>
               Help secure the Alephium protocol and earn rewards for finding vulnerabilities.
             </p>
           </section>
 
           {/* Severity Levels */}
           <section>
-            <h2 className={`text-2xl font-bold mb-8 ${textColor} font-sentient`}>
+            <h2 className={`text-2xl font-bold mb-8 text-theme-primary font-sentient`}>
               Severity Levels & Rewards
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {severityLevels.map((level) => (
-                <Card key={level.level} className={`${bgColor} ${borderColor}`}>
+                <Card key={level.level} className={`card-theme`}>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <level.icon className={`h-6 w-6 ${level.color}`} />
-                      <h3 className={`text-xl font-semibold ${textColor}`}>
+                      <h3 className={`text-xl font-semibold text-theme-primary`}>
                         {level.level}
                       </h3>
                     </div>
-                    <div className={`text-xl font-bold mb-3 ${textColor}`}>
+                    <div className={`text-xl font-bold mb-3 text-theme-primary`}>
                       {level.reward}
                     </div>
-                    <p className={`${textColor} opacity-80`}>
+                    <p className={`text-theme-secondary`}>
                       {level.description}
                     </p>
                   </CardContent>
@@ -105,9 +102,9 @@ export default function Project() {
           {/* Scope Section */}
           <section>
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className={`${bgColor} ${borderColor}`}>
+              <Card className={`card-theme`}>
                 <CardHeader>
-                  <CardTitle className={textColor}>In Scope</CardTitle>
+                  <CardTitle className="text-theme-primary">In Scope</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
@@ -116,16 +113,16 @@ export default function Project() {
                         <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
                           Included
                         </Badge>
-                        <span className={`${textColor} opacity-90`}>{item}</span>
+                        <span className={`text-theme-secondary`}>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
               </Card>
 
-              <Card className={`${bgColor} ${borderColor}`}>
+              <Card className={`card-theme`}>
                 <CardHeader>
-                  <CardTitle className={textColor}>Out of Scope</CardTitle>
+                  <CardTitle className="text-theme-primary">Out of Scope</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
@@ -134,7 +131,7 @@ export default function Project() {
                         <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20">
                           Excluded
                         </Badge>
-                        <span className={`${textColor} opacity-90`}>{item}</span>
+                        <span className={`text-theme-secondary`}>{item}</span>
                       </li>
                     ))}
                   </ul>
@@ -147,10 +144,10 @@ export default function Project() {
           <section>
             <Card className={`${bgColor} ${borderColor}`}>
               <CardHeader>
-                <CardTitle className={textColor}>Submission Guidelines</CardTitle>
+                <CardTitle className="text-theme-primary">Submission Guidelines</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className={`${textColor} space-y-2`}>
+                <div className={`text-theme-primary space-y-2`}>
                   <p>• Provide detailed technical information about the vulnerability</p>
                   <p>• Include proof-of-concept code or steps to reproduce</p>
                   <p>• One vulnerability per report</p>
@@ -166,12 +163,12 @@ export default function Project() {
           <section>
             <div className="space-y-6">
               {/* Disclosure Section */}
-              <Card className={`${bgColor} ${borderColor}`}>
+              <Card className={`card-theme`}>
                 <CardHeader>
-                  <CardTitle className={textColor}>Disclosure Policy</CardTitle>
+                  <CardTitle className="text-theme-primary">Disclosure Policy</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className={`${textColor} space-y-4`}>
+                  <div className={`text-theme-primary space-y-4`}>
                     <p className="leading-relaxed">
                       All found vulnerabilities or bugs must be exclusively reported to: 
                       <span className="font-semibold"> bugbounty@alephium.org</span>
@@ -200,12 +197,12 @@ export default function Project() {
               </Card>
 
               {/* Qualification Section */}
-              <Card className={`${bgColor} ${borderColor}`}>
+              <Card className={`card-theme`}>
                 <CardHeader>
-                  <CardTitle className={textColor}>Qualification Requirements</CardTitle>
+                  <CardTitle className="text-theme-primary">Qualification Requirements</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`${textColor} space-y-3`}>
+                  <div className={`text-theme-primary space-y-3`}>
                     <p className="font-semibold mb-4">To qualify for a reward, you must:</p>
                     <ul className="space-y-3">
                       {[
@@ -220,7 +217,7 @@ export default function Project() {
                         "Avoid illegal behavior or coercive tactics"
                       ].map((requirement, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <span className="text-[#C1A461] mt-1">•</span>
+                          <span className="text-theme-primary mt-1">•</span>
                           <span className="opacity-90">{requirement}</span>
                         </li>
                       ))}
@@ -232,14 +229,14 @@ export default function Project() {
               {/* Action Buttons */}
               <div className="flex gap-4">
                 <Button 
-                  className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                  className="btn-theme-primary"
                   onClick={() => window.open('mailto:bugbounty@alephium.org')}
                 >
                   Submit Report
                   <ArrowUpRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button 
-                  className="bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]"
+                  className="btn-theme-primary"
                   onClick={() => window.open('https://github.com/alephium/community/blob/master/BugBounty.md', '_blank')}
                 >
                   View Guidelines

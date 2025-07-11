@@ -5,6 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import theme styles */
+@import './styles/theme.css';
+
 .font-pirate {
   font-family: 'Pirata One', cursive;
 }
