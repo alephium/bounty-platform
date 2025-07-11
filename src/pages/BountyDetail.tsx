@@ -243,7 +243,7 @@ export default function BountyDetails() {
           <div className="space-y-6">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className={`text-2xl font-bold ${textColor} mb-2`}>
+                <h1 className={`text-2xl font-bold ${textColor} mb-2 font-sentient`}>
                   {bounty.title}
                 </h1>
                 <div className={`flex items-center gap-4 ${textColor}/60`}>
@@ -286,14 +286,14 @@ export default function BountyDetails() {
 
               <div className="py-6 space-y-8">
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>About The Bounty</h2>
+                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>About The Bounty</h2>
                   <p className={`${textColor}/80`}>
                     {bounty.description}
                   </p>
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>Requirements</h2>
+                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Requirements</h2>
                   {typeof bounty.requirements === 'string' ? (
                     <p className={`${textColor}/80`}>{bounty.requirements}</p>
                   ) : (
@@ -309,14 +309,14 @@ export default function BountyDetails() {
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>Reward</h2>
+                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Reward</h2>
                   <p className={`${textColor}/80`}>
                     {bounty.reward.amount} {bounty.reward.token}
                   </p>
                 </section>
 
                 <section>
-                  <h2 className={`text-lg font-bold ${textColor} mb-4`}>Timeline</h2>
+                  <h2 className={`text-lg font-bold ${textColor} mb-4 font-sentient`}>Timeline</h2>
                   <p className={`${textColor}/80`}>
                     End Date: {new Date(bounty.end_date).toLocaleDateString()}
                   </p>

@@ -212,7 +212,7 @@ const Layout = () => {
 
             <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
-                <h2 className="font-bold text-[#C1A461] mb-4">NAVIGATION GUIDE</h2>
+                <h2 className="font-bold text-[#C1A461] mb-4 font-sentient">NAVIGATION GUIDE</h2>
                 <div className="space-y-6">
                   {[
                     {
@@ -248,7 +248,7 @@ const Layout = () => {
             <Card className={`${bgColor} ${borderColor}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-[#C1A461]">TOP EARNERS</h2>
+                  <h2 className="font-bold text-[#C1A461] font-sentient">TOP EARNERS</h2>
                   <Link 
                     to="/leaderboard"
                     className="text-sm text-[#C1A461] hover:underline"

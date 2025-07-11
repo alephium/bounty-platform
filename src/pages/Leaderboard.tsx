@@ -108,7 +108,7 @@ export default function Leaderboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className={`text-3xl font-bold ${textColor} flex items-center gap-2`}>
+            <h1 className={`text-3xl font-bold ${textColor} flex items-center gap-2 font-sentient`}>
               <Trophy className="w-8 h-8" />
               Leaderboard
             </h1>

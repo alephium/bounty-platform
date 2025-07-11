@@ -67,7 +67,7 @@ export default function Project() {
         <div className="grid gap-12">
           {/* Hero Section */}
           <section className="pt-12">
-            <h1 className={`text-4xl font-bold mb-6 ${textColor}`}>
+            <h1 className={`text-4xl font-bold mb-6 ${textColor} font-sentient`}>
               Bug Find
             </h1>
             <p className={`text-lg mb-8 ${textColor} opacity-90`}>
@@ -77,7 +77,7 @@ export default function Project() {
 
           {/* Severity Levels */}
           <section>
-            <h2 className={`text-2xl font-bold mb-8 ${textColor}`}>
+            <h2 className={`text-2xl font-bold mb-8 ${textColor} font-sentient`}>
               Severity Levels & Rewards
             </h2>
             <div className="grid md:grid-cols-2 gap-6">

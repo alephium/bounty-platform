@@ -127,7 +127,7 @@ export default function Home() {
                   )}
                 </Avatar>
                 <div>
-                  <h1 className={`text-2xl font-bold ${textColor}`}>
+                  <h1 className={`text-2xl font-bold ${textColor} font-sentient`}>
                     Welcome aboard, Captain {user?.full_name || 'Guest'}
                   </h1>
                   <p className={textColor}>Your next adventure awaits on $ALPH Bounty Lands</p>
