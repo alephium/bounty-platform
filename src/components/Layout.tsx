@@ -107,15 +107,12 @@ const Layout = () => {
     return <AvatarDropdown user={user} getInitials={getInitials} />
   }
 
-  const bgColor = theme === 'dark' ? 'bg-[#1B2228]' : 'bg-white'
-  const textColor = theme === 'dark' ? 'text-[#C1A461]' : 'text-gray-900'
-  const borderColor = theme === 'dark' ? 'border-[#C1A461]/20' : 'border-amber-200'
 
   return (
     <>
     <SessionProvider>
-      <div className={`min-h-screen ${bgColor}`}>
-      <nav className={`${bgColor} border-b ${borderColor}`}>
+      <div className="min-h-screen bg-theme-primary">
+      <nav className="bg-theme-primary border-b border-theme-secondary">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
           {/* Left side remains the same */}
           <div className="flex items-center gap-8">
@@ -127,7 +124,7 @@ const Layout = () => {
                 <Link 
                   key={item}
                   to={`/${item.toLowerCase()}`}
-                  className={`text-sm font-medium ${textColor} hover:opacity-80 transition-colors relative`}
+                  className="text-sm font-medium text-theme-primary hover:opacity-80 transition-colors relative"
                 >
                   {item}
                 </Link>
@@ -137,15 +134,13 @@ const Layout = () => {
           
           {/* Right side updated with theme toggle */}
           <div className="flex items-center gap-4">
-            <Search className={`w-5 h-5 ${textColor}`} />
+            <Search className="w-5 h-5 text-theme-primary" />
             <ThemeToggle />  {/* Add theme toggle here */}
             
             {user ? (
               <div className="flex items-center gap-4">
                 <Button 
-                  className={theme === 'dark' ? 
-                    "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                    "bg-amber-500 hover:bg-amber-600 text-white"}
+                  className="btn-theme-primary"
                   onClick={handleSponsorClick}
                 >
                   {isSponsor ? 'Sponsor Dashboard' : 'Become a Sponsor'}
@@ -156,17 +151,13 @@ const Layout = () => {
               <div className="flex items-center gap-4">
                 <Button 
                   variant="outline"
-                  className={theme === 'dark' ? 
-                    "border-[#C1A461] text-[#C1A461] hover:bg-[#C1A461]/10" : 
-                    "border-amber-500 text-amber-500 hover:bg-amber-50"}
+                  className="btn-theme-secondary"
                   onClick={() => navigate('/sponsor')}
                 >
                   Become a Sponsor
                 </Button>
                 <Button 
-                  className={theme === 'dark' ? 
-                    "bg-[#C1A461] hover:bg-[#C1A461]/90 text-[#1B2228]" : 
-                    "bg-amber-500 hover:bg-amber-600 text-white"}
+                  className="btn-theme-primary"
                   onClick={() => navigate('/auth')}
                 >
                   Sign in
@@ -182,12 +173,12 @@ const Layout = () => {
             <Outlet />
           </main>
           <aside className="space-y-6 w-60">
-          <Card className={`${bgColor} ${borderColor}`}>
+          <Card className="card-theme">
             <CardContent className="p-4 space-y-4">
               <div>
                 <div className="flex items-center gap-2 text-2xl font-bold">
-                  <span className="text-[#C1A461]">◈</span>
-                  <span className="text-[#C1A461]">
+                  <span className="text-theme-primary">◈</span>
+                  <span className="text-theme-primary">
                     {loading ? '...' : new Intl.NumberFormat('en-US', {
                       style: 'currency',
                       currency: 'USD',
@@ -196,21 +187,21 @@ const Layout = () => {
                     }).format(metrics.totalOpenRewards)}
                   </span>
                 </div>
-                <div className="text-sm text-[#C1A461]">Total Treasure Open</div>
+                <div className="text-sm text-theme-primary">Total Treasure Open</div>
               </div>
               <div>
                 <div className="flex items-center gap-2 text-2xl font-bold">
-                  <span className="text-[#C1A461]">◈</span>
-                  <span className="text-[#C1A461]">
+                  <span className="text-theme-primary">◈</span>
+                  <span className="text-theme-primary">
                     {loading ? '...' : metrics.availableQuests}
                   </span>
                 </div>
-                <div className="text-sm text-[#C1A461]">Quests Available</div>
+                <div className="text-sm text-theme-primary">Quests Available</div>
               </div>
             </CardContent>
           </Card>
 
-            <Card className={`${bgColor} ${borderColor}`}>
+            <Card className="card-theme">
               <CardContent className="p-4">
                 <h2 className="font-bold text-theme-primary mb-4 font-sentient">NAVIGATION GUIDE</h2>
                 <div className="space-y-6">
@@ -236,8 +227,8 @@ const Layout = () => {
                         {step.icon}
                       </div>
                       <div>
-                        <h3 className="font-medium text-[#C1A461]">{step.title}</h3>
-                        <p className="text-sm text-[#C1A461]">{step.description}</p>
+                        <h3 className="font-medium text-theme-primary">{step.title}</h3>
+                        <p className="text-sm text-theme-primary">{step.description}</p>
                       </div>
                     </div>
                   ))}
@@ -245,25 +236,25 @@ const Layout = () => {
               </CardContent>
             </Card>
 
-            <Card className={`${bgColor} ${borderColor}`}>
+            <Card className="card-theme">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-bold text-theme-primary font-sentient">TOP EARNERS</h2>
                   <Link 
                     to="/leaderboard"
-                    className="text-sm text-[#C1A461] hover:underline"
+                    className="text-sm text-theme-primary hover:underline"
                   >
                     View All
                   </Link>
                 </div>
                 <div className="space-y-3">
                   {loadingEarners ? (
-                    <div className="text-[#C1A461] text-sm">Loading...</div>
+                    <div className="text-theme-primary text-sm">Loading...</div>
                   ) : topEarners.length > 0 ? (
                     topEarners.map((earner) => (
                       <div key={earner.user.id} className="flex items-center gap-3">
                         <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold text-[#C1A461]">#{earner.rank}</span>
+                          <span className="text-xs font-bold text-theme-primary">#{earner.rank}</span>
                         </div>
                         <Avatar className="w-8 h-8">
                           <AvatarImage src={earner.user.avatar_url || undefined} />
@@ -274,18 +265,18 @@ const Layout = () => {
                         <div className="flex-1 min-w-0">
                           <Link 
                             to={`/profile/${earner.user.username}`}
-                            className="text-sm font-medium text-[#C1A461] hover:underline truncate block"
+                            className="text-sm font-medium text-theme-primary hover:underline truncate block"
                           >
                             {earner.user.full_name || earner.user.username}
                           </Link>
-                          <p className="text-xs text-[#C1A461]/60">
+                          <p className="text-xs text-theme-muted">
                             ${earner.totalEarnings.toLocaleString()}
                           </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-[#C1A461]/60 text-sm">No data yet</div>
+                    <div className="text-theme-muted text-sm">No data yet</div>
                   )}
                 </div>
               </CardContent>

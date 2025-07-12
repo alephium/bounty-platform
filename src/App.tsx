@@ -48,28 +48,13 @@ export default function App() {
           <Toaster
             position="top-center"
             toastOptions={{
-              // Customize the default toast styles
+              className: 'toast-theme',
               style: {
-                background: '#1B2228',
-                color: '#C1A461',
-                border: '1px solid rgba(193, 164, 97, 0.2)',
                 padding: '16px 24px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 borderRadius: '8px',
                 fontSize: '16px',
                 maxWidth: '400px',
                 textAlign: 'center',
-              },
-              // Customize success toast
-              success: {
-                iconTheme: {
-                  primary: '#C1A461',
-                  secondary: '#1B2228',
-                },
-                style: {
-                  background: '#1B2228',
-                  color: '#C1A461',
-                },
               },
             }}
           />
